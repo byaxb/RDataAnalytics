@@ -117,9 +117,6 @@ search()
 #当然，你也可以在R里边，执行下边的语句直接打开浏览器
 browseURL("https://stackoverflow.com/questions/tagged/r")
 
-#一般的查找
-RSiteSearch("deep*learning")
-
 
 #推荐使用sos包
 #初次使用，需要安装
