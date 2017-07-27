@@ -89,7 +89,7 @@ devtools::install_github("hadley/tidyverse")
 #重新安装就好
 #把低版本中的library文件夹和新安装版本中的library合并
 #新版本中已有文件不要覆盖
-#然后运行一下代码即可
+#然后运行以下代码即可
 update.packages()
 
 #打开R的帮助页面
