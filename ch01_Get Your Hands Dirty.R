@@ -383,7 +383,7 @@ summary(cheng_ji_biao)
 #在需求确定之后，首先会采集数据
 #比如，我们要分析的成绩数据，置于以下URL之中
 cheng_ji_url <-
-  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/ch01_data_cj.csv"
+  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/cj.csv"
 #我们要做的事情，是直接将其读入
 cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
