@@ -48,7 +48,7 @@
 #本次课程同样采用前述的《学生成绩分析》的数据
 #采用真实数据的目的很简单：所得结果是鲜活的
 cheng_ji_url <-
-  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/ch01_data_cj.csv"
+  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/ch01_data_cj.csv"
 cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
                           stringsAsFactors = TRUE)
