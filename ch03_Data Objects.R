@@ -566,7 +566,7 @@ describe(cheng_ji_biao)
 #毕竟采集数据和分析数据的过程是分开的
 
 cheng_ji_url <-
-  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/ch01_data_cj.csv"
+  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/cj.csv"
 cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
                           stringsAsFactors = FALSE)
