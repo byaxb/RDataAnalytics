@@ -3,7 +3,7 @@
 #######################################################
 #######################################################
 ##
-## 名称：《R语言数据分析·R语言基础》
+## 名称：《R语言数据分析·基础编程》
 ## 作者：艾新波
 ## 学校：北京邮电大学
 ## 版本：V6
@@ -11,7 +11,7 @@
 ##
 ##*****************************************************
 ##
-## ch02_R Basics_V6
+## ch02_Programming Fundamentals_V6
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
