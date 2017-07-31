@@ -648,7 +648,9 @@ test_set <- cheng_ji_biao[-train_idx, ]
 
 #其次推荐的是https://github.com/Rdatatable/data.table/wiki
 #说到数据处理，data.table这个包也是要强烈推荐的
-#尤其涉及到超大规模的data.frame时，data.table的速度优势尤为明显
+#尤其涉及到大规模的data.frame时，data.table的速度优势尤为明显
+#这里说的大规模，比如记录数过千万
+#或者说，体量为10-100 Gb类似的数据
 #当然data.table本身就像SQL查询一样，很多操作较之data.frame更为便利
 
 
