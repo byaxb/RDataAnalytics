@@ -148,7 +148,33 @@ lines(density(scale(yu_wen)), col = "red",
 ##用图形刻画数据
 #######################################################
 
+#在R里边，有基础绘图系统、lattice以及ggplot2等
+#也有散见于各种包的相应绘制函数
+#当然，也有echarts等外部接口
+#本讲以ggplot2为主
+#ggplot2：这里的gg是指Grammar of Graphics
+#顾名思义，提供的是一整套图形语法的实现
+#所以ggplot2与其它某些零散的绘图函数有本质的区别，
+#自成体系
+#在进入ggplot2的实操之前，建议对其脉络有个了解：
+#请阅读《A Layered Grammar of Graphics》，
+#网址：http://vita.had.co.nz/papers/layered-grammar.pdf
 
+#ggplot2的基本绘图框架是：
+# ggplot(data = <DATA>) +
+#   <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>),
+#                   stat = <STAT>,
+#                   position = <POSITION>) +
+#   <COORDINATE_FUNCTION> +
+#   <FACET_FUNCTION>
+#虽然绘图框架很直观明了，但是真正要精通各类图形绘制，
+#仍然需要日积月累
+
+#在初学ggplot2的过程中，除了图形语法之外，
+#还有一个难点，那就是数据的转换的过程，
+#比如数据的长宽变换等
+#在接下来的具体代码演示过程中，
+#这一点小伙伴们也许多加留意
 
 #######################################################
 #条形图、柱状图_barplot
