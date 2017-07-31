@@ -450,6 +450,8 @@ writeJPEG(president3, target = "presidents3_changed.jpg")
 shell("presidents3_changed.jpg") #照片已泛黄
 #当然，你也可以不用shell()函数，直接在在资源管理器中
 #打开getwd()所得到的路径，然后查看相应的jpeg文件
+#Windows里边，还可以使用以下函数
+shell.exec("presidents3_changed.jpg") # 效果一样
 
 
 
