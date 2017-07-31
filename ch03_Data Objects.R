@@ -441,9 +441,15 @@ apply(wu_ke, 2, function(x) { #求极差
 library(jpeg)
 #download the presidents.jpg from:
 #https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/presidents.jpg
+jpg_url <- "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/presidents.jpg"
+download.file(jpg_url, "presidents.jpg", mode="wb")
+shell("presidents.jpg")
 president3 <- readJPEG("presidents.jpg")
 president3[ , , 3] <- 0
 writeJPEG(president3, target = "presidents3_changed.jpg")
+shell("presidents3_changed.jpg") #照片已泛黄
+#当然，你也可以不用shell()函数，直接在在资源管理器中
+#打开getwd()所得到的路径，然后查看相应的jpeg文件
 
 
 
