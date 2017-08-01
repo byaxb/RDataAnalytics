@@ -14,7 +14,7 @@
 ## ch07_Cluster Analysis_V6
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
-## @Beijing University of Posts and Telecommunications
+## Beijing University of Posts and Telecommunications
 ##
 ##*****************************************************
 ##
