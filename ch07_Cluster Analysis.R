@@ -302,6 +302,7 @@ circlize_dendrogram(dend)
 #######################################################
 
 #先看一个演示
+#基于人工数据
 library(factoextra)
 data(multishapes)
 df <- multishapes[, 1:2]
