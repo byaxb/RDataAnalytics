@@ -49,7 +49,7 @@ str(iris)
 #前四列分别代表：
 #Sepal.Length:萼片长
 #Sepal.Width:萼片宽
-#Petal.Length:花边长
+#Petal.Length:花瓣长
 #Petal.Widht:花瓣宽
 #第五列代表每一朵花的类别
 #Species:种类
