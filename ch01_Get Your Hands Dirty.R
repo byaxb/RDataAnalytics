@@ -387,7 +387,12 @@ cheng_ji_url <-
 #我们要做的事情，是直接将其读入
 cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
-                          stringsAsFactors = FALSE)
+                          stringsAsFactors = FALSE,
+                          fileEncoding = "UTF-8")
+#或者，也可以采用下边这种方式
+#会自动处理编码问题
+# library(readr)
+# cheng_ji_biao <- read_csv(cheng_ji_url)
 
 View(cheng_ji_biao)
 #看看他的结构
