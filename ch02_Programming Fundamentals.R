@@ -490,6 +490,26 @@ for(i in letters[1:3]) {
   cat("Outer loop with \ti=", i, "\n")
 }
 
+#异常处理
+X <- list(1,2,"3", 4, 5)
+#注意理解为何不能用c()替换list()
+for(cur_x in X) {
+  reciprocal <- 1/cur_x
+  cat("\nThe reciprocal of", cur_x, "is", reciprocal)
+}
+#改用下边的方式
+#也就是把可能出问题的语句，
+#全都交给tryCatch()函数
+for(cur_x in X) {
+  tryCatch({
+    reciprocal <- 1/cur_x
+    cat("\nThe reciprocal of", cur_x, "is", reciprocal)
+  }, #显然，函数的第一个参数就是表达式
+  #表达式可能有很多，建议都用{}括起来
+  error = function(e) {
+    cat("\nSomething wrong while processing ", cur_x)
+  })
+}
 
 
 #######################################################
