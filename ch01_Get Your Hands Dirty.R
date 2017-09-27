@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·Get Your Hands Dirty》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V6
-## 时间：2017年6月
+## 版本：V7
+## 时间：2017年9月
 ##
 ##*****************************************************
 ##
-## ch01_Get Your Hands Dirty_V6
+## ch01_Get Your Hands Dirty_V7
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -21,6 +21,8 @@
 ## Author: byaxb
 ## Email:axb@bupt.edu.cn
 ## QQ:23127789
+## WeChat:13641159546
+## URL:https://github.com/byaxb
 ##
 ##*****************************************************
 ##
@@ -84,7 +86,7 @@ lines(x, z, col = "red", type = "o")
 
 #创建一个向量a
 a <- c(3, 4)
-#向量a的长度
+#向量a的长度|a|
 sqrt(sum(a2 ^ 2))
 #两个向量之和
 b <- c(2, 8)
@@ -389,6 +391,7 @@ cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
                           stringsAsFactors = FALSE,
                           fileEncoding = "UTF-8")
+
 #或者，也可以采用下边这种方式
 #会自动处理编码问题
 # library(readr)
