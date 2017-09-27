@@ -442,7 +442,7 @@ View(wu_ke)
 View(t(wu_ke))
 
 #对矩阵进行操作
-rowSums(wu_ke) #每个同学的总分
+rowSums(wu_ke) #每个同学的总成绩
 colMeans(wu_ke) #各门课的平均分
 #更一般的方法
 apply(wu_ke, 1, sum)
@@ -639,7 +639,7 @@ tail(cheng_ji_biao, n = 10)
 View(tail(cheng_ji_biao, n = 10))
 
 #给数据框增加一列
-cheng_ji_biao$总分 <- apply(cheng_ji_biao[, 4:12], 
+cheng_ji_biao$总成绩 <- apply(cheng_ji_biao[, 4:12], 
                           1, sum)
 
 #删除数据框的某一列
@@ -653,8 +653,8 @@ View(cheng_ji_biao)
 
 
 #数据集的排序
-#根据总分，进行排序
-zong_fen_pai_xu <- order(cheng_ji_biao$总分, decreasing = TRUE)
+#根据总成绩，进行排序
+zong_fen_pai_xu <- order(cheng_ji_biao$总成绩, decreasing = TRUE)
 cheng_ji_biao_ordered <- cheng_ji_biao[zong_fen_pai_xu, ]
 
 #数据集分为训练集和测试集
