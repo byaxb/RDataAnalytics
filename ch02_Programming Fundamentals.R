@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·基础编程》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V6
-## 时间：2017年6月
+## 版本：V7
+## 时间：2017年9月
 ##
 ##*****************************************************
 ##
-## ch02_Programming Fundamentals_V6
+## ch02_Programming Fundamentals_V7
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -21,6 +21,8 @@
 ## Author: byaxb
 ## Email:axb@bupt.edu.cn
 ## QQ:23127789
+## WeChat:13641159546
+## URL:https://github.com/byaxb
 ##
 ##*****************************************************
 ##
@@ -39,38 +41,91 @@
 #某火星课程，同学们得分特别低
 scores_low <- c(27, 36, 41, 53, 33, 34, 78, 90, 39)
 #接下来的语句便开始提分了
-#小伙伴们应该看出了下边这个提分公式了
+#最简单的办法，给每个同学加10分
+score_plus10 <- scores_low + 10
+score_plus10
+#还是有很多不及格的，要不加20分？
+(score_plus20 <- scores_low + 20)
+#不仅有很多不及格的，居然还有超过100的
+#所以，加一个绝对的分数貌似有问题啊
+
+#一个神奇的提分公式
 #据说是钱学森钱老的大手笔哦^-^
-scores_high <- floor(10*sqrt(scores_low))
 
 scores_high <- floor(10*sqrt(scores_low))
 mean(scores_low)
 mean(scores_high)
-scores_comparison <- data.frame(low = scores_low, high = scores_high)
+
+#反复提分
+(scores_high <- floor(10*sqrt(scores_high)))
+#可以重复执行上述语句，看其效果
+scores_comparison <- data.frame(low = scores_low,
+                                high = scores_high)
 View(scores_comparison)
+
+#通过图形的方式来展示提分效果
 library(ggplot2)
 library(tidyr)
 scores_comparison_melt <- gather(scores_comparison)
-#反复提分
-scores_high <- floor(10*sqrt(scores_high))
-ggplot(scores_comparison_melt, 
-       aes(x = key, y = value, fill = key)) +
+ggplot(scores_comparison_melt,
+       aes(x = key,
+           y = value,
+           fill = key)) +
   geom_boxplot()
 
 
-#######################################################
-##扩展包及其函数的查找
-#######################################################
+#学习R语言数据分析，或是其它数据科学编程
+#往往学习曲线都比较陡
+#因为既要学习语言本身，还需要掌握机器学习/数据挖掘的
+#模型和算法
+
+#本课程的策略是分而治之：
+#先讲R语言，再以R语言为工具，
+#讲授机器学习/数据挖掘的模型和算法
+
+#单就R语言的学习来说，无非掌握两个方面：
+#R语言 = 基础编程 + 数据对象
+#这也体现了作为数据分析语言的特殊之处
+#在掌握一些基本的语法、逻辑控制之后
+#R语言的核心在于数据对象及其操作
+#或者说，R语言会比一般的编程语言更多关注数据对象本身
+#ch02_基础编程
+#ch03_数据对象
+
+
+#接下来，先看R的基础编程
+#考虑到大家已经Get Hands Dirty了
+#接下来，我们从R语言本身的特点讲起
+#力图用最简单语言，把R基础编程需要掌握的核心要点
+#给大家做一个交待
+
 #时至今日，编程几乎是必备技能
 #编程，并不只是程序员的事情
 #无论你身处学术界、产业界
 #无论你搞科研，还是做工程
 #在绝大部分的高技术里，都需要编程
 #不会编程，几乎是难以想像的
-#R语言的编程，是自己的逻辑（1%）+巨人的肩膀（99%）
-#所以，先应该学会安装包、查找包
 
+#R编程最大的特点，就是：
+#用别人的包和函数，讲述你自己的故事！
+# R编程 = 你的逻辑框架 （1%）
+#        （根据任务需求，花很大部分时间来编写逻辑框架）
+#       + 已有扩展包中的函数 （99%）
+#        （加载别人早就编写好的包，并调用其中的函数）
+#当然，你有新的idea，可以写新的算法或是改进已有算法
+#即便如此，你也需要大量使用既有函数
+#作为一个数据分析人员，编写代码，早就不应该是从零开始了
+#而是站在巨人的肩膀上
+#尽管，很多小伙伴觉得从零开始更能满足自己的控制欲
+
+#所以，先应该学会安装包、查找包
+#查找包的方法，请参照讲义内容
+
+#######################################################
+##扩展包的安装及帮助文档的查看
+#######################################################
 #绝大部分的包都可以通过以下语句来安装
+#比如安装神经网络的包nnet
 install.packages("nnet")
 #有些包，没有放在CRAN
 #需要通过特定渠道下载
@@ -84,6 +139,15 @@ biocLite("minet")
 #从github上下载安装一些最新版本的包
 # install.packages("devtools")
 devtools::install_github("hadley/tidyverse")
+
+#有些情况下，也需要将包文件download到本地，然后再安装
+#比如你有一台机子数据保密很严格，不能上网
+#此时能做的事情就是先下载到本地，然后拷贝文件安装
+#方法如下：
+# install.packages("maptree_1.4-7.tar.gz",
+#                  repos = NULL,
+#                  type = "source")
+#这里边涉及到包之间的依存关系，感兴趣的小伙伴自行思考解决
 
 #R不提供升级的功能
 #重新安装就好
@@ -110,7 +174,7 @@ apropos("test", where = TRUE)
 search()
 
 
-#下边这个问答网站是强烈推荐的
+#stackoverflow网站是强烈推荐的
 #无论你学的是R还是Python
 #"https://stackoverflow.com/questions/tagged/r"
 #当然，你也可以在R里边，执行下边的语句直接打开浏览器
@@ -247,8 +311,11 @@ Fn(16)
 #还有一个更简单的做法
 #并且是并行的方式哦^-^
 #公式的具体含义，请小伙伴自行百度
+nFn <- 16
 sapply(1:nFn, function(x) {
-  1 / sqrt(5) * (((1 + sqrt(5)) / 2) ^ x - ((1 - sqrt(5)) / 2) ^ x)
+  1 / 
+    sqrt(5) * (((1 + sqrt(5)) / 2) ^ x - 
+                 ((1 - sqrt(5)) / 2) ^ x)
 })
 
 
@@ -256,12 +323,12 @@ sapply(1:nFn, function(x) {
 #当然，在R里边
 #尽量不要使用显式循环
 #能向量化运算的，尽量向量化
-x <- 1:10000000
-y <- 2:10000001
-z <- numeric(10000000)
+x <- 1:100000000
+y <- 2:100000001
+z <- numeric(100000000)
 system.time(z <- x + y, gcFirst = TRUE)
 system.time({
-  for(i in 1:10000000) {
+  for(i in 1:100000000) {
     z[i] <- x[i] + y[i]
   }
 },  gcFirst = TRUE)
@@ -274,6 +341,10 @@ library(foreach)
 library(doParallel)
 cl <- makeCluster(detectCores())
 registerDoParallel(cl, cores = detectCores())
+#在某些工作站上，上述语句要花费一定的时间
+#假如每一次“循环”的时间都比较短
+#而重新makeCluster的时间比较长
+#那样就得不偿失了
 library(igraph)
 #生成一个网络
 ig <- sample_gnp(200, 1/200)
@@ -294,8 +365,9 @@ stopCluster(cl)
 max(scc_mxs)
 
 
+
 #注意分支语句的写法
-p = 0.03
+p <- 0.03
 if(p<=0.05) {
   print("p <= 0.05!") 
   
@@ -308,7 +380,8 @@ if(p<=0.05)
 else
   print("p > 0.05!")
 
-#需要注意的是，若小数点后有无限多位，计算机是没法存储的
+#题外话：
+#若小数点后有无限多位，计算机是没法存储的
 if(sqrt(2) ^ 2 == 2) {
   cat("Equal, to do something")
 } else {
@@ -330,10 +403,14 @@ if(all.equal(sqrt(2) ^ 2 ,2)) {
 #分段函数的绘制
 x <- seq(from = -10, to = 10, by = 0.01)
 y <- numeric(length(x))
-y[x<0] <- -1
+y[x < 0] <- -1
 y[x == 0] <- 0
 y[x > 0] <- 1
-plot(x, y, type = "l", col = "blue", lwd = 2)
+plot(x,
+     y,
+     type = "l",
+     col = "blue",
+     lwd = 2)
 
 
 
@@ -341,9 +418,18 @@ plot(x, y, type = "l", col = "blue", lwd = 2)
 ##编写函数
 #######################################################
 
+#编代码的过程中，一定要注意避免硬代码
+#千万不要一次次Ctr C之后Ctr V
+#那样你的代码会变得很难维护
+#如果一套逻辑需要多次重复出现
+#最好的办法是编写一个函数
+
 #函数就是一个输入、处理、到输出的过程
 #输入的是参数
 
+#还记得么：一切都是对象
+#所以，函数，也是通过赋值来创建的
+#比如：
 #摄氏度（Celsius）到华氏度（Fahrenheit）的转换
 ce2fa <- function(ce) { #参数ce为输入
   fa <- 1.8 * ce + 32 #对输入进行处理
@@ -395,6 +481,26 @@ dotDemo(seq(1, 9, by = 3), y = letters[1:10])
 #需要指出的是
 #+、-、*、/binary operators
 #其实都是函数
+1+2
+"+"(1, 2)
+'+'(1, 2)
+'/'(2, 3)
+'^'(10, 2)
+#其实，连赋值符号<-都可以变成函数的形式
+'<-'(newObject, 3)
+#当然，以前学过的:，本质上也是一个函数
+':'(1, 10)
+#下边这种方式，你能忍么？
+'if'(2 > 1, {
+  cat("这也行？好吧，就扶你")
+  })
+
+
+#%in%运算符
+#可以简单的理解为：
+#左侧的集合是否在右侧的集合之中
+c(1, 3, 9) %in% 1:3
+
 
 #可以自行定义一些二元操作符
 #勾股定理
@@ -407,6 +513,7 @@ dotDemo(seq(1, 9, by = 3), y = letters[1:10])
 
 #当我们看完了上边的%my_binary_operator%之后
 #对下边的符号，也就不怕了
+library(tidyverse)
 x <- c(17, 28, 17, 12, 15, 12, 49)
 x %>% 
   unique() %>%
@@ -463,7 +570,9 @@ rm(list = "+.onlyFirst")
 methods("+")
 
 
-#代码调试
+#######################################################
+##代码调试
+#######################################################
 findRuns <- function(x, k) {
   n <- length(x)
   runs <- NULL
@@ -478,19 +587,11 @@ findRuns(x = x, k = 2)
 debugonce(findRuns)
 debug(findRuns)
 
-for(i in letters[1:3]) {
-  for(j in 1:9) {
-    if(j %% 2 == 0) {
-      next
-    } else if(j == 7) {
-      break
-    }
-    cat("Inner loop with \tj=", j, " and i=", i, "\n")
-  }
-  cat("Outer loop with \ti=", i, "\n")
-}
-
-#异常处理
+#######################################################
+##异常处理
+#######################################################
+#不要让个别循环出现的异常
+#影响我们的程序运行
 X <- list(1,2,"3", 4, 5)
 #注意理解为何不能用c()替换list()
 for(cur_x in X) {
