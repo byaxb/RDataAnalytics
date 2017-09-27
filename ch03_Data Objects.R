@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·数据对象》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V6
-## 时间：2017年6月
+## 版本：V7
+## 时间：2017年9月
 ##
 ##*****************************************************
 ##
-## ch03_Data Objects_V6
+## ch03_Data Objects_V7
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -21,6 +21,8 @@
 ## Author: byaxb
 ## Email:axb@bupt.edu.cn
 ## QQ:23127789
+## WeChat:13641159546
+## URL:https://github.com/byaxb
 ##
 ##*****************************************************
 ##
@@ -69,7 +71,13 @@ if(!F) {
   print("F is FALSE")
 }
 F <- TRUE
+if(!F) {
+  print("F is FALSE")
+}
 rm(list = ls())
+if(!F) {
+  print("F is FALSE")
+}
 
 #锁定某些变量，不让别人修改
 fakeConstant <- 1
@@ -97,12 +105,14 @@ xing_ming <- c("周黎", "汤海明", "舒江辉",
 
 
 #逻辑向量
-isFemale <- c(T, F, TRUE, FALSE, TRUE, TRUE)
+is_female <- c(T, F, TRUE, FALSE, TRUE, TRUE)
 
 #向量只能存储单一类型
 #涉及多种类型时，会强制类型转换
 x <- c(3, ".", 1, 4, 1, 5, 9, 2, 6)
 x
+#非要让他们共存的话，必须用后边讲到的list
+x <- list(3, ".", 1, 4, 1, 5, 9, 2, 6)
 
 #不存在包含向量的向量
 c(c(1, 2), 1, 2, c(2, 1), c(T, F))
@@ -134,7 +144,8 @@ seq(from = as.Date("2017-9-13"),
 #也就是上16次课
 #可以采用下边的方法
 seq(from = as.Date("2017-9-13"),
-    by = "weeks", length = 16)
+    by = "weeks", 
+    length = 16)
 
 #生成重复元素的向量
 rep("a", 10)
@@ -174,7 +185,7 @@ x <- append(x, c("h", "i"), after = 7)
 
 #访问向量的子集
 #子集的访问，应该说是数据对象里边最需要掌握的内容
-#向量的自己通过[]来指定
+#向量的子集通过[]来指定
 #第1种方法：采用1~N的正整数来指定，N为向量的长度
 x[1:2] <- 0
 x
@@ -208,7 +219,10 @@ z <- append(z, NA, after = sample(50, 1))
 plot(z, type = "h")
 na_idx <- which(is.na(z))
 z[is.na(z)] <- mean(z[!is.na(z)])
-lines(na_idx, z[na_idx], type = "h", col = "red", lwd = 2)
+lines(na_idx, z[na_idx], 
+      type = "h", 
+      col = "red", 
+      lwd = 2)
 #方法四：通过元素名访问相应的子集
 hua_wei <- c(p1 = 2012, 
              p9 = 2016,
@@ -233,7 +247,8 @@ sort(fen_shu_xian2016)
 sort(fen_shu_xian2016, decreasing = TRUE)
 order(fen_shu_xian2016)
 fen_shu_xian2016[order(fen_shu_xian2016)]
-fen_shu_xian2016[order(fen_shu_xian2016, decreasing = TRUE)]
+fen_shu_xian2016[order(fen_shu_xian2016, 
+                       decreasing = TRUE)]
 #倒序
 rev(fen_shu_xian2016)
 rev(hua_wei)
@@ -264,8 +279,8 @@ fen_cheng
 #而离散取值的变量，则用因子来存储
 
 #比如性别：
-xing_bie <- factor(c("女", "男", "男", "女", "男",
-                     "女", "女", "男", "女", "女"))
+xing_bie <- c("女", "男", "男", "女", "男",
+              "女", "女", "男", "女", "女")
 class(xing_bie)
 mode(xing_bie)
 xing_bie <- factor(xing_bie)
@@ -313,6 +328,19 @@ yu_wen5
 table(yu_wen5) #注意，此时不及格/及格/中统计为0
 yu_wen5[1] > yu_wen5[2]
 
+weekdays <-factor(c('周一', "周三", "周二","周二"))
+#比较运算符不支持无序因子
+weekdays[3] < weekdays[1]
+#变成有序因子
+weekdays <-factor(c("周一", "周三", "周二","周二"),ordered=T)
+weekdays[1] < weekdays[2]
+weekdays[2] < weekdays[3]
+weekdays <-factor(c("周一", "周三", "周二","周二"),
+                  levels = c("周一", "周二", "周三"),
+                  ordered=T)
+weekdays[1] < weekdays[2]
+weekdays[2] < weekdays[3]
+
 
 
 #######################################################
@@ -351,7 +379,8 @@ yu_shu_wai <- matrix(c(94, 82, 96,
                      ncol = 3)
 colnames(yu_shu_wai) <- c("yu_wen", "shu_xue", "wai_yu")
 #再看看另外一种创建方式
-yu_shu_wai <- c(94, 87, 92, 91, 85, 92, 88, 81, 88, 94,
+yu_shu_wai <- c(
+  94, 87, 92, 91, 85, 92, 88, 81, 88, 94,
   82, 94, 79, 84, 92, 82, 72, 89, 77, 81,
   96, 89, 86, 96, 82, 85, 86, 87, 95, 88)
 dim(yu_shu_wai)
@@ -454,7 +483,6 @@ shell("presidents3_changed.jpg") #照片已泛黄
 shell.exec("presidents3_changed.jpg") # 效果一样
 
 
-
 #######################################################
 ##列表
 #######################################################
@@ -513,6 +541,10 @@ bupt$xue_sheng["全日制"]
 #一个[]，看到的依然是包装箱
 bupt[1] 
 class(bupt[1])
+#因此，下边的语句会出错
+sum(bupt[4])
+#这才是正确的打开方式
+sum(bupt[[4]])
 #两个方括号，
 #相当于进入包装箱内部了
 #能看到包装箱内部了
@@ -562,11 +594,12 @@ cheng_ji_biao <- data.frame(xing_ming = xing_ming,
 #cheng_ji_biao <- cbind(xing_ming, xing_bie, yu_wen, shu_xue, wai_yu)
 #class(cheng_ji_biao)
 
-str(cheng_ji_biao)
-View(cheng_ji_biao)
-summary(cheng_ji_biao)
+str(cheng_ji_biao) #查看数据的结构
+View(cheng_ji_biao) #打开成绩表
+summary(cheng_ji_biao) #对数据进行统计描述
 library(Hmisc)
-describe(cheng_ji_biao)
+describe(cheng_ji_biao) #对数据进行描述
+
 
 #当然，绝大部分情况下
 #数据不会在代码里逐字敲入
@@ -606,7 +639,8 @@ tail(cheng_ji_biao, n = 10)
 View(tail(cheng_ji_biao, n = 10))
 
 #给数据框增加一列
-cheng_ji_biao$总分 <- apply(cheng_ji_biao[, 4:12], 1, sum)
+cheng_ji_biao$总分 <- apply(cheng_ji_biao[, 4:12], 
+                          1, sum)
 
 #删除数据框的某一列
 xing_bie_bak <- cheng_ji_biao$性别
