@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·关联规则》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V6
-## 时间：2017年6月
+## 版本：V7
+## 时间：2017年9月
 ##
 ##*****************************************************
 ##
-## ch05_Association Rules_V6
+## ch05_Association Rules_V7
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -21,6 +21,8 @@
 ## Author: byaxb
 ## Email:axb@bupt.edu.cn
 ## QQ:23127789
+## WeChat:13641159546
+## URL:https://github.com/byaxb
 ##
 ##*****************************************************
 ##
@@ -32,67 +34,78 @@
 
 #清空内存
 rm(list = ls())
-library(arules)
-#加载数据
-data(Titanic)
-#查看数据结构
-str(Titanic)
-#查看具体数据
-Titanic
+load("cj.rda", verbose = TRUE)
+#对数据进行简单描述
+str(cheng_ji_biao)
+summary(cheng_ji_biao)
+View(cheng_ji_biao)
+library(Hmisc)
+describe(cheng_ji_biao)
 
-
-#将列联表数据，展开成原始记录
-#转变成数据框
-Titanic_df <- as.data.frame(Titanic)
-titanic_raw <- NULL
-#注意：此处是按列进行伸展
-for (i in 1:4) {
-  titanic_raw <-
-    cbind(titanic_raw, rep(as.character(Titanic_df[, i]), Titanic_df$Freq))
+#数据离散化
+#arules包只能对离散数据进行关联规则挖掘
+#离散化有专用的包discretization
+#当然，对于大部分的任务而言，
+#cut()函数已经够用了
+for (i in 4:12){
+  cheng_ji_biao[,i]<- cut(cheng_ji_biao[,i],
+                          breaks = c(0, 60, 70, 80, 90, 100),
+                          labels = c("不及格", "及格", "中", "良", "优"),
+                          include.lowest = FALSE, 
+                          right = FALSE,
+                          ordered_result = TRUE)
 }
-str(titanic_raw)
-View(titanic_raw)
-titanic_raw <- as.data.frame(titanic_raw)
-names(titanic_raw) <- names(Titanic_df)[1:4]
-
-#当然，也有更简单的办法
-#利用epitools直接进行转换
-library(epitools)
-titanic_raw <- expand.table(Titanic)
-
+View(cheng_ji_biao)
+cheng_ji_biao <- cheng_ji_biao[, -c(1:2, ncol(cheng_ji_biao))]
 
 #对转换后的数据进行简单描述
-str(titanic.raw)
-summary(titanic_raw)
+str(cheng_ji_biao)
+summary(cheng_ji_biao)
 library(Hmisc)
-describe(titanic_raw)
-
-
-#将titanic.raw转换成因子
-titanic_raw <- as.data.frame(lapply(titanic_raw, factor))
-str(titanic_raw)
+describe(cheng_ji_biao)
 
 #转换为transaction
-titanic_trans <- as(titanic_raw, "transactions")
+cjb_trans <- as(cheng_ji_biao, "transactions")
 #查看数据
-titanic_trans
-inspect(titanic_trans)
+cjb_trans
+inspect(cjb_trans)
 #转换为矩阵
-titanic_matrix <- as(titanic_trans, "matrix")
-View(titanic_matrix)
+cjb_matrix <- as(cjb_trans, "matrix")
+View(cjb_matrix)
 #转换为列表
-titanic_list <- as(titanic_trans, "list")
-titanic_list
-#以下代码中，titanic_raw可以替换成titanic_trans
-#titanic_matirx, 或是titanic_list
+cjb_list <- as(cjb_trans, "list")
+cjb_list
+#无论是列表、矩阵、数据框
+#还是最直接的事务记录transactions
+#都可以直接用来挖掘
 
-
-library(arules)
-irules_args_default <- apriori(titanic_raw)
+#对于关联规则的挖掘和可视化
+#主要用arules和arulesViz两个包
+#加载后者时，前者自动加载
+library(arulesViz)
+irules_args_default <- apriori(cjb_trans)
+irules_args_default
+irules_args_default@info
 inspect(irules_args_default)
-#可以将规则转换成数据框
+
+#这些规则怎么保存呢？
+#当然可以console输出之后复制、或是截图，
+#但效果并不好
+#稍微好一点的办法是直接将console的结果捕获
+out <- capture.output(inspect(irules_args_default))
+out
+writeLines(out, con = "D://desktop/rules.txt")
+#更好的办法，应该是将规则转换成数据框
+#然后另存为csv文件
 irules_args_default_in_df <- as(irules_args_default, "data.frame")
 View(irules_args_default_in_df)
+#考虑到规则中也包含逗号,
+#在另存为csv文件时，一般需要设置参数quote=TRUE
+write.csv(irules_args_default_in_df, 
+          file = "Rules.csv",
+          quote = TRUE,
+          row.names = FALSE)
+#当然，在另存为csv之前，也可以对规则进行必要的处理
 col1_without_braces <-
   gsub("[\\{\\}]", "", irules_args_default_in_df$rules)
 left_and_right <-
@@ -101,29 +114,46 @@ left_and_right <- as.data.frame(left_and_right)
 names(left_and_right) <- c("LHS", "RHS")
 irules_in_df <-
   cbind(left_and_right, irules_args_default_in_df[, -1])
+View(irules_in_df)
 #转换成data.frame之后
 #自然可以随意处置了
 #比如显示、或是另存为csv文件等
 #也可以通过正则表达式任意抽取自己想要的规则
 #请小伙伴们自行练习
-View(irules_in_df)
+#当然，arules包中write()函数也可以将规则直接写到本地
+write(irules_args_default, 
+      file="D://desktop/rules2.csv", 
+      sep=",", 
+      quote=TRUE,
+      row.names=FALSE)  
+
 
 #定制其中的参数
+#设置支持度、置信度、最小长度等
 irules <- apriori(
-  titanic_raw,
+  cjb_trans,
   parameter = list(
     minlen = 2,
-    supp = 0.005,
+    supp = 100 / length(cjb_trans), #最小支持度，减少偶然性
+    conf = 0.8 #最小置信度，推断能力
+  ))
+
+
+
+#也可以进一步设定前项和后项
+irules <- apriori(
+  cjb_trans,
+  parameter = list(
+    minlen = 2,
+    supp = 50 / length(cjb_trans),
     conf = 0.8
   ),
-  appearance = list(rhs = paste0("Survived=", c("No", "Yes")),
+  appearance = list(rhs = paste0("文理分科=", c("文科", "理科")),
                     default = "lhs"))
-inspect(irules)
-
-#也可以时候提取你想要的规则
-inspect(subset(irules, subset = lhs %pin% "Age=" ))
 
 #格式化规则评估指标
+View(quality(irules))
+#小数点后三位
 quality(irules) <- round(quality(irules), digits = 3)
 #对规则进行排序
 irules_sorted <- sort(irules, by = "lift")
@@ -134,30 +164,64 @@ subset.matrix <-
   is.subset(irules_sorted, irules_sorted, sparse = FALSE)
 subset.matrix[lower.tri(subset.matrix, diag = TRUE)] <- NA
 redundant <- colSums(subset.matrix, na.rm = TRUE) >= 1
-which(redundant)
-irules_pruned <- irules_sorted[!redundant]
+as.integer(which(redundant))
+# [1]   4   7   8   9  10  15  18  23  24  26  30  31  32  35  36  37  38  39  40  41  43  44  47  48  49  50  54  55  56
+# [30]  57  59  63  64  65  68  72  73  74  75  76  77  78  80  82  83  84  87  89  90  92  95  96  97 100 101 102 103 104
+# [59] 108 109 110 111 112 113 114 117 118 123 126
+(irules_pruned <- irules_sorted[!redundant])
+# set of 57 rules 
 inspect(irules_pruned)
 
-
-
-itemFrequency(titanic_trans, type = "relative")
-itemFrequencyPlot(titanic_trans)
-
-
-#生成频繁项集，而不是规则
-itemsets <- apriori(titanic_raw,
-                    parameter = list(
-                      minlen = 2,
-                      supp = 0.005,
-                      target = "frequent itemsets"
-                    ))
-inspect(itemsets)
+#规则搜索
+#比如仅关心文科相关的规则
+irules_sub1 <- subset(irules_pruned,
+                      items %in% c("文理分科=文科"))
+irules_sub2 <- subset(irules_pruned,
+                      items %pin% c("文科"))
+#当然也可以同时满足多种搜索条件
+#比如性别和支持度
+irules_sub3 <- subset(irules_pruned, 
+                      lhs %pin% c("性别") &
+                        support > 150/length(cjb_trans))
+inspect(irules_sub3)
 
 #从规则中提取频繁项集
 itemsets <- unique(generatingItemsets(irules_pruned))
 itemsets
+# set of 57 itemsets
+itemsets_df <- as(itemsets, "data.frame")
+View(itemsets_df)
 inspect(itemsets)
 
+#反过来，先挖掘频繁项集
+#再导出关联规则
+#生成频繁项集，而不是规则
+itemsets <- apriori(cjb_trans,
+                    parameter = list(
+                      minlen = 2,
+                      supp = 100 / length(cjb_trans),
+                      target = "frequent itemsets"
+                    ))
+inspect(itemsets)
+irules_induced <- ruleInduction(itemsets, 
+                                cjb_trans,
+                                confidence = 0.8)
+#显然，只要参数是一样的
+#得到规则条数也是一样的
+
+
+#1-项集的频繁程度
+itemFrequency(cjb_trans, type = "relative")
+itemFrequencyPlot(cjb_trans)
+#当然我们更愿意统一成ggplot2的风格
+item_freq <- itemFrequency(cjb_trans, type = "relative")
+item_freq %>%
+  as.data.frame %>%
+  rownames_to_column(var = "item") %>%
+  mutate(item = factor(item, levels = item)) %>%
+  ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x  = element_text(angle=60, vjust=1, hjust = 1))
 
 
 #规则可视化
@@ -167,9 +231,17 @@ plot(irules_pruned, method = "grouped")
 plot(irules_pruned, method = "paracoord")
 
 #交互式的规则可视化
-sel <- plot(irules_pruned, method="graph", 
+library(tcltk2)
+plot(irules_pruned, 
+            method="graph", 
             interactive=TRUE)
 
+
+#以上是R中关于关联规则的基本实现
+#感兴趣的同学，可以进一步阅读：
+#序列模式arulesSequences等主题
+#当然，即便是关联规则，arules当然使用最多
+#但也并非是唯一的选择，比如RKEEL等均可尝试
 
 #######################################################
 ##The End ^-^
