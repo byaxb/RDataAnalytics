@@ -806,7 +806,6 @@ ggplot(imp, aes(x = attributes,
 #这里展示的，只是数据可视化的一部分图形
 #还有很多图形尚未涉及，请小伙伴们自行研究：
 #比如：
-#茎叶图stem()
 #马赛克图mosaicplot()
 #雷达图stars()
 #关系图
