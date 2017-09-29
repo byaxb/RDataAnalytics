@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·认识数据》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V6
-## 时间：2017年6月
+## 版本：V7
+## 时间：2017年9月
 ##
 ##*****************************************************
 ##
-## ch04_Get to Know Your Data_V6
+## ch04_Get to Know Your Data_V7
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -21,6 +21,8 @@
 ## Author: byaxb
 ## Email:axb@bupt.edu.cn
 ## QQ:23127789
+## WeChat:13641159546
+## URL:https://github.com/byaxb
 ##
 ##*****************************************************
 ##
@@ -35,11 +37,17 @@
 #了解一份数据，首先也是要看数据的高矮胖瘦
 #然后再去深入了解内在的关系结构
 
-#要初步了解数据，一般有两种方法：
+#要初步了解数据，大部分教材上用的是以下两种方法：
 #1、用少量数字描述数据
 #2、用图形直观刻画数据
+#在V1~V6版中，采用的也是上述思路
 
-
+#从V7版开始，本课程将更新一个思路
+#子曰：吾道一以贯之
+#既然本课程提出：
+#机器学习之要义在于“关系结构”
+#尤其是变量之间的关系和数据空间的结构
+#认识数据，亦然~！
 
 #######################################################
 ##获取数据
@@ -49,118 +57,134 @@
 #采用真实数据的目的很简单：所得结果是鲜活的
 cheng_ji_url <-
   "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/cj.csv"
+#我们要做的事情，是直接将其读入
+cheng_ji_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cj.csv"
 cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
-                          stringsAsFactors = TRUE)
-
-
-#######################################################
-##用少量数字描述数据
-##观察数据的分布特征
-#######################################################
-
-#拿到数据之后，首先要做的事情，当然是观察数据的结构
+                          stringsAsFactors = FALSE,
+                          fileEncoding = "UTF-8")
+#前述fileEncoding不能少
+#当然，也可以使用readr::read_csv
+#会直接guess_encoding()
+library(readr)
+cheng_ji_biao <- read_csv(cheng_ji_url)
 str(cheng_ji_biao)
 
-#现以语文、数学这两门课程为例
-#对数据形态进行观察
-yu_wen <- cheng_ji_biao$语文
-shu_xue <- cheng_ji_biao$数学
+#作必要的处理
+cheng_ji_biao$班级 <- factor(cheng_ji_biao$班级)
+cheng_ji_biao$性别 <- factor(cheng_ji_biao$性别)
+cheng_ji_biao$文理分科 <- factor(cheng_ji_biao$文理分科)
+cheng_ji_biao$总成绩 <- apply(cheng_ji_biao[, 4:12], 1, sum)
 
-#######################################################
-#数据的集中趋势
-#众数modal number
-names(which.max(table(yu_wen)))
-#[1] "89"
-names(which.max(table(shu_xue)))
-#[1] "96"
-#均值
-mean(yu_wen)
-#[1] 87.26581
-mean(shu_xue)
-#[1] 86.08129
-#两门课平均分相差不大
-
-#中位数
-median(yu_wen)
-#[1] 88
-median(shu_xue)
-#[1] 89
-
-
-
-#######################################################
-#数据的分散程度
-#分位数
-quantile(yu_wen)
-quantile(shu_xue)
-
-#四分位距
-IQR(yu_wen)
-IQR(shu_xue)
-
-#极差=全距
-range(yu_wen)
-diff(range(yu_wen))
-range(shu_xue)
-diff(range(shu_xue))
-max(shu_xue) - min(shu_xue) #与上一语句同
-
-
-#标准差
-sd(yu_wen)
-sd(shu_xue)
-
-#绝对中位差
-mad(yu_wen)
-mad(shu_xue)
-
-#变异系数
-#Coefficient of Variation
-cv <- function(x) {
-  sd(x) / mean(x)
+#在编代码时，最好不要有太多的复制粘贴行为
+#一个通常的做法是写完了
+#cheng_ji_biao$班级 <- factor(cheng_ji_biao$班级)
+#这行代码后，复制两遍，然后将班级更改为性别和文理分科
+#这种做法并不可取。因为很有可能你把左侧都改好了，而右侧
+#的班级忘记修改了，而在代码执行的过程中，并不会报错
+#更好的做法是写一个循环：
+for(tmp_col in c("班级", "性别", "文理分科")) {
+  cheng_ji_biao[, tmp_col] <- factor(cheng_ji_biao[, tmp_col])
 }
-cv(yu_wen)
-cv(shu_xue)
+#当然，还有另一种更好的选择，让你的代码干净、清爽
+library(tidyverse)
+cheng_ji_biao <- cheng_ji_biao %>%
+  mutate(班级 = factor(班级),
+           性别 = factor(性别),
+           文理分科 = factor(文理分科),
+           总成绩 = rowSums(.[, 4:12]))
+#这里的rowSums，也可以是自定义的
+my_sum <- function(x) {
+  row_sum <- apply(x, 1, sum)
+  return(row_sum)
+}
+cheng_ji_biao <- cheng_ji_biao %>%
+  mutate(班级 = factor(班级),
+           性别 = factor(性别),
+           文理分科 = factor(文理分科),
+           总成绩 = my_sum(.[, 4:12]))
+View(cheng_ji_biao)
+str(cheng_ji_biao)
+head(cheng_ji_biao)
+
+#可能有小伙伴觉得，一次次从网络读取数据很麻烦
+#好吧，那咱们就把它存到本地
+#实际上，在大部分数据分析项目中
+#我们都可以把清理好的数据存为rda格式放在本地
+#save(cheng_ji_biao, file = "cjb.rda")
+#上述语句中，默认的位置是在getwd()
+#小伙伴当然也可以把它放在其他位置
+
+load("cjb.rda")
+#也可以采用下边这种方式选取
+load(file.choose())
 
 #######################################################
-#数据分布的形状
-library(e1071)
-#skewness偏度
-skewness(yu_wen) #-5.78左侧有长尾
-skewness(shu_xue) #-1.62左侧有长尾，偏移程度没有语文成绩那么大
-#kurtosis峰度
-#通过峰度也可以看出平均数的代表性
-kurtosis(yu_wen, type = 3)#尖峰分布，72.17
-kurtosis(shu_xue)#尖峰分布，5.75
-#注意：峰度的不同定义
-
-plot(density(yu_wen),
-     xlim = c(min(scale(yu_wen, scale = FALSE)), max(yu_wen)),
-     lwd = 2)
-lines(density(scale(yu_wen, scale = FALSE)), col = "blue",
-      lwd = 2)
-lines(density(scale(yu_wen)), col = "red",
-      lwd = 2)
-
-
-#######################################################
-##用图形刻画数据
+##一维数据空间形态
+##单变量数据分布
 #######################################################
 
-#在R里边，有基础绘图系统、lattice以及ggplot2等
-#也有散见于各种包的相应绘制函数
-#当然，也有echarts等外部接口
-#本讲以ggplot2为主
-#ggplot2：这里的gg是指Grammar of Graphics
-#顾名思义，提供的是一整套图形语法的实现
-#所以ggplot2与其它某些零散的绘图函数有本质的区别，
-#自成体系
-#在进入ggplot2的实操之前，建议对其脉络有个了解：
-#请阅读《A Layered Grammar of Graphics》，
-#网址：http://vita.had.co.nz/papers/layered-grammar.pdf
+#机器学习的核心任务
+#是揭示变量之间的关系和数据空间的结构
+#变量之间的关系，自然是一个变量变化或若干变量变化之后，
+#另外变量随之产生变化；
+#数据空间的形态，
+#则主要是数据点在数据空间的散布所呈现的结构
 
-#ggplot2的基本绘图框架是：
+#要考察变量之间的依存/随动关系，
+#自然首先要看单个变量的分布情况
+#若某个变量取值不变，退化为常量，则几乎是不被作为特征的
+#我们要考查的，恰恰就是数据本身的变化或者说分布情况
+#同样，要考查数据空间的形态，
+#当然也可以从单个维度的形态着手
+#因此，我们要认识数据，做的第一件事情，
+#往往就是单变量的分布情况的描述
+
+#一维空间的数据形态，可以通过茎叶图或是Wikinson点图
+#来直观表示
+library(tidyverse)
+shuxue_1101 <- cheng_ji_biao%>%
+  filter(班级 == "1101") %>%
+  select(数学)
+shuxue_1110 <- cheng_ji_biao%>%
+  filter(班级 == "1110") %>%
+  select(数学)
+stem(shuxue_1101[, 1])
+# The decimal point is 1 digit(s) to the right of the |
+#   
+#   5 | 5799
+# 6 | 0014
+# 6 | 55789
+# 7 | 000011122334444
+# 7 | 788899
+# 8 | 111222334444
+# 8 | 589
+# 9 | 224
+stem(shuxue_1110[, 1])
+# The decimal point is at the |
+#   
+# 88 | 0
+# 90 | 000
+# 92 | 00000000
+# 94 | 00000000
+# 96 | 000000000000000000000000
+# 98 | 0000
+
+
+
+#Wikinson点图
+ggplot(cheng_ji_biao, 
+       aes(x=factor(0), y = 数学, 
+           fill = ..count..,
+           colour = ..count..))+
+  geom_dotplot(binaxis = "y",
+               binwidth = 1.25,
+               stackdir = "center")+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggplot2的基本绘图模板template是：
 # ggplot(data = <DATA>) +
 #   <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>),
 #                   stat = <STAT>,
@@ -176,319 +200,547 @@ lines(density(scale(yu_wen)), col = "red",
 #在接下来的具体代码演示过程中，
 #这一点小伙伴们也许多加留意
 
-#######################################################
-#条形图、柱状图_barplot
-#条形图：将数值映射为长度
-#基础绘图系统
-#选取前两个学生周黎、汤海明进行barplot对比
-zhou_tang <- cheng_ji_biao[1:2, 4:12]
-class(zhou_tang)
-barplot(as.matrix(zhou_tang),
-        beside = TRUE)
-barplot(as.matrix(zhou_tang),
-        col = rainbow(2), #重新设置颜色
-        beside = TRUE)
+#前边是数据形态的直观展示
+#我们也可以有一些定量指标来对散步情况进行分析
+#现以数学、语文这两门课程为例
+#对数据形态进行观察
+#数据的集中趋势
+#众数modal number
+modal_number <- function(x) {
+  freqs <- table(x)
+  highest_freq <- which.max(freqs)
+  modal_number <- names(highest_freq)
+  if(is.numeric(x)) {
+    modal_number <- as.numeric(modal_number)
+  }
+  return(modal_number)
+}
+modal_number(cheng_ji_biao$数学)
+#[1] 96
+modal_number(cheng_ji_biao$语文)
+#[1] 89
+modal_number(cheng_ji_biao$班级)
+#[1] "1102"
 
-#将文理科平均值进行柱状图对比
-#文科生各科平均值
-wen <- apply(cheng_ji_biao[cheng_ji_biao$文理分科  == "文科", 4:12],
-             2, mean)
-#理科生各科平均值
-li <- apply(cheng_ji_biao[cheng_ji_biao$文理分科  == "理科", 4:12],
-            2, mean)
-wen_li <- rbind(wen, li)
-lengend_text <- c(wen = "文科", li = "理科")
-midpoints_coor <- barplot(
-  wen_li,
-  beside = TRUE,
-  horiz = TRUE,
-  #horizontal水平
-  xpd = FALSE,
-  #不允许条形图跑出绘图区域
-  las = 2,
-  #竖着写不下，横着来
-  cex.names = 0.75,
-  #字体太大，变小点
-  xlim = c(70, 100),
-  legend.text = lengend_text[row.names(wen_li)],
-  xlab = "成绩",
-  ylab = "科目",
-  main = "文理各科平均成绩对比图"
-)
-text(wen_li + 1,
-     #x坐标
-     midpoints_coor,
-     #轴坐标
-     label = format(wen_li, digits = 3),
-     #相应坐标的文字
-     cex = 0.75) #文字缩放
+#均值
+mean(cheng_ji_biao$数学)
+#[1] 86.08129
+mean(cheng_ji_biao$语文)
+#[1] 87.26581
+mean(cheng_ji_biao$数学, trim = 0.01)
+#[1] 86.37188
+mean(cheng_ji_biao$语文, trim = 0.01)
+#[1] 87.50854
+#两门课平均分相差不大
 
-#采用ggplot2进行绘图
+#中位数
+median(cheng_ji_biao$数学)
+#[1] 89
+median(cheng_ji_biao$语文)
+#[1] 88
+
+
+#数据的分散程度
+#分位数
+quantile(cheng_ji_biao$数学)
+# 0%  25%  50%  75% 100% 
+# 0   81   89   95  100 
+quantile(cheng_ji_biao$语文)
+# 0%  25%  50%  75% 100% 
+# 0   85   88   91   96
+#可能已经有小伙伴留意到：居然还有取值为0的记录
+#这些异常值，接下来需要进行处理
+
+#四分位距
+IQR(cheng_ji_biao$数学)
+#[1] 14
+IQR(cheng_ji_biao$语文)
+#[1] 6
+#显然数学的四分位距要大得多
+#也就是数学是比较拉分的科目
+#但数学并不是分散程度最大的科目
+apply(cheng_ji_biao[, 4:12], 2, IQR)
+# 语文 数学 外语 政治 历史 地理 物理 化学 生物 
+# 6.0 14.0  8.0  5.0  9.5  6.0 17.0 10.0 12.0
+#由此可见，真正拉分的，是物理、数学、生物和化学
+
+
+
+#极差=全距
+range(cheng_ji_biao$数学)
+diff(range(cheng_ji_biao$数学))
+range(cheng_ji_biao$语文)
+diff(range(cheng_ji_biao$语文))
+max(cheng_ji_biao$数学) - min(cheng_ji_biao$数学) #与上一语句同
+#当然也可以求取所有科目的极差
+apply(cheng_ji_biao[, 4:12], 2, function(x) {
+  diff(range(x))
+  #或者
+  #max(x) - min(x)
+})
+
+
+#标准差
+sd(cheng_ji_biao$数学)
+#[1] 10.89484
+sd(cheng_ji_biao$语文)
+#[1] 5.853646
+
+#绝对中位差
+mad(cheng_ji_biao$数学)
+#[1] 8.8956
+mad(cheng_ji_biao$语文)
+#[1] 4.4478
+
+#变异系数
+#Coefficient of Variation
+coefficient_of_ariation <- function(x) {
+  sd(x) / mean(x)
+}
+coefficient_of_ariation(cheng_ji_biao$数学)
+#[1] 0.1138789
+coefficient_of_ariation(cheng_ji_biao$语文)
+#[1] 0.04800896
+
+#摄氏度
+#以2017年6月15日全国各地天气为例
+ce <- c(21, 21, 16, 14, 18, 17, 15, 18, 19, 19, 20,
+        21, 21, 22, 22, 21, 20, 25, 25, 27, 17, 20,
+        17, 19, 13, 18, 15, 12, 18, 21, 23, 27, 26)
+#以下是同样的温度另外两种表示方法
+#兰氏度
+ra <- 1.8*ce + 32 + 459.67
+#开氏度
+ke <- 273.15 + ce
+#标准差却不一样
+sd(ra)
+#[1] 6.851509
+sd(ke)
+#[1] 3.806394
+#但变异系数相同
+coefficient_of_ariation(ra)
+coefficient_of_ariation(ke)
+#[1] 0.01300059
+
+#刚才已经提到，数据中存在异常点
+#一个简单的办法就是通过箱线图来识别
 library(ggplot2)
-library(tidyr)
-wen_li <- as.data.frame(wen_li)
-wen_li$文理分科  <- lengend_text[row.names(wen_li)]
-wen_li2 <- gather(wen_li,  文理分科)
-colnames(wen_li2) <- c("文理分科", "科目", "平均成绩")
-ggplot(wen_li2, aes(x =  科目, y =  平均成绩, fill =  文理分科)) +
-  geom_bar(position = "dodge", stat = "identity") +
-  coord_cartesian(ylim = c(75, 100)) +
-  theme(legend.position = c(0.9, 0.9))
-#http://ggplot2.tidyverse.org/reference/coord_cartesian.html
-
-ggplot(wen_li2, aes(x =  科目, y =  平均成绩, fill =  文理分科)) +
-  geom_bar(position = "dodge", stat = "identity") +
-  coord_flip(ylim = c(75, 100)) + #也可以横过来显示
-  theme(legend.position = c(0.9, 0.9))
-
-
-View(cheng_ji_biao)
-
-#看看周黎得分与平均分之差
-#fen_cha分差
-ping_jun <- apply(cheng_ji_biao[, 4:12],
-                  2, mean)
-fen_cha <- cheng_ji_biao[1, 4:12] - ping_jun
-fen_cha <- gather(fen_cha)
-barplot(as.matrix(fen_cha))
-ggplot(fen_cha, aes(x = key, y = value, fill = key)) +
-  geom_bar(stat = "identity", width = 0.25) +
-  geom_abline(
-    intercept = 0,
-    slope = 0,
-    size = 1.5,
-    alpha = 0.5
-  ) +
-  #coord_flip() +
-  ggtitle("周黎各科分差")
-
-
-#######################################################
-#Cleveland点图_dotchart
-#与条形图/柱状图几乎等价：将数值映射为长度
-#基础绘图系统中，可以通过dotchart()函数实现
-#以下是ggplot2版本
-ggplot(fen_cha, aes(x = key, y = value, fill = key)) +
-  geom_segment(aes(xend = key, yend = 0), colour = "grey") +
-  geom_point(size = 3, aes(colour = key)) +
-  geom_abline(
-    intercept = 0,
-    slope = 0,
-    size = 1.5,
-    alpha = 0.5
-  ) +
-  ggtitle("周黎各科分差")
-
-#######################################################
-#饼图_pie
-#主要用于占比关系的直观展示
-#基础绘图系统中采用pie()来实现
-
-#各班人数对比
-#首先要将班级转换为因子
-cheng_ji_biao$班级  <- factor(cheng_ji_biao$班级)
-#饼图_ggplot2
-ggplot(cheng_ji_biao, aes(x =  班级, fill =  班级)) +
-  geom_bar() +
-  ggtitle("各班人数对比")
-ggplot(cheng_ji_biao, aes(x =  班级, fill =  班级)) +
-  geom_bar() +
-  coord_polar() +
-  ggtitle("各班人数对比")
-ggplot(cheng_ji_biao,  aes(x = factor(1), fill =  班级)) +
-  geom_bar(width = 1) +
-  coord_polar(theta = "y") +
-  ggtitle("各班人数对比")
-
-
-###########################################
-#面积堆积图
-#查看总分排名前10、后10同学各科成绩对比图
-#增加总分这一列
-cheng_ji_biao$总分  <- apply(cheng_ji_biao[, 4:12], 1, sum)
-cheng_ji_biao2 <-
-  cheng_ji_biao[order(cheng_ji_biao$总分, decreasing = TRUE),]
-topOnes_raw <- rbind(head(cheng_ji_biao2, n = 10),
-                     tail(cheng_ji_biao2, n = 10))
-topOnes_gather <- gather(topOnes_raw[, c(1, 4:12)], key = "姓名")
-names(topOnes_gather) <- c("姓名", "科目", "成绩")
-topOnes_gather$姓名  <-
-  factor(topOnes_gather$姓名, levels = topOnes_raw$姓名, ordered = TRUE)
-ggplot(topOnes_gather, aes(
-  x =  姓名,
-  y =  成绩,
-  group =  科目,
-  fill =  科目,
-  colour =  科目
-)) +
-  geom_area(alpha = 0.5) +
-  geom_point(position = "stack")
-
-
-#######################################################
-#折线图
-#这些图常用来表征时序变化
-#基础绘图系统中采用plot(), points(), lines()来实现
-
-#在此，我们比较一下文理科各科成绩的平均分
-#文科生各科平均成绩
-wen <- apply(cheng_ji_biao[cheng_ji_biao$文理分科  == "文科", 4:12],
-             2, mean)
-#理科生各科平均成绩
-li <- apply(cheng_ji_biao[cheng_ji_biao$文理分科  == "理科", 4:12],
-            2, mean)
-wen_li <- rbind(wen, li)
-wen_li <- as.data.frame(wen_li)
-wen_li$文理分科  <- lengend_text[row.names(wen_li)]
-wen_li2 <- gather(wen_li,  文理分科)
-colnames(wen_li2) <- c("文理分科", "科目", "平均成绩")
-ggplot(wen_li2, aes(
-  x =  科目,
-  y =  平均成绩,
-  group =  文理分科,
-  fill =  文理分科,
-  colour =  文理分科
-)) +
-  geom_line() +
-  geom_point(shape = 22, size = 3) +
-  geom_text(aes(y =  平均成绩, label = format(平均成绩, digits = 3)), vjust = 1.5) +
-  ggtitle("文理科各科成绩对比图") +
-  theme(legend.position = c(0.15, 0.15))
-
-
-#######################################################
-#直方图
-#用来表示数据的分布
-#基础绘图系统中采用hist(), lines(density(...))来实现
-
-#下面看一看不同文理科数学成绩的分布
-library(ggplot2)
-ggplot(cheng_ji_biao, aes(
-  x =  数学,
-  y = ..density..,
-  group =  文理分科,
-  fill =  文理分科
-)) +
-  geom_histogram(position = "identity", alpha = 0.5) +
-  geom_density(aes(fill = NA, colour =  文理分科), alpha = 0.2, size = 1)
-
-
-
-
-#######################################################
-#箱线图
-#同样是用来表示数据的分布
-#基础绘图系统中，可用boxplot()来实现
-ggplot(cheng_ji_biao, aes(x =  文理分科, y =  数学, fill =  文理分科)) +
-  geom_boxplot() +
+ggplot(cheng_ji_biao, aes(x=factor(0), y = 总成绩))+
+  geom_boxplot(width = 0.5,
+               fill ="#E69F00",
+               outlier.colour = "red",
+               outlier.shape = 3,
+               outlier.size = 2)+
   geom_rug(position = "jitter",
            size = 0.1,
            sides = "l") +
-  ggtitle("文理分科的数学成绩对比")
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+#在R里边，有基础绘图系统、lattice以及ggplot2等
+#也有散见于各种包的相应绘制函数
+#当然，也有echarts等外部接口
+#本讲以ggplot2为主
+#ggplot2：这里的gg是指Grammar of Graphics
+#顾名思义，提供的是一整套图形语法的实现
+#所以ggplot2与其它某些零散的绘图函数有本质的区别，
+#自成体系
+#在进入ggplot2的实操之前，建议对其脉络有个了解：
+#请阅读《A Layered Grammar of Graphics》，
+#网址：http://vita.had.co.nz/papers/layered-grammar.pdf
 
-#######################################################
-#小提琴图
-#概率密度图对称绘制的效果
-#可以通过vioplot::vioplot来绘制
-#以下是ggplot2版本
-#小提琴图
-ggplot(cheng_ji_biao, aes(x =  文理分科, y =  数学, fill =  文理分科)) +
-  geom_violin() +
-  stat_summary(
-    fun.y = fivenum,
-    geom = "point",
-    fill = "white",
-    shape = 21,
-    size = 2.5
-  ) +
-  coord_flip() +
-  ggtitle("文理分科的数学成绩对比")
-#当然，我们也可以将小提琴图与箱线图合二为一
-ggplot(cheng_ji_biao, aes(x =  文理分科, y =  数学, fill =  文理分科)) +
-  geom_violin() +
-  geom_boxplot(width = 0.2,  outlier.colour = NA) +
-  stat_summary(
-    fun.y = fivenum,
-    geom = "point",
-    fill = "white",
-    shape = 21,
-    size = 2.5
-  ) +
-  coord_flip() +
-  ggtitle("文理分科的数学成绩对比")
+#上图中只是直观的展示了异常点的存在
+#以下通过boxplot.stats直接获取异常点的具体取值
+(outliers <- boxplot.stats(cheng_ji_biao$总成绩)$out)
+#异常点的标签
+outliers_idx <- which(cheng_ji_biao$总成绩 %in% outliers)
+#显示异常点
+View(cheng_ji_biao[outliers_idx, ])
+#剔除掉异常点之后的新数据
+cheng_ji_biao <- cheng_ji_biao[-outliers_idx, ]
+#以下的数据探索，都是针对这一份新数据
 
+#看一看数据分布的形状
+hist_results <- hist(cheng_ji_biao$数学, breaks=30)
+shuxue_hist <- data.frame(counts= hist_results$counts,
+                          breaks = hist_results$mids)
+library(ggplot2)
+ggplot(shuxue_hist, aes(x=breaks, y = counts, fill = counts)) +
+  geom_bar(stat = "identity",alpha = 0.75)+
+  scale_fill_gradient(low="blue", high="red")  
+#当然，对于直方图和概率密度曲线
+#ggplot2本身也支持得很好
+ggplot(cheng_ji_biao, aes(x = 数学)) +
+  geom_histogram(aes(y = ..density.., fill = ..density..)) +
+  geom_density(aes(y = ..density..), 
+               colour = 'red', 
+               fill = 'red', 
+               alpha = 0.35, 
+               size = 0.75)
 
-#######################################################
-#Wikinson点图
-ggplot(cheng_ji_biao, aes(x =  文理分科, y =  数学, fill =  文理分科)) +
-  geom_dotplot(binaxis = "y",
-               binwidth = 0.75,
-               stackdir = "center") +
-  ggtitle("文理分科的数学成绩对比")
-
-
-#######################################################
-#散点图
-#应该是用得最多的图形之一了
-#二维散点图一般用来表示变量两两之间的关系
-ggplot(cheng_ji_biao, aes(x =  语文, y =  数学)) +
-  geom_point(aes(shape =  文理分科, col =  文理分科), alpha = 0.5)
-#考虑到可能有部分点会重叠
-#还有所谓的向日葵散点图
-#可通过sunflowerplot()函数实现
-
-#当然，也可以绘制所有科目之间的散点图对
-library(GGally)
-ggpairs(cheng_ji_biao[, 4:12])
-
-#######################################################
-#二维密度图
-ggplot(cheng_ji_biao, aes(
-  x =  语文,
-  y =  数学,
-  shape =  文理分科,
-  group =  文理分科
-)) +
-  geom_point(alpha = 0.5) +
-  stat_density2d(aes(colour = ..level..))
+#可以通过小提琴图和箱线图来观看其数据分布
+library(ggplot2)
+ggplot(cheng_ji_biao, aes(x=factor(0), y = 数学))+
+  geom_violin(fill = "#56B4E9", width = 0.75) +
+  geom_boxplot(width = 0.25,
+               fill ="#E69F00",
+               outlier.colour = "red",
+               outlier.shape = 1,
+               outlier.size = 2)+
+  geom_rug(position = "jitter",
+           size = 0.1,
+           sides = "b") +
+  coord_flip()+
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
 
 
-#######################################################
+#以上是数据分布的直观展示
+#我们也可以看一看具体的量化值
+#数据分布的形状
+library(e1071)
+#skewness偏度
+skewness(cheng_ji_biao$语文)
+#[1] -0.7717088
+skewness(cheng_ji_biao$数学)
+#[1] -0.9768555
+#kurtosis峰度
+#通过峰度也可以看出平均数的代表性
+kurtosis(cheng_ji_biao$语文)
+#[1] 0.9025781
+kurtosis(cheng_ji_biao$数学)
+#[1] 0.2687023
+#注意：峰度的不同定义
+
+#前述指标中涉及到与正态分布的比较
+#实际上，还有一个QQ图也可展示不同分布的比较
 #QQ图
 #与聊天工具无关
 #指的是分位数quantile-quantile图
 #用以描述两个变量分布是否一致
-#基础绘图系统中，采用qqnorm()、qqplot()实现
-ggplot(cheng_ji_biao, aes(sample =  数学)) +
+library(ggplot2)
+ggplot(cheng_ji_biao, 
+       aes(sample =  数学)) +
   stat_qq()
 
 
-#######################################################
-#相关系数图
-library(corrplot)
-corrplot(
-  cor(cheng_ji_biao[, 4:12], use = "complete.obs"),
-  method = "ellipse",
-  is.corr = FALSE,
-  diag = TRUE,
-  tl.col = rgb(50, 50, 50, maxColorValue = 255)
-)
-#当然也可以用ggplot2来实现
+#数据的平移与缩放
+ggplot(cheng_ji_biao, aes(x = 语文)) +
+  geom_density(size = 1, 
+               fill = "orange",
+               colour = "blue",
+               alpha = 0.75) +
+  geom_density(aes(x = 语文 - mean(语文)),
+               size = 1,
+               fill = "orange",
+               colour = "blue",
+               alpha = 0.75) +
+  geom_density(aes(x = (语文 - mean(语文)) / sd(语文)),
+               size = 1,
+               fill = "darkred",
+               alpha = 0.5)
+##小伙伴藉此可以看出减法、除法的数据科学含义
+
+yuwen_pingjun <- cheng_ji_biao %>%
+  group_by(班级) %>%
+  dplyr::select(班级, 语文) %>%
+  summarise(平均成绩 = mean(语文))
+yuwen_pingjun
+yuwen01 <- cheng_ji_biao %>%
+  filter(班级 == "1101") %>%
+  dplyr::select(语文)
+yuwen06 <- cheng_ji_biao %>%
+  filter(班级 == "1106") %>%
+  dplyr::select(语文)
+
+eq_score <- function(x, center, scale) {
+  if(is.numeric(x) && is.vector(x)) {
+    scale(scale(x), -center/scale, 1/scale)[, 1]
+  } else {
+    cat("Only numeric vectors are supported\n")
+  }
+}
+eq_score(yuwen01[, 1], 
+         mean(yuwen06[, 1]), 
+         sd(yuwen06[, 1]))
+#当然，标准得分并不只是应用于将一个班的学生成绩
+#换算成另一个班，在聚类的过程中，要让量纲不同的
+#特征发挥同等重要的作用，一般也要做标准化
+#在某些算法实现方面，比如神经网络，也可能需要对
+#变量进行标准化
+
+#对于连续数据的描述，基本如此
+#对于非连续数据，计次可能是最直观的
+#比如计算文理科学生的数量
+ggplot(cheng_ji_biao, 
+       aes(x = 文理分科, 
+           fill = 文理分科)) +
+  geom_bar(width = 0.25) +
+  geom_text(stat="count", 
+            aes(label = ..count.., y = ..count..+10))
+#可见文理科学生人数表均衡
+#再来看看各班男女生的数量
 library(ggplot2)
-ke_mu <- as.data.frame(cor(cheng_ji_biao[, 4:12]))
-ke_mu <- data.frame(row = rownames(ke_mu), ke_mu)
-rownames(ke_mu) <- NULL
-ke_mu_gather <- gather(ke_mu, key = row)
-colnames(ke_mu_gather) <- c("科目1", "科目2", "相关系数")
-ke_mu_gather$科目1 <- factor(ke_mu_gather$科目1,
-                           levels = ke_mu$row)
-ke_mu_gather$科目2 <- factor(ke_mu_gather$科目2,
-                           levels = ke_mu$row)
-View(ke_mu)
-ggplot(ke_mu_gather, aes(x =  科目1, y =  科目2)) +
-  geom_tile(aes(fill = 相关系数), colour = "black")
+ggplot(cheng_ji_biao, 
+       aes(x = 班级, 
+           fill = 性别)) +
+  geom_bar(width = 0.5, position = "fill") +
+  geom_text(stat="count", 
+            aes(label = ..count..),
+            position = position_fill(vjust = .5)) +
+  facet_wrap(~文理分科, ncol=2, scale="free") +
+  scale_fill_manual(values=c("orange","darkgrey"))
+#最后这行代码，当然是手工调颜色了
+
+#可以看出，1111和1113班还有个别文科生
+#同样属于错误数据
+#需要重新确认数据源
+#本实验中直接进行清洗
+cheng_ji_biao <- cheng_ji_biao %>%
+  filter(!(文理分科 == "文科" & 班级 %in% c("1111", "1113")))
+#清洗完成之后，再次执行上述代码
+ggplot(cheng_ji_biao, 
+       aes(x = 班级, fill = 性别)) +
+  geom_bar(width = 0.5, position = "fill") +
+  geom_text(stat="count", 
+            aes(label = ..count..),
+            position = position_fill(vjust = .5)) +
+  facet_wrap(~文理分科, ncol=2, scale="free") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values=c("orange","darkgrey"))
+
+#从前述分析可以看出，一维数据的探索
+#大部分都是关于“变化”的
+#衡量变化也有其他很多指标，比如Gini指数、信息熵
+library(entropy)
+shannon_entropy <- function(counts) {
+  frequencies <- counts / sum(counts)
+  -sum(frequencies * log2(frequencies))
+}
+counts <- table(cheng_ji_biao$文理分科)
+shannon_entropy(counts)
+#[1] 0.999797
+#当然，也可以直接调用已有的扩展包
+library(entropy)
+entropy(counts)
+#[1] 0.6931472
+entropy::entropy(counts, unit = "log2")
+#[1] 0.999797
 
 
+#######################################################
+##二维数据空间形态
+##变量两两之间的关系
+#######################################################
+
+#######################################################
+#离散变量vs离散变量
+#形式可以有很多种，比如马赛克图
+#本实验中推荐的是树图
+library(treemap)
+library(tidyverse)
+cjb_sum <- cheng_ji_biao %>% 
+  group_by(文理分科, 班级, 性别) %>% 
+  summarise(count = n())
+View(cjb_sum)
+treemap(as.data.frame(cjb_sum) ,
+        index=c("文理分科", "班级", "性别"),
+        vSize="count",
+        vColor="count",
+        type="value")
+
+#接下来则是树图的高级版
+#可交互的树图
+#library(devtools)
+#install_github("AntoineGuillot2/D3partitionR")
+library(D3partitionR)
+cjb_sum <- as.data.frame(cjb_sum)
+for(i in 1:3) {
+  cjb_sum[, i] <- as.character(cjb_sum[, i])
+}
+cjb_sum2 <- as.data.table(cjb_sum)
+D3partitionR()%>%
+  add_data(cjb_sum2,
+           count = 'count',
+           steps=c("文理分科", "班级", "性别"),
+           tooltip = c('name','count'),
+           color = "name")%>%
+  set_chart_type('treemap')%>%
+  set_tooltip_parameters(visible=T,style='background-color:lightblue;')%>%
+  add_title(text='各班男女生',style='font-size:20px;')%>%
+  plot()
+#其他很多参数请小伙伴们自行尝试
+#set_chart_type('circle_treemap')
+#更多参数可见网址
+#https://github.com/AntoineGuillot2/D3partitionR
+
+
+
+#######################################################
+#连续变量vs连续变量
+#散点图是最常见、但同时也应该是最有用的图之一
+#散点图可用来观察变量之间可能存在的模式
+#同时也是二位数据空间形态的最直接的体现
+library(ggplot2)
+ggplot(cheng_ji_biao, aes(x = 物理,
+                          y = 语文, 
+                          colour = 物理)) +
+  geom_point()
+ggplot(cheng_ji_biao, aes(x = 生物, 
+                          y = 化学, 
+                          colour = 生物)) +
+  geom_point()
+
+library(ggplot2)
+ggplot(cheng_ji_biao, aes(x = 数学, 
+                          y = 生物, 
+                          fill = 文理分科)) +
+  geom_point(aes(shape = 文理分科, 
+                 colour = 文理分科))
+
+ggplot(cheng_ji_biao, aes(x = 生物, y = 化学, fill = 文理分科)) +
+  geom_point(aes(shape = 文理分科, colour = 文理分科))
+
+
+#散点图矩阵
+library(GGally)
+ggpairs(cheng_ji_biao,
+        columns = 4:12)
+View(cheng_ji_biao)
+
+#相关系数矩阵
+library(corrplot)
+corrplot(cor(cheng_ji_biao[, 4:12]),
+         method = "color",
+         diag = FALSE)
+View(cor(cheng_ji_biao[, 4:12]))
+
+#相关系数
+library(ggplot2)
+library(tidyverse)
+xgxs <- cor(cheng_ji_biao[, 4:12])
+xgxs <- xgxs %>%
+  as.data.frame() %>%
+  mutate(ke_mu = row.names(xgxs)) %>%
+  gather(key = ke_mu)
+names(xgxs) <- c("kemu1", "kemu2", "xgxs")
+xgxs$xgxs_cut <- cut(xgxs$xgxs,
+                 breaks= seq(0, 1, len = 11),
+                 include.lowest=TRUE)
+ggplot(xgxs, aes(x = kemu1, y = kemu2, fill = xgxs_cut)) +
+  geom_tile(colour="white", size = 1.5) +
+  geom_text(aes(label = format(xgxs, digits = 2))) +
+  scale_fill_brewer(palette = "YlGn",name="相关系数")
+
+
+#######################################################
+#离散变量vs连续变量
+#主要是分组绘图
+#对不同的组别进行比较
+
+#箱线图
+library(ggplot2)
+ggplot(cheng_ji_biao, aes(x =  文理分科, y =  数学, fill =  文理分科)) +
+  geom_boxplot(outlier.colour = "red",
+               outlier.shape = 3,
+               outlier.size = 1) +
+  geom_rug(aes(colour = 文理分科),
+           position = "jitter",
+           size = 0.1,
+           sides = "l",
+           alpha = 0.25)
+
+
+#看看不同班级数学成绩的分布
+library(ggplot2)
+ggplot(cheng_ji_biao, aes(x =  班级, y =  数学, 
+                          fill =  班级)) +
+  geom_boxplot(outlier.colour = "red",
+               outlier.shape = 3,
+               outlier.size = 1) +
+  theme(legend.position = "none")
+
+#小提琴图
+ggplot(cheng_ji_biao, aes(x =  文理分科, 
+                          y =  数学, 
+                          fill =  文理分科)) +
+  geom_violin() +
+  stat_summary(
+    fun.y = fivenum,
+    geom = "point",
+    fill = "white",
+    shape = 21,
+    size = 2.5) +
+  coord_flip()
+#当然，我们也可以将小提琴图与箱线图合二为一
+ggplot(cheng_ji_biao, aes(x =  文理分科, 
+                          y =  数学, fill =  文理分科)) +
+  geom_violin() +
+  geom_boxplot(fill = "orange", width = 0.2,  outlier.colour = NA) +
+  stat_summary(
+    fun.y = fivenum,
+    geom = "point",
+    fill = "white",
+    shape = 21,
+    size = 2.5) +
+  coord_flip()
+
+#Wikinson点图
+ggplot(cheng_ji_biao, aes(x =  文理分科, 
+                          y =  数学, 
+                          fill =  文理分科,
+                          colour = 文理分科)) +
+  geom_dotplot(binaxis = "y",
+               binwidth = 0.65,
+               stackdir = "center")
+
+#直方图与概率密度图
+library(ggplot2)
+ggplot(cheng_ji_biao, aes(x =  数学, 
+                          y = ..density.., 
+                          group =  文理分科,
+                          fill =  文理分科)) +
+  geom_histogram(position = "identity", 
+                 alpha = 0.5) +
+  geom_density(aes(fill = NA, 
+                   colour =  文理分科), 
+               alpha = 0.2,
+               size = 1)
+
+
+#对于分类问题而言，在进行数据描述时
+#最关键的，当属因变量vs自变量了
+library(caret)
+featurePlot(
+  x = cheng_ji_biao[, 4:12],
+  y = cheng_ji_biao$文理分科,
+  plot = "density",
+  scales = list(
+    x = list(relation = "free"),
+    y = list(relation = "free")),
+  adjust = 1.5,
+  pch = "|",
+  auto.key = list(columns = 2))
+#从上图可以看出，数学/生物最优辨识度
+#而语文，几乎文理科生没有什么区别
+
+#变量之间的依存关系
+#可以通过信息增益来度量
+#也就是说，当我们知道某个自变量时
+#有助于因变量不确定性的减少
+library(infotheo)
+condentropy(cheng_ji_biao$文理分科) -
+  condentropy(cheng_ji_biao$文理分科, cheng_ji_biao$性别)
+
+library(FSelectorRcpp)
+information_gain(x = cheng_ji_biao[, c(1, 3)],
+                 y = cheng_ji_biao$文理分科)
+#实际上，信息增益也是特征选择常用的方法
+
+#######################################################
+##高维数据空间形态
+##多变量之间的关系
 #######################################################
 #三维散点图
 library(rgl)
@@ -498,70 +750,58 @@ plot3d(
   z = cheng_ji_biao$外语,
   type = "s",
   size = 0.5,
-  col = c("red", "green", "blue")[cheng_ji_biao$文理分科]
-)
+  col = c("red", "green")[cheng_ji_biao$文理分科])
 
-#######################################################
 #除了三维之外，可以继续向多维扩展
 #比如脸谱图
 library(aplpack)
-faces(cheng_ji_biao[1:30, #不适合展示太多数据点，故选取前20
-                    4:12])
+#不适合展示太多数据点
+#文理各科分别选取8个
+cheng_ji_biao_a <- cheng_ji_biao[which(cheng_ji_biao$文理分科 == "文科"), ]
+cheng_ji_biao_b <- cheng_ji_biao[which(cheng_ji_biao$文理分科 == "理科"), ]
+top8A <- head(cheng_ji_biao_a[order(cheng_ji_biao_a$总成绩, decreasing = TRUE), 
+                              4:12], n = 8)
+top8B <- head(cheng_ji_biao_b[order(cheng_ji_biao_b$总成绩, decreasing = TRUE), 
+                              4:12], n = 8)
+faces(rbind(top8A, top8B))
 
+View(cheng_ji_biao)
 
-#######################################################
 #平行坐标图
-cheng_ji_biao3 <- cheng_ji_biao[sample(1:nrow(cheng_ji_biao), 150),]
+cheng_ji_biao_a <- cheng_ji_biao[which(cheng_ji_biao$文理分科 == "文科"), ]
+cheng_ji_biao_b <- cheng_ji_biao[which(cheng_ji_biao$文理分科 == "理科"), ]
+top150A <- head(cheng_ji_biao_a[order(cheng_ji_biao_a$总成绩, decreasing = TRUE), 
+                              4:13], n = 150)
+top150B <- head(cheng_ji_biao_b[order(cheng_ji_biao_b$总成绩, decreasing = TRUE), 
+                              4:13], n = 150)
+top300 <- rbind(top150A, top150B)
 library(MASS)
 parcoord(
-  cheng_ji_biao3[, 4:12],
+  top300[, 1:9],
   var.label = TRUE,
-  col = c("red","blue")[cheng_ji_biao3$文理分科],
+  col = c("red","blue")[top300$文理分科],
   cex = 3,
   main = "文理分科平行坐标图"
 )
 
 require(GGally)
-ggparcoord(cheng_ji_biao3,
-           columns = 4:12,
-           groupColumn = 13) +
+ggparcoord(top300,
+           columns = 1:9,
+           groupColumn = 10) +
   geom_point()
 
 
-#######################################################
-#当然，在进行数据描述时后
-#更要着眼于数据建模
-#分类与回归当然是算法建模中最为重要的一个部分
-#caret包提供了相应的特征绘制的方法
-library(AppliedPredictiveModeling)
-transparentTheme(trans = .4)
-library(caret)
-featurePlot(
-  x = cheng_ji_biao[, 4:12],
-  y = cheng_ji_biao$文理分科,
-  plot = "density",
-  ## Pass in options to xyplot() to
-  ## make it prettier
-  scales = list(
-    x = list(relation = "free"),
-    y = list(relation = "free")
-  ),
-  adjust = 1.5,
-  pch = "|",
-  auto.key = list(columns = 2)
-)
-#从上图可以看出，数学/生物最优辨识度
-#而语文，几乎文理科生没有什么区别
-
-featurePlot(
-  x = cheng_ji_biao[, 4:12],
-  y = cheng_ji_biao$文理分科,
-  plot = "box",
-  scales = list(y = list(relation = "free"),
-                x = list(rot = 90)),
-  auto.key = list(columns = 2)
-)
-
+library(FSelectorRcpp)
+imp <- information_gain(x = cheng_ji_biao[, 3:12],
+                 y = cheng_ji_biao$文理分科, 
+                 type = "gainratio")
+imp$attributes <- factor(imp$attributes,
+                         levels = imp$attributes)
+library(ggplot2)
+ggplot(imp, aes(x = attributes, 
+                y = importance,
+                fill = importance)) +
+  geom_bar(stat = "identity")
 
 #这里展示的，只是数据可视化的一部分图形
 #还有很多图形尚未涉及，请小伙伴们自行研究：
@@ -572,6 +812,7 @@ featurePlot(
 #关系图
 #网络图plot.igraph
 #地图ggmap
+#词云wordcloud2
 #等等
 #以后在进行具体算法建模时，也会涉及到很多专用的图形
 #比如：
@@ -581,6 +822,8 @@ featurePlot(
 #……
 #这些图形展示，当然已经超越了所谓的简单的数据描述了
 #而是在对模型本身进行直观展示
+#换言之，通过这些图形，不只是看数据的长相
+#而是透过现象看本质了
 
 
 
