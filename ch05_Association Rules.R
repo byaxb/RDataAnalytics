@@ -32,6 +32,17 @@
 #######################################################
 
 
+#在观察完数据的长相之后，便开始深入其内在的关系结构了
+#本次实验聚焦的是伴随关系
+#教材上的名称频繁项集、关联规则
+#关联规则可能是机器学习/数据挖掘领域最为知名的算法了
+#啤酒和尿不湿的故事，提供了“发现数据背后意想不到的模式”
+#的范本，也让关联规则成为数据挖掘最好的
+#科（guang）普（gao）
+
+#######################################################
+##数据读取与类型转换
+#######################################################
 #清空内存
 rm(list = ls())
 load("cj.rda", verbose = TRUE)
@@ -64,6 +75,7 @@ summary(cheng_ji_biao)
 library(Hmisc)
 describe(cheng_ji_biao)
 
+library(arules)
 #转换为transaction
 cjb_trans <- as(cheng_ji_biao, "transactions")
 #查看数据
@@ -79,55 +91,29 @@ cjb_list
 #还是最直接的事务记录transactions
 #都可以直接用来挖掘
 
+#######################################################
+##关联规则挖掘
+#######################################################
+#关于Apriori算法的原理，请参阅课程讲义
+#R中的具体实现，则简单得超乎人们的想象
+#首先是加载包
 #对于关联规则的挖掘和可视化
 #主要用arules和arulesViz两个包
 #加载后者时，前者自动加载
 library(arulesViz)
+#调用apriori()函数进行挖掘
 irules_args_default <- apriori(cjb_trans)
+#看一看挖出来的规则
 irules_args_default
+#关于规则的一些基本信息
 irules_args_default@info
+#查看具体的规则
 inspect(irules_args_default)
 
-#这些规则怎么保存呢？
-#当然可以console输出之后复制、或是截图，
-#但效果并不好
-#稍微好一点的办法是直接将console的结果捕获
-out <- capture.output(inspect(irules_args_default))
-out
-writeLines(out, con = "D://desktop/rules.txt")
-#更好的办法，应该是将规则转换成数据框
-#然后另存为csv文件
-irules_args_default_in_df <- as(irules_args_default, "data.frame")
-View(irules_args_default_in_df)
-#考虑到规则中也包含逗号,
-#在另存为csv文件时，一般需要设置参数quote=TRUE
-write.csv(irules_args_default_in_df, 
-          file = "Rules.csv",
-          quote = TRUE,
-          row.names = FALSE)
-#当然，在另存为csv之前，也可以对规则进行必要的处理
-col1_without_braces <-
-  gsub("[\\{\\}]", "", irules_args_default_in_df$rules)
-left_and_right <-
-  do.call("rbind", strsplit(col1_without_braces, split = " => "))
-left_and_right <- as.data.frame(left_and_right)
-names(left_and_right) <- c("LHS", "RHS")
-irules_in_df <-
-  cbind(left_and_right, irules_args_default_in_df[, -1])
-View(irules_in_df)
-#转换成data.frame之后
-#自然可以随意处置了
-#比如显示、或是另存为csv文件等
-#也可以通过正则表达式任意抽取自己想要的规则
-#请小伙伴们自行练习
-#当然，arules包中write()函数也可以将规则直接写到本地
-write(irules_args_default, 
-      file="D://desktop/rules2.csv", 
-      sep=",", 
-      quote=TRUE,
-      row.names=FALSE)  
 
-
+######################################################
+##参数设定
+#######################################################
 #定制其中的参数
 #设置支持度、置信度、最小长度等
 irules <- apriori(
@@ -137,8 +123,6 @@ irules <- apriori(
     supp = 100 / length(cjb_trans), #最小支持度，减少偶然性
     conf = 0.8 #最小置信度，推断能力
   ))
-
-
 
 #也可以进一步设定前项和后项
 irules <- apriori(
@@ -151,15 +135,14 @@ irules <- apriori(
   appearance = list(rhs = paste0("文理分科=", c("文科", "理科")),
                     default = "lhs"))
 
-#格式化规则评估指标
-View(quality(irules))
-#小数点后三位
-quality(irules) <- round(quality(irules), digits = 3)
 #对规则进行排序
 irules_sorted <- sort(irules, by = "lift")
 inspect(irules_sorted)
 
-#删除冗余规则
+
+#######################################################
+##删除冗余规则
+#######################################################
 subset.matrix <-
   is.subset(irules_sorted, irules_sorted, sparse = FALSE)
 subset.matrix[lower.tri(subset.matrix, diag = TRUE)] <- NA
@@ -172,19 +155,46 @@ as.integer(which(redundant))
 # set of 57 rules 
 inspect(irules_pruned)
 
-#规则搜索
+
+#######################################################
+##评估指标
+#######################################################
+#查看评估指标
+quality(irules_pruned)
+#更多评估指标
+(more_measures <- interestMeasure(irules_pruned,
+                                  measure = c("conviction",
+                                              "casualConfidence", 
+                                              "mutualInformation"),
+                                  transactions = cjb_trans))
+#增加评估指标
+quality(irules_pruned) <- cbind(quality(irules_pruned),
+                         more_measures)
+#格式化规则评估指标
+View(quality(irules_pruned))
+#小数点后三位
+quality(irules_pruned) <- round(quality(irules_pruned), digits = 5)
+View(quality(irules_pruned))
+
+
+#######################################################
+##规则搜索
+#######################################################
 #比如仅关心文科相关的规则
 irules_sub1 <- subset(irules_pruned,
                       items %in% c("文理分科=文科"))
 irules_sub2 <- subset(irules_pruned,
                       items %pin% c("文科"))
 #当然也可以同时满足多种搜索条件
-#比如性别和支持度
+#比如性别和确信度
 irules_sub3 <- subset(irules_pruned, 
                       lhs %pin% c("性别") &
-                        support > 150/length(cjb_trans))
+                        conviction > 3)
 inspect(irules_sub3)
 
+#######################################################
+##频繁项集与关联规则
+#######################################################
 #从规则中提取频繁项集
 itemsets <- unique(generatingItemsets(irules_pruned))
 itemsets
@@ -209,12 +219,12 @@ irules_induced <- ruleInduction(itemsets,
 #显然，只要参数是一样的
 #得到规则条数也是一样的
 
-
 #1-项集的频繁程度
 itemFrequency(cjb_trans, type = "relative")
 itemFrequencyPlot(cjb_trans)
 #当然我们更愿意统一成ggplot2的风格
 item_freq <- itemFrequency(cjb_trans, type = "relative")
+library(tidyverse)
 item_freq %>%
   as.data.frame %>%
   rownames_to_column(var = "item") %>%
@@ -224,7 +234,9 @@ item_freq %>%
   theme(axis.text.x  = element_text(angle=60, vjust=1, hjust = 1))
 
 
-#规则可视化
+#######################################################
+##规则可视化
+#######################################################
 library(arulesViz)
 plot(irules_pruned, method = "graph")#最常用的一种方式
 plot(irules_pruned, method = "grouped")
@@ -235,6 +247,48 @@ library(tcltk2)
 plot(irules_pruned, 
             method="graph", 
             interactive=TRUE)
+
+
+#######################################################
+##规则的导出与保持
+#######################################################
+#这些规则怎么保存呢？
+#当然可以console输出之后复制、或是截图，
+#但效果并不好
+#稍微好一点的办法是直接将console的结果捕获
+out <- capture.output(inspect(irules_pruned))
+out
+writeLines(out, con = "Rules.txt")
+#更好的办法，应该是将规则转换成数据框
+#然后另存为csv文件
+irules_pruned_in_df <- as(irules_pruned, "data.frame")
+View(irules_pruned_in_df)
+#考虑到规则中也包含逗号,
+#在另存为csv文件时，一般需要设置参数quote=TRUE
+write.csv(irules_pruned_in_df, 
+          file = "Rules.csv",
+          quote = TRUE,
+          row.names = FALSE)
+#当然，在另存为csv之前，也可以对规则进行必要的处理
+col1_without_braces <-
+  gsub("[\\{\\}]", "", irules_pruned_in_df$rules)
+left_and_right <-
+  do.call("rbind", strsplit(col1_without_braces, split = " => "))
+left_and_right <- as.data.frame(left_and_right)
+names(left_and_right) <- c("LHS", "RHS")
+irules_in_df <-
+  cbind(left_and_right, irules_pruned_in_df[, -1])
+View(irules_in_df)
+#转换成data.frame之后
+#自然可以随意处置了
+#比如可以通过正则表达式任意抽取自己想要的规则
+#请小伙伴们自行练习
+#当然，arules包中write()函数也可以将规则直接写到本地
+write(irules_pruned, 
+      file="Rules2.csv", 
+      sep=",", 
+      quote=TRUE,
+      row.names=FALSE)  
 
 
 #以上是R中关于关联规则的基本实现
