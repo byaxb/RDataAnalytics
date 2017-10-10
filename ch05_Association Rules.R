@@ -65,6 +65,8 @@ for (i in 4:12){
                           include.lowest = FALSE, 
                           right = FALSE,
                           ordered_result = TRUE)
+  #对于形如[a,b)的方式，也可以用Hmisc中的cut2()函数
+  #请小伙伴自行实现
 }
 View(cheng_ji_biao)
 cheng_ji_biao <- cheng_ji_biao[, -c(1:2, ncol(cheng_ji_biao))]
@@ -232,6 +234,15 @@ item_freq %>%
   ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
   geom_bar(stat = "identity") +
   theme(axis.text.x  = element_text(angle=60, vjust=1, hjust = 1))
+#保留现有的因子水平，也有下述方法
+item_freq %>%
+  as.data.frame %>%
+  rownames_to_column(var = "item") %>%
+  mutate(item = forcats::fct_inorder(item)) %>%
+  ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x  = element_text(angle=60, vjust=1, hjust = 1))
+
 
 
 #######################################################
