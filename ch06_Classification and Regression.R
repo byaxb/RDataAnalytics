@@ -764,7 +764,11 @@ imodel <- train(文理分科~.,
       preProc = c("center", "scale"),
       tuneGrid = svm_grid)
 imodel$bestTune
+# sigma C
+# 18     4 1
 
+#同样也可以对train的结果进行绘制
+plot(imodel)
 
 #进行k-折交叉检验k-fold cross validation
 library(kernlab)
