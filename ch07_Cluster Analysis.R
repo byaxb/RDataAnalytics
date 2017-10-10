@@ -73,9 +73,27 @@ cheng_ji_biao %>%
 #聚类，本质上是识别数据点在数据空间的（距离）结构
 #可以先看看在生物、物理二维空间里是怎么分布的
 library(ggplot2)
-ggplot(cheng_ji_biao, aes(x = 生物, y = 物理)) +
+ggplot(cheng_ji_biao, aes(x = 物理, y = 数学)) +
   geom_point(aes(colour = 文理分科, shape = 文理分科))
-#当然也可以进一步在三维空间中进行数据的查看
+#数据空间的密度
+#将50~100细分为N份，看每一个有多少落入其间
+ibreaks <- seq(50, 100, len = 21)
+cheng_ji_biao %>%
+  select(物理, 数学) %>%
+  mutate(物理 = cut(物理, breaks = ibreaks),
+           数学 = cut(数学, breaks = ibreaks)) %>%
+  group_by(物理, 数学) %>%
+  summarise(freq = n()) %>%
+  complete(物理, 数学) %>%
+  mutate(freq = ifelse(is.na(freq), 0, freq)) %>%
+  ggplot(aes(x = 物理, y = 数学, fill = freq)) +
+  geom_tile(colour="white", size = 0.5) +
+  geom_text(aes(label = freq), size = 3) +
+  scale_fill_gradient(low = "white", high = "red")+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+#三维散点图
 library(rgl)
 plot3d(
   x = cheng_ji_biao$数学,
@@ -85,8 +103,9 @@ plot3d(
   ylab = "Physics",
   zlab = "Biology",
   type = "s",
-  radius = 0.5,
+  size = 0.5,
   col = c("red", "green")[cheng_ji_biao$文理分科])
+
 #剔除其中的缺失值和异常值
 na_idx <- which(cheng_ji_biao$总成绩 == 0)
 cheng_ji_biao <- cheng_ji_biao[-na_idx, ]
@@ -108,7 +127,51 @@ plot3d(
   radius = 0.5,
   col = c("red", "green")[cheng_ji_biao$文理分科])
 
+#绘制其中的密度分布
+selected_cols <- c("数学", "物理", "生物")
+shu_wu_sheng <- cheng_ji_biao[, selected_cols]
+sws_dist <- as.matrix(dist(shu_wu_sheng,
+                           diag = TRUE,
+                           upper = TRUE))
+iseq <- seq(50, 100, len = 10)
+imatrix <- expand.grid(iseq, iseq, iseq)
+names(imatrix) <- selected_cols
+dist_imatrix <- apply(imatrix, 1, function(x) {
+  apply(shu_wu_sheng, 1, function(y) {
+    sqrt(sum((y - x)^2))
+  })
+})
+#定义半径为平均距离
+epsilon <- mean(sws_dist)
+#计算半径范围之内的点数作为密度
+sws_density <- apply(dist_imatrix, 2, function(x) {
+  sum(x < epsilon)
+})
+#调颜色
+my_color_ramp <- function(colors, values) {
+  v <- (values - min(values))/diff(range(values))
+  x <- colorRamp(colors)(v)
+  rgb(x[,1], x[,2], x[,3], maxColorValue = 255)
+}
+cols <- my_color_ramp(c("white", "red"), sws_density) 
+#绘制图形
+grd <- imatrix
+grd$col <- cols
+length <- width <- height <- (max(iseq) - min(iseq)) / length(iseq)
+for(i in seq(nrow(grd))){
+  #创建一个长方体
+  icube3d <- cube3d(col = grd$col[i])
+  #设定长宽高
+  icube3d <- scale3d(icube3d, length, width, height)
+  #将长方体移动至指定位置
+  icube3d <- translate3d(icube3d, grd$数学[i], grd$物理[i], grd$生物[i])
+  #绘制长方体
+  shade3d(icube3d, alpha = 0.05)
+}
+
+
 #从三维图之中，已经能直观的看到数据的散布情况
+#及其密度分布
 #对数据进行聚类，有一个逻辑前提：
 #数据不是均匀分布的
 #而是呈现一定的模式
@@ -166,6 +229,7 @@ dist(
   diag = TRUE,
   upper = TRUE
 )
+#求取混合类型的距离
 library(cluster)
 as.matrix(daisy(artificial_data))
 
@@ -186,6 +250,7 @@ fviz_dist(
   show_labels = FALSE
 )
 #也可以考虑性别
+library(cluster)
 cj_dist_plus <- daisy(cheng_ji_biao[, 3:12])
 fviz_dist(
   cj_dist_plus,
@@ -232,6 +297,8 @@ cj_mds_plus %>%
   geom_text(aes(label = name, colour = sex), 
             size = 3, alpha = 0.75)
 #由此可见，数据空间，并没有很好地区分为文理科两类
+
+
 
 
 #######################################################
@@ -444,6 +511,13 @@ imodel_db <- list(data = cj_matri,
 fviz_cluster(imodel_db, 
              cj_matri,
              geom = "point")
+
+
+#从聚类效果可以看出，
+#基于密度的聚类，针对我们目前的问题情境，
+#其实并不适用，实际上，对于我们问题的情境
+#很难想象具有想前述人工数据那样的形状，
+#即便有，对于成绩数据而言，也很难解释。
 
 
 #######################################################
