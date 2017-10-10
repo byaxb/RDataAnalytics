@@ -111,13 +111,13 @@ head(cheng_ji_biao)
 #好吧，那咱们就把它存到本地
 #实际上，在大部分数据分析项目中
 #我们都可以把清理好的数据存为rda格式放在本地
-#save(cheng_ji_biao, file = "cjb.rda")
+#save(cheng_ji_biao, file = "cj.rda")
 #上述语句中，默认的位置是在getwd()
 #小伙伴当然也可以把它放在其他位置
 
-load("cjb.rda")
+load("cj.rda")
 #也可以采用下边这种方式选取
-load(file.choose())
+#load(file.choose())
 
 #######################################################
 ##一维数据空间形态
@@ -471,7 +471,8 @@ eq_score(yuwen01[, 1],
 #变量进行标准化
 
 #对于连续数据的描述，基本如此
-#对于非连续数据，计次可能是最直观的
+#对于非连续数据，当然也是查看其分布情况
+#计次可能是最直观的
 #比如计算文理科学生的数量
 ggplot(cheng_ji_biao, 
        aes(x = 文理分科, 
@@ -624,6 +625,13 @@ xgxs <- xgxs %>%
   as.data.frame() %>%
   mutate(ke_mu = row.names(xgxs)) %>%
   gather(key = ke_mu)
+#当然，将row.names转换成一列，这种操作比较常见
+#因此也有专门的函数实现
+# xgxs <- xgxs %>%
+#   as.data.frame() %>%
+#   rownames_to_column(var = "ke_mu") %>%
+#   gather(key = ke_mu)
+
 names(xgxs) <- c("kemu1", "kemu2", "xgxs")
 xgxs$xgxs_cut <- cut(xgxs$xgxs,
                  breaks= seq(0, 1, len = 11),
@@ -745,12 +753,107 @@ information_gain(x = cheng_ji_biao[, c(1, 3)],
 #三维散点图
 library(rgl)
 plot3d(
-  x = cheng_ji_biao$语文,
-  y = cheng_ji_biao$数学,
-  z = cheng_ji_biao$外语,
+  x = cheng_ji_biao$数学,
+  y = cheng_ji_biao$物理,
+  z = cheng_ji_biao$生物,
+  xlab = "Mathematics", 
+  ylab = "Physics",
+  zlab = "Biology",
   type = "s",
   size = 0.5,
   col = c("red", "green")[cheng_ji_biao$文理分科])
+
+#我们当然可以对这个三维数据进行直观展示，
+#但这显然是不够的，我们只有进行了量化，
+#各种各样的关系、模式才能呈现出来，
+#这也是数据科学最令人着迷的地方
+
+#数据空间的密度
+#数据的密度，当然与我们以前学过的物质的密度不一样
+#不可能是质量与体积之比
+#这里的密度，只是密集程度而已
+#一个简单的方法：单位面积/体积内数据点的多少
+#将50~100细分为N份，看每一个有多少落入其间
+ibreaks <- seq(50, 100, len = 21)
+cheng_ji_biao %>%
+  select(物理, 数学) %>%
+  mutate(物理 = cut(物理, breaks = ibreaks),
+           数学 = cut(数学, breaks = ibreaks)) %>%
+  #将语文、数学离散化
+  group_by(物理, 数学) %>%
+  summarise(freq = n()) %>%
+  #进行汇总统计
+  complete(物理, 数学) %>%
+  mutate(freq = ifelse(is.na(freq), 0, freq)) %>%
+  #不全为0的单元格
+  ggplot(aes(x = 物理, y = 数学, fill = freq)) +
+  geom_tile(colour="white", size = 0.5) +
+  geom_text(aes(label = freq), size = 3) +
+  #scale_fill_distiller(direction = 1) +
+  scale_fill_gradient(low = "white", high = "red")+
+  theme(axis.text.x = element_text(angle = 90))
+#感兴趣的小伙伴可以用stat_density2d
+#或是stat_bin2d实现类似的效果
+
+#接下来考虑另一种计算密度的方法
+#每一个点，半径为epsilon领域内点的多少
+selected_cols <- c("数学", "物理", "生物")
+shu_wu_sheng <- cheng_ji_biao[, selected_cols]
+sws_dist <- as.matrix(dist(shu_wu_sheng,
+                 diag = TRUE,
+                 upper = TRUE))
+iseq <- seq(50, 100, len = 10)
+imatrix <- expand.grid(iseq, iseq, iseq)
+names(imatrix) <- selected_cols
+dist_imatrix <- apply(imatrix, 1, function(x) {
+  apply(shu_wu_sheng, 1, function(y) {
+    sqrt(sum((y - x)^2))
+  })
+})
+#定义半径为平均距离
+epsilon <- mean(sws_dist)
+#计算半径范围之内的点数作为密度
+sws_density <- apply(dist_imatrix, 2, function(x) {
+  sum(x < epsilon)
+})
+#调颜色
+my_color_ramp <- function(colors, values) {
+  v <- (values - min(values))/diff(range(values))
+  x <- colorRamp(colors)(v)
+  rgb(x[,1], x[,2], x[,3], maxColorValue = 255)
+}
+cols <- my_color_ramp(c("white", "red"), sws_density) 
+#绘制图形
+library(rgl)
+#绘制“空”间
+plot3d(
+  x = imatrix,
+  size =2,
+  type = "n",
+  xlab = "Mathematics", 
+  ylab = "Physics",
+  zlab = "Biology",
+  col = cols)
+grd <- imatrix
+grd$col <- cols
+grd$alpha <- (sws_density - min(sws_density)) / (max(sws_density) - min(sws_density)) * 0.9
+length <- width <- height <- (max(iseq) - min(iseq)) / length(iseq)
+for(i in seq(nrow(grd))){
+  #创建一个长方体
+  icube3d <- cube3d(col = grd$col[i])
+  #设定长宽高
+  icube3d <- scale3d(icube3d, length, width, height)
+  #将长方体移动至指定位置
+  icube3d <- translate3d(icube3d, grd$数学[i], grd$物理[i], grd$生物[i])
+  #绘制长方体
+  shade3d(icube3d, alpha = grd$alpha[i])
+}
+
+#数据空间的均匀程度
+#可以用hopkins统计量来描述
+#均匀分布的话，趋近于0.5
+#倾斜的话，趋近于0
+clustertend::hopkins(cheng_ji_biao[, 4:12], n = 100)
 
 #除了三维之外，可以继续向多维扩展
 #比如脸谱图
@@ -802,6 +905,8 @@ ggplot(imp, aes(x = attributes,
                 y = importance,
                 fill = importance)) +
   geom_bar(stat = "identity")
+
+
 
 #这里展示的，只是数据可视化的一部分图形
 #还有很多图形尚未涉及，请小伙伴们自行研究：
