@@ -58,8 +58,9 @@ format(pi, digits = 17)
 ?NumericConstants
 Inf <- 0
 pi <- 1
+#
 .12
-
+.12 == 0.12
 
 #R中的保留字
 ?Reserved
@@ -272,6 +273,179 @@ names(fen_cheng) <- names(tou_ru)
 fen_cheng
 
 
+#以上均是向量作为一个存储容器的基本操作
+#接下来看一下向量的数学运算
+
+#原点
+p0 <- c(x = 0, y = 0)
+#向量1
+p1 <- c(x = 1, y = 2)
+#向量2
+p2 <- c(x = 2, y = 1)
+
+#求和
+p3 <- p1 + p2
+
+#数乘
+p4 <- 1.5 * p3
+
+my_ggplot <- ggplot() +
+  xlim(0, 5) +
+  ylim(0, 5) +
+  coord_fixed()
+plot(my_ggplot)
+my_ggplot <- my_ggplot +
+  geom_point(aes(x = p1["x"], y = p1["y"]))+
+  geom_segment(aes(x = p0["x"], y = p0["y"], xend = p1["x"], yend = p1["y"]),
+                            arrow = arrow(length = unit(0.3, "cm")),
+               colour = 'black') +
+  geom_text(aes(x = p1["x"], y = p1["y"], label = "p1"), size = 4, vjust = -1)
+plot(my_ggplot)
+
+my_ggplot <- my_ggplot +
+  geom_point(aes(x = p2["x"], y = p2["y"]))+
+  geom_segment(aes(x = p0["x"], y = p0["y"], xend = p2["x"], yend = p2["y"]),
+               arrow = arrow(length = unit(0.3, "cm")),
+               colour = 'black') +
+  geom_text(aes(x = p2["x"], y = p2["y"], label = "p2"), size = 4, vjust = -1)
+plot(my_ggplot)
+my_ggplot <- my_ggplot +
+  geom_segment(aes(x = p2["x"], y = p2["y"], xend = p3["x"], yend = p3["y"]),
+               linetype = 2,
+               colour = 'grey') +
+  geom_segment(aes(x = p1["x"], y = p1["y"], xend = p3["x"], yend = p3["y"]),
+               linetype = 2,
+               colour = 'grey')
+plot(my_ggplot)
+my_ggplot <- my_ggplot +
+  geom_point(aes(x = p3["x"], y = p3["y"]), colour = 'red', size = 3)+
+  geom_segment(aes(x = p0["x"], y = p0["y"], xend = p3["x"], yend = p3["y"]),
+               arrow = arrow(length = unit(0.3, "cm")),
+               colour = 'red') +
+  geom_text(aes(x = p3["x"], y = p3["y"], label = "p3"), size = 4, vjust = -1)
+plot(my_ggplot)
+
+my_ggplot <- my_ggplot +
+  geom_point(aes(x = p4["x"], y = p4["y"]), size = 3, colour = 'blue')+
+  geom_segment(aes(x = p3["x"], y = p3["y"], xend = p4["x"], yend = p4["y"]),
+               linetype = 2,
+               arrow = arrow(length = unit(0.4, "cm")),
+               colour = 'blue') +
+  geom_text(aes(x = p4["x"], y = p4["y"], label = "p4"), size = 4, vjust = -1) 
+plot(my_ggplot)
+
+#投影
+#向量1
+p1 <- c(x = 1, y = 2)
+#向量2
+p2 <- c(x = 2, y = 1)
+#投影
+p1_on_p2 <- sum(p1 * p2) / sum(p2 * p2) * p2
+#容易看出，求投影，完全不需要用到cos之类的
+ggplot() +
+  xlim(0, 3) +
+  ylim(0, 3) +
+  coord_fixed()+ #求投影时，必须fixed，否则垂直效果容易失真
+  geom_point(aes(x = p1["x"], y = p1["y"]))+
+  geom_segment(aes(x = p0["x"], y = p0["y"], xend = p1["x"], yend = p1["y"]),
+               arrow = arrow(length = unit(0.3, "cm")),
+               colour = 'black') +
+  geom_text(aes(x = p1["x"], y = p1["y"], label = "p1"), size = 4, vjust = -1)+
+  geom_point(aes(x = p2["x"], y = p2["y"]))+
+  geom_segment(aes(x = p0["x"], y = p0["y"], xend = p2["x"], yend = p2["y"]),
+               arrow = arrow(length = unit(0.3, "cm")),
+               colour = 'black') +
+  geom_text(aes(x = p2["x"], y = p2["y"], label = "p2"), size = 4, vjust = -1)+
+  geom_point(aes(x = p1_on_p2["x"], y = p1_on_p2["y"]), size = 2, colour = "red")+
+  geom_segment(aes(x = p0["x"], y = p0["y"], xend = p1_on_p2["x"], yend = p1_on_p2["y"]),
+               colour = 'red') +
+  geom_segment(aes(x = p1["x"], y = p1["y"], xend = p1_on_p2["x"], yend = p1_on_p2["y"]),
+               linetype = 2,
+               colour = 'red') +
+  geom_text(aes(x = p1_on_p2["x"], y = p1_on_p2["y"], label = "p1_on_p2"), size = 4, vjust = 1, hjust = -0.2)
+
+
+#向量相乘
+petal_raw <- iris[, c("Petal.Length", "Petal.Width")]
+petal_raw$type <- "raw"
+w <- c(1, 2)
+petal_multiply <- t(apply(petal_raw[, 1:2], 1, function(x) {
+  w * x
+}))
+petal_multiply <- petal_multiply %>%
+  as.data.frame() %>%
+  mutate(type = "multiply")
+petal <- rbind(petal_raw, petal_multiply)
+ggplot(petal, aes(x = Petal.Length, y = Petal.Width)) +
+  geom_point() +
+  facet_wrap(~type)
+#由此可见，向量相乘，只不过是在不同维度上缩放而已
+
+#向量的内积
+#通过以下代码，小伙伴们可以看出内积的数据科学含义
+set.seed(2012)
+x <- rnorm(100)
+set.seed(2017)
+y <- rnorm(100)
+sum(x * y)
+#[1] -3.794033
+sum(sort(x) * sort(y))
+#[1] 116.0311
+sum(sort(x) * sort(y, decreasing = TRUE))
+#[1] -115.3062
+x <- sort(x)
+y <- sort(y)
+inner_products <- NULL
+for (i in 2:99) {
+  same_part_len <- rep(i, 500)
+  inner_product <- replicate(500,
+                             sum(x * y[c(sample(i), (i + 1):100)]))
+  
+  inner_products <- rbind(inner_products,
+                          cbind(same_part_len, inner_product))
+}
+ggplot(
+  as.data.frame(inner_products),
+  aes(
+    x = same_part_len,
+    y = inner_product,
+    group = same_part_len,
+    fill = same_part_len
+  )
+) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+
+
+#向量是逐个相乘之后再相加
+#相乘之后再相减
+#x1*x2 - y1*y2
+p0 <- c(0, 0)
+p1 <- c(4, 3)
+p2 <- c(1, 3)
+p3 <- p1 + p2
+diff(rev(p1)*p2)
+#其实，行列式代表的都是面积或是体积
+demo_points <- rbind(p0, p1, p3, p2)
+det(A)
+point_label <- c(
+  "c(0, 0)",
+  "c(4, 3)",
+  "c(4, 6)",
+  "c(1, 3)")
+ggplot(as.data.frame(demo_points), aes(x = demo_points[, 1], y = demo_points[, 2])) +
+  geom_point() +
+  geom_polygon(fill = "red", alpha = 0.25, colour = "black") +
+  geom_label(aes(label =point_label), 
+             hjust = c(0, 0, 1, 1), 
+             vjust = c(1, 1, 0, 0),
+             fill = "yellow")+
+  xlim(0, 5.5) +
+  ylim(0, 6.5) +
+  coord_fixed()
+diff(rev(p1)*p2)
+#其实，行列式代表的都是面积或是体积
+
 
 #######################################################
 ##因子
@@ -477,13 +651,27 @@ jpg_url <- "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/p
 download.file(jpg_url, "presidents.jpg", mode="wb")
 shell("presidents.jpg")
 president3 <- readJPEG("presidents.jpg")
+View(president3[ , , 3])
 president3[ , , 3] <- 0
+
 writeJPEG(president3, target = "presidents3_changed.jpg")
 shell("presidents3_changed.jpg") #照片已泛黄
 #当然，你也可以不用shell()函数，直接在在资源管理器中
 #打开getwd()所得到的路径，然后查看相应的jpeg文件
 #Windows里边，还可以使用以下函数
 shell.exec("presidents3_changed.jpg") # 效果一样
+
+#当然，还可以做很多其他与图像相关的算术运算或几何运算
+#如图像的加法运算
+shell("bg.jpg")
+shell("man.jpg")
+bg <- readJPEG("bg.jpg")
+man <- readJPEG("man.jpg")
+bg_man <- 0.2 * bg + 0.8 * man
+writeJPEG(bg_man, target = "bg_man.jpg")
+shell("bg_man.jpg")
+#感兴趣的小伙伴，可以再去探索一下其他的一些图像计算
+#实现对图像平移、旋转、放大和缩小、灰度差值、加噪等
 
 
 #######################################################
@@ -609,12 +797,13 @@ describe(cheng_ji_biao) #对数据进行描述
 #也不会通过控制台输入
 #毕竟采集数据和分析数据的过程是分开的
 
-cheng_ji_url <-
-  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/cj.csv"
+cheng_ji_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cj.csv"
 cheng_ji_biao <- read.csv(cheng_ji_url,
                           head = TRUE,
                           stringsAsFactors = FALSE)
 str(cheng_ji_biao)
+# rm(list = ls())
+# load("cj.rda", verbose = TRUE)
 #作必要的类型转换
 cheng_ji_biao$班级 <- factor(cheng_ji_biao$班级)
 cheng_ji_biao$性别 <- factor(cheng_ji_biao$性别)
@@ -629,8 +818,8 @@ cheng_ji_biao$语文 #数值向量
 
 #也可以像matrix一样，通过[]来访问
 cheng_ji_biao[, "语文"]
-cheng_ji_biao[, c("语文", "数学", "外语")]
-cheng_ji_biao[, c(1, 6:4)]
+View(cheng_ji_biao[, c("语文", "数学", "外语")])
+View(cheng_ji_biao[, c(1, 6:4)])
 cheng_ji_biao[, -(2:3)]
 cheng_ji_biao[, c(1, 13)]
 
@@ -638,8 +827,8 @@ cheng_ji_biao[, c(1, 13)]
 head(cheng_ji_biao, n = 10)
 View(head(cheng_ji_biao, n = 10))
 #查看数据框的后n行
-tail(cheng_ji_biao, n = 10)
-View(tail(cheng_ji_biao, n = 10))
+tail(cheng_ji_biao)
+View(tail(cheng_ji_biao))
 
 #给数据框增加一列
 cheng_ji_biao$总成绩 <- apply(cheng_ji_biao[, 4:12], 
