@@ -124,6 +124,10 @@ ggplot(scores_comparison_melt,
 #######################################################
 ##扩展包的安装及帮助文档的查看
 #######################################################
+
+#推荐将R的扩展包放在R安装路径子文件夹library之中
+#win10等操作系统，可能需要修改这个文件夹的写入权限
+
 #绝大部分的包都可以通过以下语句来安装
 #比如安装神经网络的包nnet
 install.packages("nnet")
@@ -187,11 +191,54 @@ library(sos)
 #比如，查找R语言里边深度学习的相关包和函数
 findFn("deep learning")
 
+#重装R及包的更新
+#R不支持升级，多个版本可以共存
+#采用新版本R，需要把已有包文件从library文件夹下拷贝、
+#合并到新版本的library文件夹之中（注意不要覆盖）
+#并且update.packages()一下
+
+#有些小伙伴对于不同版本R更新周期的箱线图比较感兴趣
+#为了满足大家的好奇心，以下给出具体的实现代码
+#这些代码属于插播的内容，初次阅读会有一定难度
+#R不同版本的网址
+r_htmls <- paste0("https://cran.r-project.org/src/base/R-", 0:3)
+#加载爬虫工具
+library(rvest)
+r_version_info <- NULL
+for(cur_r_html in r_htmls) {
+  html_content <- read_html (cur_r_html)
+  target_name <- "table , th:nth-child(1), th a, th:nth-child(2)"
+  #这个target_name，是通过SelectorGadget获取的
+  r_version_info <- rbind(r_version_info,
+                          html_content%>% html_node(target_name) %>% html_table)
+}
+library(tidyverse)
+r_version_info %>%
+  select("Name", "Last modified", "Size") %>%
+  set_names(c("name", "last_modified", "size")) %>%
+  filter(gregexpr("R-", name) != -1) %>%
+  mutate(type = substring(name, 1, 3),
+         last_modified = as.POSIXct(last_modified)) %>%
+  mutate(days_ellpased = c(NA, round(difftime(last_modified[2:(length(last_modified))],
+                                              last_modified[1:(length(last_modified) - 1)],
+                                              units = "days"), digits = 2))) %>%
+  ggplot(aes(x = type, y = days_ellpased, fill = type)) +
+  geom_boxplot()
+#通过这个图，可以看出R.0/R.1/R.2/R.3不同版本的更新周期
+#具体数值如下
+#    type  mean     median
+#    <chr> <dbl>    <dbl>
+# 1   R-0  39.30423 41.530
+# 2   R-1  54.96724 57.000
+# 3   R-2  77.43512 70.150
+# 4   R-3  75.99955 66.495
+#换句话说，大概每过2个月，基本上就应该更新一下你的R
+
 
 #######################################################
 ##一切都是对象
 #######################################################
-#objectName <- value
+#object_name <- value
 
 #变量命名
 #不要太短的名字
@@ -228,6 +275,9 @@ ls()
 #######################################################
 #顺序、分支、循环
 #是一切结构化编程的基本逻辑
+
+#无论你的算法有多复杂
+#都是由这三种最基本的逻辑控制完成
 
 #先看一个简单的for循环
 for(me in c("Song Jiang", "Wu Yong", "Lu Junyi")) {
@@ -313,8 +363,8 @@ Fn(16)
 #公式的具体含义，请小伙伴自行百度
 nFn <- 16
 sapply(1:nFn, function(x) {
-  1 / 
-    sqrt(5) * (((1 + sqrt(5)) / 2) ^ x - 
+  1 / sqrt(5) * 
+    (((1 + sqrt(5)) / 2) ^ x - 
                  ((1 - sqrt(5)) / 2) ^ x)
 })
 
@@ -465,7 +515,7 @@ frm("axb")#参数的缺省值
 frm(frm = "BJTU", names = "AXB")
 
 #特殊参数...
-dotDemo <- function(...) {
+dot_demo <- function(...) {
   #捕捉到...
   dotArgs <- list(...)
   #装进list之后的...，便可以随意使用了
@@ -475,8 +525,18 @@ dotDemo <- function(...) {
   }
 }
 y <- 1:9
-dotDemo(y, x = 1, 2, "ok")
-dotDemo(seq(1, 9, by = 3), y = letters[1:10])
+dot_demo(y, x = 1, 2, "ok")
+dot_demo(seq(1, 9, by = 3), y = letters[1:10])
+
+#当然，假如你只是把...当成过客，也不是不可以
+pass_dot <- function(...) {
+  cat("OK. I have done nothing to dots ^-^")
+  plot(...)
+}
+pass_dot(1:10)
+x <- seq(-pi, pi, len = 300)
+y <- .5 * sin(x)
+pass_dot(x, y)
 
 #需要指出的是
 #+、-、*、/binary operators
@@ -611,6 +671,8 @@ for(cur_x in X) {
     cat("\nSomething wrong while processing ", cur_x)
   })
 }
+
+
 
 
 #######################################################
