@@ -153,12 +153,18 @@ devtools::install_github("hadley/tidyverse")
 #                  type = "source")
 #这里边涉及到包之间的依存关系，感兴趣的小伙伴自行思考解决
 
-#R不提供升级的功能
-#重新安装就好
-#把低版本中的library文件夹和新安装版本中的library合并
-#新版本中已有文件不要覆盖
-#然后运行以下代码即可
-update.packages()
+
+#安装完包之后，就是加载使用了
+#这和一次性安装完office，然后可以反反复复使用，是一个道理
+library(tidyverse)
+#或者
+require(tidyverse)
+#以上两个语句几乎完全相同，只不过是后者有一个返回值TRUE/FALSE
+#代表是否加载成功
+
+#若有多个包，可以通过以下方式一次性加载
+my_libs <- c("igraph", "infotheo")
+sapply(my_libs, require, character.only = TRUE)
 
 #打开R的帮助页面
 help.start()
@@ -628,6 +634,17 @@ detach(package:ggplot2)
 methods("+")
 rm(list = "+.onlyFirst")
 methods("+")
+
+
+#系统方法也可以扩展哦
+a <- 1:10
+print(a)
+print.MyClass <- function(x, ...){
+  cat("This is my print:\n")
+  print.default(x, ...)
+}
+attr(a, 'class') <- 'MyClass'
+print(a)
 
 
 #######################################################
