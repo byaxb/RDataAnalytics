@@ -55,8 +55,7 @@
 #为保持课程的一致性，减少小伙伴们熟悉业务背景的成本
 #本次课程同样采用前述的《学生成绩分析》的数据
 #采用真实数据的目的很简单：所得结果是鲜活的
-cheng_ji_url <-
-  "https://raw.githubusercontent.com/byaxb/RDataAnalytics/master/data/cj.csv"
+
 #我们要做的事情，是直接将其读入
 cheng_ji_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cj.csv"
 cheng_ji_biao <- read.csv(cheng_ji_url,
@@ -152,7 +151,7 @@ shuxue_1110 <- cheng_ji_biao%>%
 stem(shuxue_1101[, 1])
 # The decimal point is 1 digit(s) to the right of the |
 #   
-#   5 | 5799
+# 5 | 5799
 # 6 | 0014
 # 6 | 55789
 # 7 | 000011122334444
@@ -421,8 +420,8 @@ kurtosis(cheng_ji_biao$数学)
 #用以描述两个变量分布是否一致
 library(ggplot2)
 ggplot(cheng_ji_biao, 
-       aes(sample =  数学)) +
-  stat_qq()
+       aes(sample = 数学)) +
+  stat_qq(aes(colour = ..sample..))
 
 
 #数据的平移与缩放
@@ -441,6 +440,46 @@ ggplot(cheng_ji_biao, aes(x = 语文)) +
                fill = "darkred",
                alpha = 0.5)
 ##小伙伴藉此可以看出减法、除法的数据科学含义
+
+#以下做一个数据平移、缩放的动画
+#小伙伴们正好也可以尝试一下如何直接生成GIF
+library(ggplot2)
+library(animation)
+saveGIF(
+  expr = {
+    frame_count <- 100
+    all_centers <- seq(from = 0,
+                       to = 30,
+                       length = frame_count)
+    all_scales <- seq(from = 1,
+                      to = 1.8,
+                      length = frame_count)
+    for (cur_frame in 1:frame_count) {
+      cur_center <- all_centers[cur_frame]
+      cur_scale <- all_scales[cur_frame]
+      cur_title <- paste("Center:", format(cur_vline, digits = 4),
+                         "Scale:", format(cur_scale, digits = 4))
+      cur_density <- density((cheng_ji_biao$语文 - cur_center)/ cur_scale)
+      cur_vline <- cur_density$x[which.max(cur_density$y)]
+      cur_hline <- max(cur_density$y)
+      plot(
+        ggplot(cheng_ji_biao, aes(x = (语文 - cur_center)/ cur_scale)) +
+          geom_density(fill = "blue", 
+                       colour = "darkgrey",
+                       alpha = 0.5) +
+          xlim(25, 100) +
+          ylim(0, 0.2) +
+          geom_vline(xintercept = cur_vline, size = 1, colour = "blue") +
+          geom_hline(yintercept = cur_hline, size = 1, colour = "red") +
+          ggtitle(cur_title))
+      
+    }
+  },
+  movie.name = "D://desktop/animation.gif",
+  convert = "gm convert",
+  interval = 0.05
+)
+
 
 yuwen_pingjun <- cheng_ji_biao %>%
   group_by(班级) %>%
@@ -716,6 +755,19 @@ ggplot(cheng_ji_biao, aes(x =  数学,
                alpha = 0.2,
                size = 1)
 
+#当然，如果分组太多，显然不适合全都叠加在一起
+#可以采用以下方式
+library(ggridges)
+library(viridis)
+ggplot(cheng_ji_biao, aes(x = `数学`, y = `班级`, fill = ..x..)) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01, gradient_lwd = 1.) +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  scale_y_discrete(expand = c(0.01, 0)) +
+  scale_fill_viridis(name = "数学成绩", option = "C") +
+  labs(title = '数学成绩',
+       subtitle = '某高中各班数学成绩\n其中，1101~1107为文科班，1108~1115为理科班') +
+  theme_ridges(font_size = 13, grid = TRUE) +
+  theme(axis.title.y = element_blank())
 
 #对于分类问题而言，在进行数据描述时
 #最关键的，当属因变量vs自变量了
