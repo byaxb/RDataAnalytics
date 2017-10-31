@@ -768,6 +768,49 @@ ggplot(cheng_ji_biao, aes(x = `数学`, y = `班级`, fill = ..x..)) +
        subtitle = '某高中各班数学成绩\n其中，1101~1107为文科班，1108~1115为理科班') +
   theme_ridges(font_size = 13, grid = TRUE) +
   theme(axis.title.y = element_blank())
+#顺便提一下，以上代码中用到的是反引号`backquotes，
+#注意与单引号的区别
+#反引号一般用于不规范变量命名，如：
+`variriable name with blank` <- 1:10
+`variriable name with blank`
+x <- 1:10
+`x`
+
+
+
+library(tidyverse)
+library(ggplot2)
+cheng_ji_biao %>%
+  select(4:13) %>%
+  gather(文理分科) %>%
+  set_names(c("文理分科", "科目", "成绩")) %>%
+  group_by(文理分科, 科目) %>%
+  summarise(平均成绩 = mean(成绩)) %>%
+  mutate(平均成绩 = ifelse(文理分科 == "文科", 平均成绩, -1*平均成绩)) %>%
+  ggplot(aes(x = 科目, y = 平均成绩, fill = 文理分科)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = format(abs(平均成绩), digits = 3)))+
+  scale_y_continuous(labels=abs) + 
+  coord_flip()
+
+library(tidyverse)
+library(ggplot2)
+to_plot <- cheng_ji_biao %>%
+  select(4:13) %>%
+  gather(文理分科) %>%
+  set_names(c("文理分科", "科目", "成绩")) %>%
+  group_by(文理分科, 科目) %>%
+  summarise(平均成绩 = mean(成绩)) 
+ggplot(to_plot, aes(x = 科目, y = 平均成绩)) + 
+  geom_bar(data=subset(to_plot, 文理分科 == "理科"),
+           aes(fill = c("理科","文科")[1]), 
+           stat = "identity")+
+  geom_bar(data=subset(to_plot, 文理分科 == "文科"), 
+           aes(fill = c("理科","文科")[2]), 
+           alpha = 0.5,stat = "identity") +
+  theme(legend.title = element_blank())
+
+
 
 #对于分类问题而言，在进行数据描述时
 #最关键的，当属因变量vs自变量了
