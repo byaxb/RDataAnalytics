@@ -520,6 +520,10 @@ ggplot(cheng_ji_biao,
   geom_text(stat="count", 
             aes(label = ..count.., y = ..count..+10))
 #可见文理科学生人数表均衡
+#也可以看看具体的占比情况
+scales::percent(as.numeric(prop.table(table(cheng_ji_biao$文理分科))))
+
+
 #再来看看各班男女生的数量
 library(ggplot2)
 ggplot(cheng_ji_biao, 
@@ -538,7 +542,7 @@ ggplot(cheng_ji_biao,
 #需要重新确认数据源
 #本实验中直接进行清洗
 cheng_ji_biao <- cheng_ji_biao %>%
-  filter(!(文理分科 == "文科" & 班级 %in% c("1111", "1113")))
+  filter(!(文理分科 == "文科" & 班级 %in% c("1111", "1113", "1114")))
 #清洗完成之后，再次执行上述代码
 ggplot(cheng_ji_biao, 
        aes(x = 班级, fill = 性别)) +
@@ -549,6 +553,24 @@ ggplot(cheng_ji_biao,
   facet_wrap(~文理分科, ncol=2, scale="free") +
   scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(values=c("orange","darkgrey"))
+
+#我们也可以通过百分比来交叉计次
+table_percent <- function(tab, dec = 2, ...) {
+  tab <- as.table(tab)
+  ptab <- paste(round(prop.table(tab) * 100, dec), "%", sep = "")
+  res <- matrix(NA, nrow = nrow(tab) * 2, ncol = ncol(tab), byrow = TRUE)
+  oddr <- 1:nrow(res) %% 2 == 1
+  evenr <- 1:nrow(res) %% 2 == 0
+  tab <- as.matrix(tab)
+  res[oddr, ] <- tab
+  res[evenr, ] <- ptab
+  res <- as.table(res)
+  colnames(res) <- colnames(tab)
+  rownames(res) <- rep(rownames(tab), each = 2)
+  return(res)
+}
+table_percent(table(cheng_ji_biao$班级, cheng_ji_biao$性别))
+tab <- table(cheng_ji_biao$班级, cheng_ji_biao$性别)
 
 #从前述分析可以看出，一维数据的探索
 #大部分都是关于“变化”的
@@ -577,7 +599,7 @@ entropy::entropy(counts, unit = "log2")
 #######################################################
 #离散变量vs离散变量
 #形式可以有很多种，比如马赛克图
-#本实验中推荐的是树图
+#本实验中推荐的是矩形树图
 library(treemap)
 library(tidyverse)
 cjb_sum <- cheng_ji_biao %>% 
@@ -709,16 +731,17 @@ ggplot(cheng_ji_biao, aes(x =  班级, y =  数学,
   theme(legend.position = "none")
 
 #小提琴图
-ggplot(cheng_ji_biao, aes(x =  文理分科, 
-                          y =  数学, 
-                          fill =  文理分科)) +
+ggplot(cheng_ji_biao, aes(x =   文理分科,
+                          y =   数学,
+                          fill =   文理分科)) +
   geom_violin() +
   stat_summary(
     fun.y = fivenum,
     geom = "point",
     fill = "white",
     shape = 21,
-    size = 2.5) +
+    size = 2.5
+  ) +
   coord_flip()
 #当然，我们也可以将小提琴图与箱线图合二为一
 ggplot(cheng_ji_biao, aes(x =  文理分科, 
@@ -776,6 +799,35 @@ ggplot(cheng_ji_biao, aes(x = `数学`, y = `班级`, fill = ..x..)) +
 x <- 1:10
 `x`
 
+#以下查看各科成绩与文理分科的关系
+cheng_ji_biao %>%
+  mutate(id = 1:nrow(.)) %>%
+  select(4:13, 15) %>%
+  gather(id, 文理分科) %>%
+  set_names(c("文理分科", "id", "科目", "成绩")) %>%
+  ggplot(aes(x = 成绩, y = 科目, fill = 文理分科)) +
+  geom_density_ridges(scale =1.5, 
+                               alpha = .5, 
+                               color = "white") +
+  labs(title = "文理分科各科成绩对照表",
+       subtitle = "基于某高中实际数据") +
+  xlim(50, 100) +
+  scale_fill_cyclical(values = c("#ff0000", "#0000ff", "#ff8080", "#8080ff"), 
+                      guide = "legend")
+  
+
+ggplot(cheng_ji_biao, aes(x = `数学`, y = `班级`, fill = 性别)) +
+  geom_density_ridges_gradient(scale =2, 
+                               alpha = .5,
+                               rel_min_height = 0.01, 
+                               gradient_lwd = 1) +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  scale_y_discrete(expand = c(0.01, 0)) +
+  #scale_fill_viridis(name = "数学成绩", option = "C") +
+  labs(title = '数学成绩',
+       subtitle = '某高中各班数学成绩\n其中，1101~1107为文科班，1108~1115为理科班') +
+  theme_ridges(font_size = 13, grid = TRUE) +
+  theme(axis.title.y = element_blank())
 
 
 library(tidyverse)
