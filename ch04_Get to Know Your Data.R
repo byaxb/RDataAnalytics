@@ -702,6 +702,67 @@ ggplot(xgxs, aes(x = kemu1, y = kemu2, fill = xgxs_cut)) +
   geom_text(aes(label = format(xgxs, digits = 2))) +
   scale_fill_brewer(palette = "YlGn",name="相关系数")
 
+#当然，也可以用三维图形来展示相关系数
+cor_matri <- as.matrix(cor(cheng_ji_biao[, 4:12]))
+row_seqs <- 1:nrow(cor_matri)
+col_seqs <- 1:ncol(cor_matri)
+imatrix <- expand.grid(row_seqs, col_seqs)
+imatrix$z <- as.numeric(cor_matri)
+pal <- colorRampPalette(c("yellow", "green"))
+nbreaks <- 20
+cols <- pal(nbreaks)[as.numeric(cut(imatrix$z,breaks = nbreaks))]
+#绘制三维图
+library(rgl)
+plot3d(
+  x = imatrix,
+  type = "n",
+  xlab = "",
+  ylab = "",
+  zlab = "",
+  axes = FALSE)
+rgl.bbox(xlen = 0, ylen = 0, zlen = 0, color = c('grey100'))
+pinyin <- c("yuwen", "shuxue", "waiyu", "zhengzhi",
+            "lishi", "dili", "wuli", "huaxue", "shengwu")
+axes3d("x", at = 1:9,
+       labels = pinyin,
+       cex = 0.75,
+       color = "black")
+axes3d("y", at = 1:9, 
+       labels = pinyin,
+       cex = 0.75,
+       color = "black")
+length <- width <- 0.25
+imatrix <- imatrix %>%
+  as.data.frame() %>%
+  mutate(col = cols) %>%
+  set_names(c("x", "y", "z", "col"))
+#增加一根根的柱子以及相应的文本
+for(i in 1:nrow(imatrix)) {
+  if(imatrix[i, "x"] == imatrix[i, "y"]) {
+    next
+  }
+  #创建一个长方体
+  icube3d <- cube3d(col = imatrix[i, "col"])
+  #设定长宽高
+  icube3d <- scale3d(icube3d, 
+                     length, #长 
+                     width, #宽
+                     imatrix[i, "z"]*0.5) #高
+  #将长方体移动至指定位置
+  icube3d <- translate3d(icube3d, 
+                         imatrix[i, "x"], #x 
+                         imatrix[i, "y"], #y
+                         imatrix[i, "z"]*0.5) #z
+  #绘制长方体
+  shade3d(icube3d, alpha = 0.75)
+  text3d(imatrix[i, c("x", "y", "z")],
+         texts= format(imatrix[i, "z"], digits = 2),
+         cex = 0.5)
+}
+
+
+
+
 
 #######################################################
 #离散变量vs连续变量
