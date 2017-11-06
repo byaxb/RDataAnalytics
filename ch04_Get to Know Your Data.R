@@ -412,6 +412,106 @@ kurtosis(cheng_ji_biao$数学)
 #[1] 0.2687023
 #注意：峰度的不同定义
 
+#前边看了很多关于数据分布的指标
+psych::describe(cheng_ji_biao$语文)
+#小伙伴肯定手痒痒，其实自己实现也不难
+#自己手工过一遍，有助于理解
+x <- cheng_ji_biao$语文
+N <- length(x)
+#求平均值
+my_mean <- sum(x) / N
+#求标准差
+my_sd <- sqrt(sum((x - my_mean) ^ 2) / (N - 1))
+#求中位数
+x_order <- order(x)
+if (N %% 2 == 0) {
+  my_median <- sum(x[x_order[ceiling(N / 2)]],
+                   x[x_order[ceiling(N / 2)] + 1]) / 2
+} else {
+  my_median <- x[x_order[ceiling(N / 2)]]
+}
+#求绝对中位差
+k <- 1.4826
+my_mad <- k * median(abs(x - median(x)))
+#求峰度
+my_kurtosis <- (1 / N) * sum((x - mean(x)) ^ 4) / (sd(x) ^ 4) - 3
+#求峰度
+my_skew <-
+  1 / N * sum((x - mean(x)) ^ 3) / ((1 / N * sum((x - mean(
+    x
+  )) ^ 2)) ^ (3 / 2))
+
+
+#为了更加直观展示偏度与中位数、均值的关系
+#下面做一个动画
+#（小伙伴们正好也可以尝试一下如何直接生成GIF）
+library(ggplot2)
+library(animation)
+saveGIF(
+  expr = {
+    set.seed(2012)
+    #生成长度为5000的正态分布
+    x_len <- 5000
+    win_len <- 3000 #每次获取其中的3000个数据点
+    norm_data <- rnorm(x_len)
+    x <- sort(norm_data) #进行排序
+    for (i in 1:length(norm_data_sorted)) {
+      if (!(i %% 50 ==0 || i == 1 || i == x_len)) {
+        next
+      }
+      #从1~x_len/2:起点不同，窗口长度从win_len增加到x_len
+      #从x_len/2~x_len：重点固定不变，窗口长度从x_len减少到win_len
+      if (i <= 0.5 * x_len) {
+        cur_len <- (x_len - win_len) / (0.5 * x_len - 1) * (i - 1) + win_len
+        start_point <- 1
+      } else {
+        cur_len <- (win_len - x_len) / x_len * 2 * i - win_len + 2 * x_len
+        start_point <-
+          (x_len - win_len - 1) / x_len * 2 * i - x_len + win_len + 2
+      }
+      cur_sample_points <-
+        norm_data_sorted[start_point:(start_point + cur_len - 1)]
+      p <- ggplot() +
+        geom_density(aes(x = cur_sample_points),
+                     fill = "blue",
+                     alpha = 0.25) +
+        geom_vline(
+          xintercept = median(cur_sample_points),
+          colour = "red",
+          size = 1.2
+        ) +
+        geom_vline(
+          xintercept = mean(cur_sample_points),
+          colour = "yellow",
+          size = 1.2
+        ) +
+        geom_text(aes(
+          x = median(cur_sample_points),
+          y = 0.2,
+          label = "median"
+        ), colour = "red") +
+        geom_text(aes(
+          x = mean(cur_sample_points),
+          y = 0.1,
+          label = "Mean"
+        ), colour = "yellow") +
+        ggtitle(label = paste0("Skewness:", round(
+          e1071::skewness(cur_sample_points), digits = 4
+        )))
+      if (i == 1 || i == x_len) { #开始和结束时多停留一会儿
+        lapply(1:20, function(x) plot(p))
+      }
+      plot(p)
+    }
+  },
+  movie.name = "D://desktop/animation.gif",
+  convert = "gm convert",
+  interval = 0.05
+)
+
+ 
+
+
 #前述指标中涉及到与正态分布的比较
 #实际上，还有一个QQ图也可展示不同分布的比较
 #QQ图
@@ -441,8 +541,7 @@ ggplot(cheng_ji_biao, aes(x = 语文)) +
                alpha = 0.5)
 ##小伙伴藉此可以看出减法、除法的数据科学含义
 
-#以下做一个数据平移、缩放的动画
-#小伙伴们正好也可以尝试一下如何直接生成GIF
+#以下再做一个数据平移、缩放的动画
 library(ggplot2)
 library(animation)
 saveGIF(
@@ -759,8 +858,6 @@ for(i in 1:nrow(imatrix)) {
          texts= format(imatrix[i, "z"], digits = 2),
          cex = 0.5)
 }
-
-
 
 
 
