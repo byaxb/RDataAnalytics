@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·基础编程》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V7
-## 时间：2017年9月
+## 版本：V8
+## 时间：2018年3月
 ##
 ##*****************************************************
 ##
-## ch02_Programming Fundamentals_V7
+## ch02_Programming Fundamentals_V8
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -26,52 +26,10 @@
 ##
 ##*****************************************************
 ##
-## (c)2012~2017
+## (c)2012~2018
 ##
 #######################################################
 #######################################################
-
-
-
-
-#######################################################
-##开场小段
-##用R快速给学生提分
-#######################################################
-#某火星课程，同学们得分特别低
-scores_low <- c(27, 36, 41, 53, 33, 34, 78, 90, 39)
-#接下来的语句便开始提分了
-#最简单的办法，给每个同学加10分
-score_plus10 <- scores_low + 10
-score_plus10
-#还是有很多不及格的，要不加20分？
-(score_plus20 <- scores_low + 20)
-#不仅有很多不及格的，居然还有超过100的
-#所以，加一个绝对的分数貌似有问题啊
-
-#一个神奇的提分公式
-#据说是钱学森钱老的大手笔哦^-^
-
-scores_high <- floor(10*sqrt(scores_low))
-mean(scores_low)
-mean(scores_high)
-
-#反复提分
-(scores_high <- floor(10*sqrt(scores_high)))
-#可以重复执行上述语句，看其效果
-scores_comparison <- data.frame(low = scores_low,
-                                high = scores_high)
-View(scores_comparison)
-
-#通过图形的方式来展示提分效果
-library(ggplot2)
-library(tidyr)
-scores_comparison_melt <- gather(scores_comparison)
-ggplot(scores_comparison_melt,
-       aes(x = key,
-           y = value,
-           fill = key)) +
-  geom_boxplot()
 
 
 #学习R语言数据分析，或是其它数据科学编程
@@ -93,7 +51,7 @@ ggplot(scores_comparison_melt,
 #ch03_数据对象
 
 
-#接下来，先看R的基础编程
+#先看R的基础编程
 #考虑到大家已经Get Hands Dirty了
 #接下来，我们从R语言本身的特点讲起
 #力图用最简单语言，把R基础编程需要掌握的核心要点
@@ -133,15 +91,15 @@ ggplot(scores_comparison_melt,
 install.packages("nnet")
 #有些包，没有放在CRAN
 #需要通过特定渠道下载
-#主要是bioconductor和github
+#比如github、bioconductor等
 #比如minet包
 install.packages("minet")
-# Warning in install.packages :
-#   package ‘minet’ is not available (for R version 3.4.1)
+# Warning message:
+#   package ‘minet’ is not available (for R version 3.4.3) 
 source("http://bioconductor.org/biocLite.R")
 biocLite("minet")
 #从github上下载安装一些最新版本的包
-# install.packages("devtools")
+#install.packages("devtools")
 devtools::install_github("hadley/tidyverse")
 
 #有些情况下，也需要将包文件download到本地，然后再安装
@@ -155,7 +113,7 @@ devtools::install_github("hadley/tidyverse")
 
 
 #安装完包之后，就是加载使用了
-#这和一次性安装完office，然后可以反反复复使用，是一个道理
+#这和一次性安装完word/excel/powerpoint，然后可以反反复复使用，是一个道理
 library(tidyverse)
 #或者
 require(tidyverse)
@@ -181,6 +139,7 @@ help.start()
 apropos("test")
 #当然，这里边所列出的，并不包含其他扩展包的内容
 apropos("test", where = TRUE)
+#以下这个函数列出当前搜索的范围
 search()
 
 
@@ -203,7 +162,7 @@ findFn("deep learning")
 #合并到新版本的library文件夹之中（注意不要覆盖）
 #并且update.packages()一下
 
-#有些小伙伴对于不同版本R更新周期的箱线图比较感兴趣
+#有些小伙伴对于不同版本R更新周期比较感兴趣
 #为了满足大家的好奇心，以下给出具体的实现代码
 #这些代码属于插播的内容，初次阅读会有一定难度
 #R不同版本的网址
@@ -231,13 +190,27 @@ r_version_info %>%
   ggplot(aes(x = type, y = days_ellpased, fill = type)) +
   geom_boxplot()
 #通过这个图，可以看出R.0/R.1/R.2/R.3不同版本的更新周期
+#当然，我们也可以计算一下具体的数值
+r_version_info %>%
+  select("Name", "Last modified", "Size") %>%
+  set_names(c("name", "last_modified", "size")) %>%
+  filter(gregexpr("R-", name) != -1) %>%
+  mutate(type = substring(name, 1, 3),
+         last_modified = as.POSIXct(last_modified)) %>%
+  mutate(days_ellpased = c(NA, round(difftime(last_modified[2:(length(last_modified))],
+                                              last_modified[1:(length(last_modified) - 1)],
+                                              units = "days"), digits = 2))) %>%
+  group_by(type) %>%
+  summarise(mean = mean(days_ellpased, na.rm = TRUE),
+            median = median(days_ellpased, na.rm = TRUE))
 #具体数值如下
-#    type  mean     median
-#    <chr> <dbl>    <dbl>
-# 1   R-0  39.30423 41.530
-# 2   R-1  54.96724 57.000
-# 3   R-2  77.43512 70.150
-# 4   R-3  75.99955 66.495
+# # A tibble: 4 x 3
+# type    mean    median
+# <chr>   <dbl>   <dbl>
+# 1 R-0    39.3   41.5
+# 2 R-1    55.0   57.0
+# 3 R-2    77.4   70.2
+# 4 R-3    76.7   66.5
 #换句话说，大概每过2个月，基本上就应该更新一下你的R
 
 
@@ -252,11 +225,11 @@ r_version_info %>%
 #可以由多个单词，表达完整的意思
 #切记，变量命名，一定要有意义meaningful
 #比如，用下划线连接
-i_use_snake_case <- 1:10
+use_snake_case <- 1:10
 #用.连接
-other.people.use.periods <- seq(1, 10)
+use.periods <- seq(1, 10)
 #或者是驼峰命名法
-evenOthersUseCamelCase <- c(1,2,3,4,5,6,7,8,9,10)
+useCamelCase <- c(1,2,3,4,5,6,7,8,9,10)
 
 #其它编码规范，请参阅Google's R Style Guide
 browseURL("https://google.github.io/styleguide/Rguide.xml")
@@ -279,115 +252,267 @@ ls()
 #######################################################
 ##控制流
 #######################################################
+
+#从最基本的程序结构说起
 #顺序、分支、循环
 #是一切结构化编程的基本逻辑
 
-#无论你的算法有多复杂
-#都是由这三种最基本的逻辑控制完成
+#顺序结构
+#定义3个向量
+yw <- c(94, 87, 92, 91, 85, 92) #6个同学的语文成绩
+sx <- c(82, 94, 79, 84, 92, 82) #数学成绩
+wy <- c(96, 89, 86, 96, 82, 85) #外语成绩
+ysw <- yw + sx + wy #向量化操作：三科成绩相加
+ysw #显示三科成绩
+#> [1] 274 272 259 273 261 261
+(yw <- yw + 2) #向量化操作：每个同学语文成绩加2分
+#> [1] 96 89 94 93 87 94
 
-#先看一个简单的for循环
-for(me in c("Song Jiang", "Wu Yong", "Lu Junyi")) {
-  cat("My name is", me, "\n")
+
+(mean_score <- mean(yw)) #求语文平均分
+#> [1] 92.16667
+sd(yw) #求语文成绩标准差
+(sd_score <- (1 / (6-1) * sum((yw - mean_score)^2)) ^0.5)
+#> [1] 3.430258
+c(sd(yw), sd(sx), sd(wy))
+#> [1] 3.430258 6.058052 5.865151
+(z_score_yw <- (yw - mean_score) / sd_score) #求标准得分
+#> [1]  1.12 -0.92  0.53  0.24 -1.51  0.53
+
+show(yw) #显示语文成绩
+#> [1] 96 89 94 93 87 94
+show(sx) #显示数学成绩
+#> [1] 82 94 79 84 92 82
+yw >= 90 #向量化操作：逻辑判断
+#> [1]  TRUE FALSE  TRUE  TRUE FALSE  TRUE
+yw >= 85 & sx >= 85 #向量化操作：逻辑判断
+#> [1] FALSE  TRUE FALSE FALSE  TRUE FALSE
+yw >=95 | sx >= 95 #向量化操作：逻辑判断
+#> [1]  TRUE FALSE FALSE FALSE FALSE FALSE
+
+round(z_score_yw, digits = 3) #小数点后三位
+#> [1]  1.118 -0.923  0.534  0.243 -1.506  0.534
+sqrt(c(1, 4, 9)) #开根号
+#> [1] 1 2 3
+">="(yw, 90) #逻辑判断
+#[1]  TRUE FALSE  TRUE  TRUE FALSE  TRUE
+yw + 5 #求和
+#> [1] 101  94  99  98  92  99
+"+"(yw, 5) #运算符作为特殊的函数
+#> [1] 101  94  99  98  92  99
+
+
+
+#分支结构
+min_score <- min(yw)
+if(min_score >= 90) {
+  message("语文成绩全部为优")
+} else if(min_score >= 80) {
+  message("语文成绩至少为良")
+} else {
+  message("并非所有同学语文成绩均为优良")
 }
 
-#以下通过斐波那契数列
-#查看不同结构的使用方法
-#斐波那契数列
+
+#all()与any()
+yw >= 90
+#> [1]  TRUE FALSE  TRUE  TRUE FALSE  TRUE
+all(yw >= 90) #逻辑向量每一个值均为TRUE时，返回TRUE；否则返回FALSE
+#> [1] FALSE
+if(all(yw >= 90)) {
+  message("语文成绩全部为优")
+} else if(all(yw >= 80)) {
+  message("语文成绩至少为良")
+} else {
+  message("并非所有同学语文成绩均为优良")
+}
+
+
+show(yw)
+#> [1] 96 89 94 93 87 94
+any(yw <  88)
+#> [1] TRUE
+any(c(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE))
+if(any(yw < 60)) {
+  message("有同学语文成绩挂科")
+} else {
+  message("所有同学语文考试顺利通过")
+}
+#> 所有同学语文考试顺利通过
+
+#下边这种写法是错误的
+if(all(yw >= 90)) {
+  message("语文成绩全部为优")
+}
+else if(all(yw >= 80)) { #else不能单起一行
+  message("语文成绩至少为良")
+}
+else { #else不能单起一行
+  message("并非所有同学语文成绩均为优良")
+}
+
+#else不能另起一行
+
+
+#注意：if里边是标量
+yw > 90
+#[1]  TRUE FALSE  TRUE  TRUE FALSE  TRUE
+if(yw > 90) {
+  message("所有同学语文成绩均为优")
+}
+#> 所有同学语文成绩均为优
+#> Warning message:
+#>   In if (yw > 90) { :
+#>       the condition has length > 1 and only the first element will be used
+#相当于只取了第一个元素
+if((yw > 90)[1]) {
+  message("所有同学语文成绩均为优")
+}
+
+yw
+#[1] 96 89 94 93 87 94
+ifelse(yw >= 90, "优", "非优")
+#[1] "优"   "非优" "优"   "优"   "非优" "优"
+ifelse(yw >= 90, "优",
+       ifelse(yw >= 88, "较好", "一般"))
+#[1] "优" "良" "优" "优" "良" "优"
+ifelse(yw >= 90, #T F T T F T
+       c("1", "2", "3", "4", "5", "6"),
+       c("I", "II", "III", "IV", "V", "VI"))
+#> [1] "1"  "II" "3"  "4"  "V"  "6" 
+
 #for循环
-nFn <- 16
-Fn <- numeric(nFn)
-Fn[1:2] <- c(1, 1)
-for(i in 3:nFn) {
-  Fn[i] <- Fn[i-2] + Fn[i-1]
+#求斐波那契数列的前16个数
+n_fib <- 16
+fib <- numeric(n_fib)
+fib[1:2] <- c(1, 1)
+for(i in 3:n_fib) {
+  fib[i] <- fib[i-2] + fib[i-1]
+  show(fib[i])
 }
-Fn
+fib
+#> [1]   1   1   2   3   5   8  13  21  34  55  89 144 233 377 610 987
 
-
-
-#斐波那契数列
+#求1000以内的斐波那契数列
+#不知道循环多少次
 #while来实现
-Fn <- c(1, 1)
-while(sum(tail(Fn, 2)) < 1000) {
-  Fn <- c(Fn, sum(tail(Fn, 2)))
+fib <- c(1, 1)
+while(sum(tail(fib, 2)) < 1000) {
+  fib <- c(fib, sum(tail(fib, 2)))
 }
-Fn
-#另外一种实现，相对繁琐
-F_n_minus1 <- 1
-F_n <- 1
-F_n_series <- c(F_n_minus1, F_n)
-F_n_plus1 <- F_n_minus1 + F_n
-while(F_n_plus1 < 1000) {
-  F_n_series <- c(F_n_series, F_n_plus1)
-  F_n_minus1 <- F_n
-  F_n <- F_n_plus1
-  F_n_plus1 <- F_n_minus1 + F_n
-}
-F_n_series
+fib
+#[1]   1   1   2   3   5   8  13  21  34  55  89 144 233 377 610 987
 
-
-#斐波那契数列
+#或者通过
 #repeat来实现
-Fn <- c(1, 1)
+fib <- c(1, 1)
 repeat {
-  if(sum(tail(Fn, 2)) >= 1000) {
+  if(sum(tail(fib, 2)) >= 1000) {
     break
   }
-  Fn <- c(Fn, sum(tail(Fn, 2)))
+  fib <- c(fib, sum(tail(fib, 2)))
 }
-Fn
+fib
+
 #当然，上述语句的逻辑
 #与下述的while结构更加吻合
-Fn <- c(1, 1)
+fib <- c(1, 1)
 while(TRUE) {
-  if(sum(tail(Fn, 2)) >= 1000) {
+  if(sum(tail(fib, 2)) >= 1000) {
     break
   }
-  Fn <- c(Fn, sum(tail(Fn, 2)))
+  fib <- c(fib, sum(tail(fib, 2)))
 }
-Fn
+fib
 
+#再尝试一个例子
+#从1~100随机抽取一个数
+#若是52，则停止；否则，继续抽取
+time_count <- 0
+repeat {
+  my_number <- sample(1:100, 1)
+  time_count <- time_count + 1
+  if(my_number == 52) {
+    message("Haha~, I finally got '52' after ", 
+            time_count, " attempts")
+    break
+  } else {
+    message(time_count, 
+            ": Not lucky enough [", my_number, "]")
+  }
+}
+#> 1: Not lucky enough [42]
+#> 2: Not lucky enough [4]
+#> 3: Not lucky enough [7]
+#> 4: Not lucky enough [2]
+#> 5: Not lucky enough [98]
+#> 6: Not lucky enough [43]
+#> 7: Not lucky enough [44]
+#> 8: Not lucky enough [15]
+#> 9: Not lucky enough [70]
+#> 10: Not lucky enough [54]
+#> 11: Not lucky enough [27]
+#> 12: Not lucky enough [65]
+#> 13: Not lucky enough [62]
+#> 14: Not lucky enough [43]
+#> 15: Not lucky enough [54]
+#> 16: Not lucky enough [9]
+#> 17: Not lucky enough [71]
+#> 18: Not lucky enough [4]
+#> 19: Not lucky enough [66]
+#> 20: Not lucky enough [5]
+#> 21: Not lucky enough [92]
+#> Haha~, I finally got '52' after 22 attempts
 #小伙伴们需要注意一点：
 #在上述实现过程中，用到了tail函数
 #指的是倒数的某些元素，具体用法请看帮助文档
 ?tail
 
 #斐波那契数列，也可以采用递归的方式实现
-Fn <- function(n) {
+fib <- function(n) {
   if(n >= 3) {
-    return(c(Fn(n-1), sum(tail(Fn(n-1),2))))
+    return(c(fib(n-1), sum(tail(fib(n-1),2))))
   } else if(n == 2) {
-    return(c(Fn(n-1),1))
+    return(c(fib(n-1),1))
   } else if(n == 1) {
     return(1)
   }
 }
-Fn(16)
+fib(16)
 
 
-#还有一个更简单的做法
-#并且是并行的方式哦^-^
-#公式的具体含义，请小伙伴自行百度
-nFn <- 16
-sapply(1:nFn, function(x) {
+#其实，连斐波那契数列
+#也可以采用并行的方式
+n_fib <- 16
+sapply(1:n_fib, function(x) {
   1 / sqrt(5) * 
     (((1 + sqrt(5)) / 2) ^ x - 
                  ((1 - sqrt(5)) / 2) ^ x)
 })
-
+#> [1]   1   1   2   3   5   8  13  21  34  55  89 144 233 377 610 987
 
 
 #当然，在R里边
 #尽量不要使用显式循环
 #能向量化运算的，尽量向量化
-x <- 1:100000000
-y <- 2:100000001
-z <- numeric(100000000)
+x <- 1:1e8 #一亿
+y <- 2:(1e8 + 1) #一亿
+z <- integer(1e8)
 system.time(z <- x + y, gcFirst = TRUE)
+#> user  system elapsed 
+#> 0.36    0.09    0.45 
+# The ‘user time’ is the CPU time charged for 
+#       the execution of user instructions of the calling process. 
+# The ‘system time’ is the CPU time charged for 
+#        execution by the system on behalf of the calling process.
+
 system.time({
-  for(i in 1:100000000) {
+  for(i in 1:1e8) {
     z[i] <- x[i] + y[i]
   }
 },  gcFirst = TRUE)
+#> user  system elapsed 
+#> 11.51    0.06   11.70 
 
 
 #能并行计算的，尽量并行
@@ -421,21 +546,6 @@ stopCluster(cl)
 max(scc_mxs)
 
 
-
-#注意分支语句的写法
-p <- 0.03
-if(p<=0.05) {
-  print("p <= 0.05!") 
-  
-} else {
-  print("p > 0.05!")
-}
-#显然，下边这种写法是错的
-if(p<=0.05)
-  print("p <= 0.05!") 
-else
-  print("p > 0.05!")
-
 #题外话：
 #若小数点后有无限多位，计算机是没法存储的
 if(sqrt(2) ^ 2 == 2) {
@@ -450,11 +560,16 @@ if(all.equal(sqrt(2) ^ 2 ,2)) {
 } else {
   cat("Unequal, to do something else")
 }
+
 #all.equal函数中，可以通过设置参数tolerance
 #Differences smaller than tolerance are not reported
 #该参数的默认值is close to 1.5e-8
 
 
+format(sqrt(2) ^ 2, digits = 18)
+#当然，也可以采用dlpyr
+dplyr::near(sqrt(2) ^ 2, 2)
+all.equal(sqrt(2) ^ 2, 2)
 
 #分段函数的绘制
 x <- seq(from = -10, to = 10, by = 0.01)
@@ -469,7 +584,6 @@ plot(x,
      lwd = 2)
 
 
-
 #######################################################
 ##编写函数
 #######################################################
@@ -479,6 +593,7 @@ plot(x,
 #那样你的代码会变得很难维护
 #如果一套逻辑需要多次重复出现
 #最好的办法是编写一个函数
+
 
 #函数就是一个输入、处理、到输出的过程
 #输入的是参数
@@ -492,84 +607,102 @@ ce2fa <- function(ce) { #参数ce为输入
   return(fa) #输出相应的值
 }
 ce2fa(0)#0℃相当于32℉
+#> [1] 32
 ce2fa(0:10)#将0~10℃转换为相应的℉
-#当然，我们可以写得更加复杂一点
-ce2all <- function(ce) { #参数ce为输入
-  #华氏度
-  #巴哈马、伯利兹、英属开曼群岛、帕劳
-  #美利坚合众国及其他附属领土
-  fa <- 1.8 * ce + 32
-  #列氏度，德国还在使用列氏温度
-  re <- 0.8 * ce
-  #兰氏度
-  ra <- 1.8*ce + 32 + 459.67
-  #开氏度
-  ke <- 273.15 + ce
+#> [1] 32.0 33.8 35.6 37.4 39.2 41.0 42.8 44.6 46.4 48.2 50.0
+ce2fa
+#> function(ce) { #参数ce为输入
+#>   fa <- 1.8 * ce + 32 #对输入进行处理
+#>   return(fa) #输出相应的值
+#> }
+#> <bytecode: 0x00000000144b5d28>
+
+#多种温度计量
+ce2all <- function(ce) {
+  if (!is.numeric(ce) || length(ce) >= 2) {
+    stop("Invalid arguments!")
+  }
+  fa <- 1.8 * ce + 32 #华氏度，巴哈马等
+  re <- 0.8 * ce #列氏度，德国
+  ra <- 1.8 * ce + 32 + 459.67 #兰氏度
+  ke <- 273.15 + ce #开氏度
   return(c(C = ce, F = fa, Re = re, Ra = ra, K = ke))
 }
 ce2all(0)
+ce2all("0")
+ce2all(0:10)
 
 
 #位置参数和名义参数
-frm <- function(names, frm = "BUPT") {
-  cat(names," is frm ", frm)
+frm <- function(name, frm = "BUPT") {
+  cat(name," is frm ", frm)
 }
-#下边这种方式会出错
-#因为有参数没有缺失值
-frm()
+frm()#出错
+#> Error in cat(name, " is frm ", frm) : 
+#>   argument "name" is missing, with no default
 frm("axb")#参数的缺省值
-frm(frm = "BJTU", names = "AXB")
+#> axb  is frm  BUPT
+frm(name = "AXB", frm = "BJTU")
+#> AXB  is frm  BJTU
+frm(frm = "BJTU", name = "AXB")
+#> AXB  is frm  BJTU
 
-#特殊参数...
-dot_demo <- function(...) {
-  #捕捉到...
-  dotArgs <- list(...)
-  #装进list之后的...，便可以随意使用了
-  #比如，将他们输出至控制台
-  for(i in 1:length(dotArgs)) {
-    cat("Arg", i, ": \n\t", dotArgs[[i]], "\n")
-  }
+
+#看几行我们比较熟悉的代码
+xm <- c("周黎", "汤海明", "舒江辉", "翁柯", "祁强", "湛容")
+yw <- c(94, 87, 92, 91, 85, 92)
+xb <- c(FALSE, TRUE, TRUE)
+#再看看sum函数
+sum(94, 87, 92, 91, 85, 92)
+sum(1, 3, 5, 7)
+?c
+?sum
+
+my_func <- function(...) {
+  cat("The second arg is ", ..2)
+  dot_args <- list(...)
+  message("\nThe sum is ",sum(dot_args[[1]], dot_args[[5]]))
 }
-y <- 1:9
-dot_demo(y, x = 1, 2, "ok")
-dot_demo(seq(1, 9, by = 3), y = letters[1:10])
+my_func(1, 'arg2', 3, 4, 5, 6, 7, 8)
+#> The second arg is  arg2
+#> The sum is 6
 
-#当然，假如你只是把...当成过客，也不是不可以
-pass_dot <- function(...) {
-  cat("OK. I have done nothing to dots ^-^")
-  plot(...)
-}
-pass_dot(1:10)
-x <- seq(-pi, pi, len = 300)
-y <- .5 * sin(x)
-pass_dot(x, y)
-
-#需要指出的是
 #+、-、*、/binary operators
 #其实都是函数
 1+2
 "+"(1, 2)
 '+'(1, 2)
+#[1] 3
 '/'(2, 3)
+#[1] 0.6666667
 '^'(10, 2)
-#其实，连赋值符号<-都可以变成函数的形式
-'<-'(newObject, 3)
-#当然，以前学过的:，本质上也是一个函数
+#[1] 100
+#连赋值符号<-都可以变成函数的形式
+">"(2, 1)
+#[1] TRUE
+'<-'(new_var, 3)
+new_var
+#> [1] 3
+#:，本质上也是一个函数
 ':'(1, 10)
-#下边这种方式，你能忍么？
+#> [1]  1  2  3  4  5  6  7  8  9 10
+'['(1:10, 2)
+#> [1] 2
+#连if都是
 'if'(2 > 1, {
-  cat("这也行？好吧，就扶你")
+  cat("好吧，连if都是函数")
   })
+#> 好吧，连if都是函数
 
 
 #%in%运算符
 #可以简单的理解为：
 #左侧的集合是否在右侧的集合之中
 c(1, 3, 9) %in% 1:3
+'%in%'(c(1, 3, 9), 1:3)
+#[1]  TRUE  TRUE FALSE
 
-
-#可以自行定义一些二元操作符
-#勾股定理
+#自己定义二元操作符函数
 #a、b为直角边，c为斜边
 "%ab2c%" <- function(a, b) {
   sqrt(sum(a^2, b^2))
@@ -577,46 +710,124 @@ c(1, 3, 9) %in% 1:3
 3 %ab2c% 4
 # [1] 5
 
-#当我们看完了上边的%my_binary_operator%之后
-#对下边的符号，也就不怕了
-library(tidyverse)
+#看完%ab2c%之后，对下边的符号，也就觉得不过如此了
+library(purrr)
 x <- c(17, 28, 17, 12, 15, 12, 49)
 x %>% 
   unique() %>%
   sort()
+#等价于下边的代码，不过是更加简洁优雅
+x <- c(17, 28, 17, 12, 15, 12, 49)
+x2 <- unique(x)
+x3 <- sort(x2)
+x3
+#[1] 12 15 17 28 49
 
+#来点恶作剧
+"+" <- function(x, y) {
+  x * y
+}
+5 + 2 
+#[1] 10
+rm("+")
+5+2
+#[1] 7
+
+#当我们看完了上边的%my_binary_operator%之后
+#对下边的符号，也就不怕了
+library(tidyverse)
+x <- c(17, 28, 17, 12, 15, 12, 49)
+#%>%管道操作符
+x %>% 
+  unique() %>%
+  sort()
+
+#特殊函数的帮助文档
+?round
+?"+" #双引号
+?'+' #单引号
+?`+` #反单引号
+?'%in%'
+?'round'
+
+isGeneric("plot")
+plot
+plot(1:10)
+
+x <- seq(1, 100, by = 10)
+y <- 2*x + 10
+xy <- cbind(x, y)
+typeof(xy)
+class(xy)
+plot(xy, 
+     xlim = c(1, 100), 
+     ylim = c(0, 230),
+     type = "o", col = "red")
+x <- seq(1, 100, by = 10)
+y <- 2*x + 10
+my_model <- lm(y~x)
+op <- par(mfrow = c(2, 2))
+plot(my_model)
+par(op)
 
 #泛型函数
-whoami <- function(x, ...) UseMethod("whoami")
-whoami.boy <- function(x) {
-  print("I am a boy")
+interface <- function(x, y) {
+  message("Single interface")
+  UseMethod("particular", y)
 }
-whoami.girl <- function(x) {
-  print("I am a girl")
+particular.classA <- function(x, y) {
+  message("Different behavior: classA")
 }
-whoami.default <- function(x) {
-  print("I don't know who I am")
+particular.classB <- function(x, y) {
+  message("Different behavior: classB")
 }
-a <- 1:10
-whoami(a)
-class(a) <- "boy"
-whoami(a)
-class(a) <- "girl"
-whoami(a)
-attr(a, "class") <- "boy"
-whoami(a)
+particular.default <- function(x, y) {
+  message("Different behavior: default")
+}
+x <- 1:10
+y <- 1:20
+class(y) <- "classA"
+interface(x, y)
+#> Single interface
+#> Different behavior: classA
+class(y) <- "classB"
+interface(x, y)
+#> Single interface
+#> Different behavior: classB
+class(y) <- NULL
+interface(x, y)
+#> Single interface
+#> Different behavior: default
 
 
 #其实，+也是一个泛型函数
+methods("+")
+#> [1] +.Date   +.POSIXt
+#> see '?methods' for accessing help and source code
+library(ggplot2)
+methods("+")
+# [1] +.Date   +.gg*    +.POSIXt
+# see '?methods' for accessing help and source code
+
+z <- rnorm(1000)
+ggplot(data = data.frame(z), aes(z)) +
+  geom_density()
+
 #你当然可以对它进行修改
 #以下操作纯属娱（e）乐（gao）
-a <- 10:100
-a + 11:101
 "+.onlyFirst" <- function(a, b) {
   return(a[1] + b[1])
 }
-class(a) <- "onlyFirst"
-a + 11:101
+`+.onlyFirst` <- function(a, b) {
+  return(a[1] + b[1])
+}
+a <- 1:5
+a + 6:10
+#> [1]  7  9 11 13 15
+class(a) <- "onlyFirst" #给a贴上一个类标签onlyFirst
+a + 6:10
+#> [1] 7
+
 #当你理解了上边这个泛型的+
 #后续看到ggplot2中的加号
 #就不会陌生了
@@ -624,13 +835,14 @@ library(ggplot2)
 ggplot(data = iris, 
        aes(x = Petal.Length, 
            y = Petal.Width, 
-           colour = Species)) + 
+           colour = Species,
+           shape = Species)) + 
   geom_point()
 
 
 #究竟有多少个+的函数
 methods("+")
-detach(package:ggplot2)
+detach(package:ggplot2, force = TRUE)
 methods("+")
 rm(list = "+.onlyFirst")
 methods("+")
@@ -647,6 +859,54 @@ attr(a, 'class') <- 'MyClass'
 print(a)
 
 
+#函数递归
+old_monk_story <- function(depth = 1) {
+  message(rep("  ", depth),
+          "400 years ago(", 2018 - 400 * depth,
+          "), monk[", depth,
+          "] is telling the story:")
+  if(2018 - 400 * (depth+1)  >= 66) {#据说佛教公元年传入我国
+    old_monk_story(depth + 1)
+  }
+  message(rep("  ", depth),
+          "monk [", depth, "] finished his stroy")
+}
+old_monk_story()
+#> 400 years ago(1618), monk[1] is telling the story, that:
+#>     400 years ago(1218), monk[2] is telling the story, that:
+#>         400 years ago(818), monk[3] is telling the story, that:
+#>             400 years ago(418), monk[4] is telling the story, that:
+#>                 400 years ago(18), monk[5] is telling the story, that:
+#>                 monk [5] finished his stroy
+#>             monk [4] finished his stroy
+#>         monk [3] finished his stroy
+#>     monk [2] finished his stroy
+#> monk [1] finished his stroy
+
+fib <- function(n) {
+  if(n %in% 1:2) {
+    return(1)
+  } else {
+    return(c(fib(n-1), sum(tail(fib(n-1), n = 2))))
+  }
+}
+
+fib <- function(n) {
+  if(n == 1) {
+    return(1)
+  } else {
+    return(c(fib(n-1), sum(tail(fib(n-1), n = 2))))
+  }
+}
+
+
+fib(1)
+fib(2)
+fib(3)
+fib(10)
+
+c(c(c(c(c(c(1, 1), 2), 3), 5), 8), 13)
+
 #######################################################
 ##代码调试
 #######################################################
@@ -662,7 +922,8 @@ x <- c(1, 0, 0, 1, 1, 1, 0, 1, 1)
 #期望的是4,5,8
 findRuns(x = x, k = 2)
 debugonce(findRuns)
-debug(findRuns)
+#debug(findRuns)
+findRuns(x = x, k = 2)
 
 #######################################################
 ##异常处理
