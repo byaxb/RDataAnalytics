@@ -4,6 +4,7 @@ cjb <- readxl::read_excel("data/cjb.xlsx")
 View(cjb)
 #对数据进行探索性分析
 library(tidyverse)
+x11()
 cjb %>%
   select(sx, wlfk) %>%
   ggplot(aes(
@@ -13,7 +14,11 @@ cjb %>%
   geom_boxplot(width = 0.5)
 #数据预处理
 as_five_grade_scores <- function(x) {
-  cut(x, breaks = c(0, seq(60, 100, by = 10)),
+  cut(x, 
+      breaks = c(0, seq(60, 100, by = 10)),
+      include.lowest = TRUE, 
+      right = FALSE,
+      ordered_result = TRUE,
       labels = c("不及格", "及格", "中", "良", "优"))
 }
 cjb <- cjb %>%
@@ -31,4 +36,4 @@ my_model <- cjb %>%
 #模型评估
 inspectDT(my_model)
 #可视化
-plot(my_model)
+plot(my_model, method = "graph")
