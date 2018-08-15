@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·基础编程》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V8
-## 时间：2018年3月
+## 版本：V9
+## 时间：2018年8月
 ##
 ##*****************************************************
 ##
-## ch02_Programming Fundamentals_V8
+## ch02_Programming Fundamentals_V9
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -155,6 +155,25 @@ browseURL("https://stackoverflow.com/questions/tagged/r")
 library(sos)
 #比如，查找R语言里边深度学习的相关包和函数
 findFn("deep learning")
+#看看
+
+#毫无疑问，TASK VIEWS是最正统的
+#机器学习相关主题
+browseURL("https://CRAN.R-project.org/view=MachineLearning")
+#聚类分析相关主题
+browseURL("https://cran.r-project.org/web/views/Cluster.html")
+#自然语言处理
+browseURL("https://cran.r-project.org/web/views/NaturalLanguageProcessing.html")
+#高性能计算相关主题
+browseURL("https://cran.r-project.org/web/views/HighPerformanceComputing.html")
+#模型部署相关主题
+browseURL("https://cran.r-project.org/web/views/ModelDeployment.html")
+#互联网相关主题
+browseURL("https://cran.r-project.org/web/views/WebTechnologies.html")
+
+#机器学习/数据挖掘相关的一些扩展包
+browseURL("https://github.com/thedataincubator/data-science-blogs/blob/master/top-r-packages.md")
+browseURL("https://www.r-pkg.org/starred")
 
 #重装R及包的更新
 #R不支持升级，多个版本可以共存
@@ -177,22 +196,24 @@ for(cur_r_html in r_htmls) {
   r_version_info <- rbind(r_version_info,
                           html_content%>% html_node(target_name) %>% html_table)
 }
+View(r_version_info)
 library(tidyverse)
-r_version_info %>%
-  select("Name", "Last modified", "Size") %>%
+r_version_info %>% 
+  as.data.frame() %>% 
+  select(2:4) %>% 
   set_names(c("name", "last_modified", "size")) %>%
-  filter(gregexpr("R-", name) != -1) %>%
+  filter(gregexpr("R-", name) != -1) %>% 
   mutate(type = substring(name, 1, 3),
-         last_modified = as.POSIXct(last_modified)) %>%
+         last_modified = as.POSIXct(last_modified)) %>% 
   mutate(days_ellpased = c(NA, round(difftime(last_modified[2:(length(last_modified))],
                                               last_modified[1:(length(last_modified) - 1)],
-                                              units = "days"), digits = 2))) %>%
+                                              units = "days"), digits = 2))) %>% 
   ggplot(aes(x = type, y = days_ellpased, fill = type)) +
   geom_boxplot()
 #通过这个图，可以看出R.0/R.1/R.2/R.3不同版本的更新周期
 #当然，我们也可以计算一下具体的数值
 r_version_info %>%
-  select("Name", "Last modified", "Size") %>%
+  select(2:4) %>%
   set_names(c("name", "last_modified", "size")) %>%
   filter(gregexpr("R-", name) != -1) %>%
   mutate(type = substring(name, 1, 3),
@@ -205,12 +226,12 @@ r_version_info %>%
             median = median(days_ellpased, na.rm = TRUE))
 #具体数值如下
 # # A tibble: 4 x 3
-# type    mean    median
-# <chr>   <dbl>   <dbl>
+# type   mean median
+# <chr> <dbl>  <dbl>
 # 1 R-0    39.3   41.5
-# 2 R-1    55.0   57.0
+# 2 R-1    55.0   57  
 # 3 R-2    77.4   70.2
-# 4 R-3    76.7   66.5
+# 4 R-3    75.0   66.5
 #换句话说，大概每过2个月，基本上就应该更新一下你的R
 
 
@@ -515,75 +536,6 @@ system.time({
 #> 11.51    0.06   11.70 
 
 
-#能并行计算的，尽量并行
-#比如，要计算某复杂网络
-#删除其中任意节点，对SCC size的影响
-library(foreach)
-library(doParallel)
-cl <- makeCluster(detectCores())
-registerDoParallel(cl, cores = detectCores())
-#在某些工作站上，上述语句要花费一定的时间
-#假如每一次“循环”的时间都比较短
-#而重新makeCluster的时间比较长
-#那样就得不偿失了
-library(igraph)
-#生成一个网络
-ig <- sample_gnp(200, 1/200)
-clusterExport(cl, 
-              varlist = c("ig"),
-              envir=environment()) 
-#对每个节点进行某个操作
-scc_mxs <- foreach(
-  i = 1:vcount(ig),
-  .combine = "c",
-  .packages = c("foreach", "doParallel", "igraph")) %dopar% {
-    tmpGraph <- delete.vertices(ig, i)
-    SCC <- components(tmpGraph, mode = "strong")
-    max(SCC$csize)
-  }
-#stop clusters
-stopCluster(cl)
-max(scc_mxs)
-
-
-#题外话：
-#若小数点后有无限多位，计算机是没法存储的
-if(sqrt(2) ^ 2 == 2) {
-  cat("Equal, to do something")
-} else {
-  cat("Unequal, to do something else")
-}
-
-#此时，可以采用下边的方式
-if(all.equal(sqrt(2) ^ 2 ,2)) {
-  cat("Equal, to do something")
-} else {
-  cat("Unequal, to do something else")
-}
-
-#all.equal函数中，可以通过设置参数tolerance
-#Differences smaller than tolerance are not reported
-#该参数的默认值is close to 1.5e-8
-
-
-format(sqrt(2) ^ 2, digits = 18)
-#当然，也可以采用dlpyr
-dplyr::near(sqrt(2) ^ 2, 2)
-all.equal(sqrt(2) ^ 2, 2)
-
-#分段函数的绘制
-x <- seq(from = -10, to = 10, by = 0.01)
-y <- numeric(length(x))
-y[x < 0] <- -1
-y[x == 0] <- 0
-y[x > 0] <- 1
-plot(x,
-     y,
-     type = "l",
-     col = "blue",
-     lwd = 2)
-
-
 #######################################################
 ##编写函数
 #######################################################
@@ -757,8 +709,8 @@ plot(1:10)
 x <- seq(1, 100, by = 10)
 y <- 2*x + 10
 xy <- cbind(x, y)
-typeof(xy)
 class(xy)
+#> [1] "matrix"
 plot(xy, 
      xlim = c(1, 100), 
      ylim = c(0, 230),
@@ -766,6 +718,8 @@ plot(xy,
 x <- seq(1, 100, by = 10)
 y <- 2*x + 10
 my_model <- lm(y~x)
+class(my_model)
+#> [1] "lm"
 op <- par(mfrow = c(2, 2))
 plot(my_model)
 par(op)
