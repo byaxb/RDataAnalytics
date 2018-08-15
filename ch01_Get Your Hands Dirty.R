@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·Get Your Hands Dirty》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V8
-## 时间：2018年3月
+## 版本：V9
+## 时间：2018年8月
 ##
 ##*****************************************************
 ##
-## ch01_Get Your Hands Dirty_V8
+## ch01_Get Your Hands Dirty_V9
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -46,6 +46,7 @@
 x <- 2
 #关于x的一些运算
 sqrt(x)#熟悉的根号2
+?sqrt #打开帮助文档，会发现sq rt = square root
 x ^ 0.5#与上一语句等价
 x ^ 8
 x ^ 2 #x的平方
@@ -91,6 +92,12 @@ integrate(function(x)
 z <- sin(2 * x)
 lines(x, z, col = "red", type = "o")
 
+#解方程，超过800按20%扣税
+#求税后是x- (x - 800) * 20% = 10000
+f <- function(x, AT = 10000) {
+  x - (x - 800) * 0.2 - AT
+}
+uniroot(f, c(10000, 15000), 10000)$root
 
 #创建一个向量a
 a <- c(3, 4)
@@ -104,6 +111,7 @@ a %*% b
 drop(a %*% b) #结果作为标量
 sum(a * b) #与上一语句等价
 
+
 #创建一个矩阵
 # 1  2
 # 3 -1
@@ -116,6 +124,15 @@ A
 View(A)
 #矩阵的转置
 t(A)
+#求矩阵的逆
+solve(A)
+#行列式
+det(A)
+#特征向量与特征值
+eigen(A)
+
+#排列组合
+choose(3, 2)
 
 #解线性代数方程
 #Ax = b
@@ -312,11 +329,11 @@ yw5 #结果是变成了若干个区间
 #数据离散化，或者说，数据分箱
 yw5 <- cut(
   yw,
-  breaks = c(0, 60, 70, 80, 90, 100),
-  labels = c("不及格", "及格", "中", "良", "优"),
-  #每个区间打上标签
-  ordered = TRUE
-) 
+  breaks = c(0, seq(60, 100, by = 10)),
+  include.lowest = TRUE, 
+  right = FALSE,
+  ordered_result = TRUE,
+  labels = c("不及格", "及格", "中", "良", "优")) 
 yw5
 #小伙伴们应该注意到了，除了打上标签之外
 #还增加了ordered这一项
@@ -372,7 +389,7 @@ ysw[c(1,3, 3, 1, 2), ]
 
 
 #当然，我们现在可以将姓名、学号、性别、各科成绩放一起
-cjb <- as.data.frame(xm = xm,
+cjb <- data.frame(xm = xm,
                      xb = xb,
                      yw = yw,
                      sx = sx,
@@ -383,7 +400,8 @@ cjb <- as.data.frame(xm = xm,
 #这种情况下，应该请出R里边最重要的数据对象了：
 #数据框！！！！
 #可以按照总分，对成绩表进行排序
-cjb <- cjb[order(cjb$zcj), ]
+cjb$zcj <- apply(cjb[, 3:5], 1, sum)
+cjb <- cjb[order(cjb$zcj, decreasing = TRUE), ]
 View(cjb)
 
 str(cjb)
@@ -478,23 +496,23 @@ boxplot(zcj~wlfk,
 
 #也可以观察不同科目的数据
 #语文
-min(cjb$yw)
-max(cjb$yw)
-range(cjb$yw)
-diff(range(cjb$yw))
+min(cjb$yw) #最低分
+max(cjb$yw) #最高分
+range(cjb$yw) #极差
+diff(range(cjb$yw)) #效果相同
 #前十名
 head(sort(cjb$yw, decreasing = TRUE), n = 10)
 #后十名
 sort(cjb$yw)[1:10]
-mean(cjb$yw)
+mean(cjb$yw) #平均分
 mean(cjb$yw, trim = 0.2)#类似于娱乐节目里边的去掉一个最低分、去掉一个最高分
-median(cjb$yw)
-sd(cjb$yw)
+median(cjb$yw) #中位数
+sd(cjb$yw) #标准差
 
 #看看哪些科目差距最大/最小
-apply(cjb[, 4:12], 2, sd)
+sort(apply(cjb[, 4:12], 2, sd), decreasing = TRUE)
 #由此可以看出：
-#数学成绩差别最大，标准差为10.89
+#物理成绩差别最大，标准差为12.45
 #政治差别最小，标准差为5.63
 #意味着什么？总分方面，数学可能拉开差距？？
 #那咱们来看看，究竟哪些科目，与最后总分相关性最强
@@ -589,7 +607,8 @@ test_set <- cjb[-train_idx, ]
 predicted <- predict(tree_model, test_set, type = "class")
 con_table <- table(predicted, test_set$wlfk)
 sum(diag(con_table)) / sum(con_table)
-#80.34%的准确率，十之七八，是能预测对的
+#> [1] 0.8209607
+#十之七八，是能预测对的
 #仅仅根据成绩，来进行文理分科，可能这个结果已经可以接受了
 
 
