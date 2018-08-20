@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·数据对象》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V8
-## 时间：2018年3月
+## 版本：V9
+## 时间：2018年9月
 ##
 ##*****************************************************
 ##
-## ch03_Data Objects_V8
+## ch03_Data Objects_V9
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -47,12 +47,16 @@
 #######################################################
 #查看R内置的一些常量
 ?Constants
+
+#预定义的全局变量
 LETTERS
 letters
 month.abb
 month.name
 pi
 format(pi, digits = 17)
+T #TRUE是真正的常量，而T <- FALSE
+F
 
 #数值常量
 ?NumericConstants
@@ -86,19 +90,15 @@ if(!F) {
 }
 
 #锁定某些变量，不让别人修改
-fakeConstant <- 1
-lockBinding("fakeConstant", globalenv())
-fakeConstant <- 2
-rm(fakeConstant) #清理掉伪常量
+fake_constant <- 1
+lockBinding("fake_constant", globalenv())
+fake_constant <- 2
+rm(fake_constant) #清理掉伪常量
 
 
 #######################################################
 ##向量
 #######################################################
-#创建向量最直接的方式
-charToRaw("艾新波")
-#[1] b0 ac d0 c2 b2 a8
-
 #c()创建向量最常见的方式
 #Combine Values into a Vector
 #字符型向量
@@ -156,21 +156,6 @@ pi:1
 #[1] 1 2 3 4 5 6 7 8 9
 #不要有记忆的负担，在R里边，不要吝啬{}和()的使用
 
-xm <- c("周黎", "汤海明", "舒江辉", "翁柯", "祁强", "湛容")
-seq_along(xm)
-#> [1] 1 2 3 4 5 6
-for(i in seq_along(xm)) {
-  message(i, ": ", xm[i])
-}
-#> 1: 周黎
-#> 2: 汤海明
-#> 3: 舒江辉
-#> 4: 翁柯
-#> 5: 祁强
-#> 6: 湛容
-
-
-
 #顺便提一句，seq为泛型函数
 #以本课程2012年第一次开课课程安排为例
 #2012年9月3日至2013年1月6日（校历2-19周）
@@ -191,6 +176,14 @@ rep(c("a", "b"), c(2, 3))
 rep(letters, 1:26)
 
 #产生随机数
+#产生服从某种分布的随机数
+rnorm(100)#标准正态分布
+rnorm(100, 2, 1) #均值为2，标准差为1
+#当然，正态分布只是诸多分布的其中一种
+?Distributions
+#另外，请注意d/p/q/r四个前缀各自的含义
+
+#随机抽样
 sample(10)
 #> [1]  6  5  8  7  2  3  4  1 10  9
 sample(c("b", "u", "p", "t", "a", "x", "b"))
@@ -214,16 +207,22 @@ length(unique_re_sample)
 #请小伙伴们验证一下
 #从N个对象中，有放回抽取N个对象
 #大约有多少是抽取不到的？
-10000 - mean(sapply(1:100000, function(x) {
-  re_sample <- sample(1:10000, 10000, replace = TRUE)
+times <- 1000
+num <- 10000
+1- mean(unlist(replicate(times, {
+  re_sample <- sample(num, num, replace = TRUE)
   unique_re_sample <- unique(re_sample)
   length(unique_re_sample)
-}))
+}))) / num
+#> [1] 0.3677274
+#这里的replicate函数用于重复执行某些语句
+#当然也可以采用sapply来实现类似的效果，
+#只不过replicate更加便捷而已
 
 
-#一旦涉及到随机
-#每次结果都不一样
-#要复现结果，则可以设置随机数种子
+#一旦涉及到随机，每次结果都不一样
+#要复现结果，尤其是在开展可重复性学术研究时，
+#需要设置随机数种子，确保之后的随机动作所得结果都是一样的
 set.seed(2012)
 #这里的随机数种子没有什么特殊含义
 #可以随便设置，这里取2012，
@@ -231,7 +230,9 @@ set.seed(2012)
 sample(20)
 sample(20)
 sample(20)
-#请注意，每次执行上述四条语句时，结果是一样的
+#请注意，每次执行上述四条语句时，
+#三个sample(20)，前后结果不一样，
+#但每次的结果是一样的
 
 #向量的增删改查
 #以“查”最为重要
@@ -333,6 +334,12 @@ sort(fen_shu_xian2016)
 # 635            640            646            670 
 # 中国科学院大学       北京大学       清华大学 
 # 671            678            680 
+
+print(fen_shu_xian2016,
+       trim = TRUE,
+       width = 3,
+       justify = "right")
+?print
 sort(fen_shu_xian2016, decreasing = TRUE)
 order(fen_shu_xian2016, decreasing = TRUE)
 #> [1]  5  3  1  4  9  6  7 10  2 11  8
@@ -435,7 +442,9 @@ my_ggplot <- my_ggplot +
   geom_text(aes(x = p4["x"], y = p4["y"], label = "p4"), size = 4, vjust = -1) 
 plot(my_ggplot)
 
-ggsave("D://desktop/p1p2p3.png", dpi = 600)
+ggsave("p1p2p3.png", dpi = 600)
+#注意：
+#图片存储在"getwd()的结果/p1p2p3.png"
 
 #投影
 #向量1
@@ -475,7 +484,7 @@ ggplot() +
                linetype = 2,
                colour = 'red') +
   geom_text(aes(x = p1_on_p2["x"], y = p1_on_p2["y"], label = "p1_on_p2"), size = 4, vjust = 1, hjust = -0.2)
-ggsave("D://desktop/prj.png", dpi = 600)
+ggsave("prj.png", dpi = 600)
 
 #向量相乘
 petal_raw <- iris[, c("Petal.Length", "Petal.Width")]
@@ -638,6 +647,14 @@ xb[c(1, 4:5)]
 xb[-c(2:3, 6)]
 # [1] 女 女 男
 # Levels: 男 女
+xm <- c("周黎", "汤海明", "舒江辉", "翁柯", "祁强", "湛容")
+yw <- c(94, 87, 92, 91, 85, 92)
+xb <- c("女", "男", "男", "女", "男", "女")
+xb <- factor(xb)
+xb[yw > 90]
+#> [1] 女 男 女 女
+#> Levels: 男 女
+
 xb[1] <- "男"
 xb
 # [1] 男 男 男 女 男 女
@@ -708,51 +725,61 @@ days[3] < days[2]
 days[1] < days[3]
 #> [1] TRUE
 
-#百分制成绩
+#百分制成绩变为五分制成绩
 yw <-  c(94, 87, 92, 91, 85, 92)
-#数据装箱、离散化
-#五分制成绩
+#数据分箱
 yw5 <-  cut(yw,
             breaks = c(0, (6:10)*10))
 yw5
-# [1] (90,100] (80,90]  (90,100] (90,100] (80,90]  (90,100]
-# Levels: (0,60] (60,70] (70,80] (80,90] (90,100]
+#> [1] (90,100] (80,90]  (90,100] (90,100] (80,90]  (90,100]
+#> Levels: (0,60] (60,70] (70,80] (80,90] (90,100]
 
-#百分制成绩
+#百分制成绩变为五分制成绩
 yw <-  c(94, 87, 92, 91, 85, 92)
-#数据装箱、离散化
-#五分制成绩+闭区间
+#数据分箱+闭区间
 yw5 <-  cut(yw,
             breaks = c(0, (6:10)*10),
             include.lowest = TRUE)
 yw5
-# [1] (90,100] (80,90]  (90,100] (90,100] (80,90]  (90,100]
-# Levels: [0,60] (60,70] (70,80] (80,90] (90,100]
+#> [1] (90,100] (80,90]  (90,100] (90,100] (80,90]  (90,100]
+#> Levels: [0,60] (60,70] (70,80] (80,90] (90,100]
 
-#百分制成绩
+#百分制成绩变为五分制成绩
 yw <-  c(94, 87, 92, 91, 85, 92)
-#数据装箱、离散化
-#五分制成绩+闭区间+有序因子
+#数据分箱+闭区间+左开右闭
 yw5 <-  cut(yw,
             breaks = c(0, (6:10)*10),
             include.lowest = TRUE,
+            right = FALSE)
+yw5
+#> [1] [90,100] [80,90)  [90,100] [90,100] [80,90)  [90,100]
+#> Levels: [0,60) [60,70) [70,80) [80,90) [90,100]
+
+
+#百分制成绩变为五分制成绩
+yw <-  c(94, 87, 92, 91, 85, 92)
+#数据分箱+闭区间+左开右闭+有序因子
+yw5 <-  cut(yw,
+            breaks = c(0, (6:10)*10),
+            include.lowest = TRUE,
+            right = FALSE,
             ordered_result = TRUE)
 yw5
-# [1] (90,100] (80,90]  (90,100] (90,100] (80,90]  (90,100]
-# Levels: [0,60] < (60,70] < (70,80] < (80,90] < (90,100]
+#> [1] [90,100] [80,90)  [90,100] [90,100] [80,90)  [90,100]
+#> Levels: [0,60) < [60,70) < [70,80) < [80,90) < [90,100]
 
-#百分制成绩
+#百分制成绩变为五分制成绩
 yw <-  c(94, 87, 92, 91, 85, 92)
-#数据装箱、离散化
-#五分制成绩+闭区间+有序因子+标签
+#数据分箱+闭区间+左开右闭+有序因子+标签
 yw5 <-  cut(yw,
             breaks = c(0, (6:10)*10),
             include.lowest = TRUE,
+            right = FALSE,
             ordered_result = TRUE,
             labels = c("不及格", "及格", "中", "良", "优"))
 yw5
-# [1] 优 良 优 优 良 优
-# Levels: 不及格 < 及格 < 中 < 良 < 优
+#> [1] 优 良 优 优 良 优
+#> Levels: 不及格 < 及格 < 中 < 良 < 优
 
 
 #######################################################
@@ -1027,18 +1054,15 @@ presidents[ , , 3] <- 0
 plot(presidents)
 
 presidents <- load.image("presidents.jpg")
-area_coor_x <- 349:451
-area_coor_y <- 110:249
+area_coor_x <- 350:449 #100
+area_coor_y <- 110:259 #150
 degree <- 0.6
 array_dim <- c(length(area_coor_x), 
                length(area_coor_y),
                3)
-arrary_data <- runif(
-  length(area_coor_x) *
-    length(area_coor_y) *
-    3)
+array_data <- runif(prod(array_dim))
 random_noise <- array(dim = array_dim,
-                      data = arrary_data)
+                      data = array_data)
 presidents[area_coor_x, area_coor_y,] <-
   (1 - degree) * presidents[area_coor_x, area_coor_y,] +
   degree * random_noise
@@ -1107,6 +1131,11 @@ bupt$xiao_qu
 #[1] "西土城路校区" "沙河校区"     "宏福校区"
 sum(bupt$ji_di)
 #[1] 16
+
+bupt$xue_sheng
+#> 全日制 非全日制 
+#> 23000    55000
+
 bupt$xue_sheng["全日制"]
 # 全日制 
 # 30000 
@@ -1211,6 +1240,11 @@ cjb <- data.frame(xm = xm,
 #注意比较与下述语句的区别
 #cheng_ji_biao <- cbind(xing_ming, xing_bie, yu_wen, shu_xue, wai_yu)
 #class(cheng_ji_biao)
+
+str(cjb[1, ])
+typeof(cjb[1, ])
+class(cjb[1, ])
+str(cjb[, 1])
 
 View(cjb) #打开成绩表
 #由于数据框本质上是列表，可以通过以下三种方式访问其中的列
@@ -1344,6 +1378,15 @@ str(cjb)
 # $ bj  : Factor w/ 15 levels "1101","1102",..: 1 1 1 1 1 1 1 1 1 1 ...
 # $ xb  : Factor w/ 2 levels "男","女": 2 1 1 2 1 2 2 1 2 2 ...
 # $ yw  : int  94 87 92 91 85 92 88 81 88 94 ...
+summary(cjb)
+#> xm                  bj       xb     
+#> Length:775         1102   : 58   男:369  
+#> Class :character   1103   : 57   女:406  
+#> Mode  :character   1105   : 57           
+#>                    1104   : 56           
+#>                    1106   : 56           
+#>                    1107   : 55           
+#>                    (Other):436 
 
 cjb$zcj <- apply(cjb[, 4:12], 1, sum)
 order(cjb$zcj, decreasing = TRUE)[1:5]
@@ -1425,201 +1468,79 @@ cjb_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
 cjb <- read.csv(cjb_url,
                 stringsAsFactors = FALSE,
                 encoding = "CP936")
-cjb <- read_csv(cjb_url,
-                locale = locale(encoding = "CP936"))
 #从https://github.com/byaxb/RDataAnalytics下载之后读取
-cjb <- readxl::read_excel("data/cjb.xlsx")
-library(tidyverse)
-cjb %>%
-  filter_at(vars(4:12), any_vars(. < 60))%>%
-  View()
+#cjb <- readxl::read_excel("data/cjb.xlsx")
 
-cjb %>%
-  filter_at(vars(4:12), any_vars(. < 60))%>%
-  View()
-
-
-cjb %>%
-  mutate(zcj = rowSums(.[4:12])) %>%
-  select(xm, bj, yw:sw, xb, zcj) %>%
-  head(n = 12) %>%
-  arrange(xb) %>%
-  write.csv(file = "D://desktop/fenzu.csv")
-View(cjb)
-
-#函数只有value单个参数
+#x %>% f
+#相当于f(x)
 cjb %>%
   head
-#> # A tibble: 6 x 13
-#> xm       bj xb       yw    sx    wy    zz    ls    dl
-#> <chr> <dbl> <chr> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#>   1 周黎   1101 女       94    82    96    97    97    98
-#> 2 汤海明~  1101 男       87    94    89    95    94    94
-#> 3 舒江辉~  1101 男       92    79    86    98    95    96
-#> 4 翁柯   1101 女       91    84    96    93    97    94
-#> 5 祁强   1101 男       85    92    82    93    87    88
-#> 6 湛容   1101 女       92    82    85    91    90    92
-#> # ... with 4 more variables: wl <dbl>, hx <dbl>,
-#> #   sw <dbl>, wlfk <chr>
+#即：
 head(cjb)
-#除了value之外，还有其他参数
-#value默认为第一个参数
+
 cjb %>%
-  head(n = 4)
+  head(n = 4) #cjb默认为第一个参数
+#相当于
 head(cjb, n = 4)
-#> # A tibble: 4 x 13
-#> xm       bj xb       yw    sx    wy    zz    ls    dl
-#> <chr> <dbl> <chr> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#>   1 周黎   1101 女       94    82    96    97    97    98
-#> 2 汤海明~  1101 男       87    94    89    95    94    94
-#> 3 舒江辉~  1101 男       92    79    86    98    95    96
-#> 4 翁柯   1101 女       91    84    96    93    97    94
-#> # ... with 4 more variables: wl <dbl>, hx <dbl>,
-#> #   sw <dbl>, wlfk <chr>
-
-#除了value之外，还有其他参数
-#value默认为第一个参数
-first_arg <- 1:10
-value <- seq(1, 10, by = 2)
-value %>%
-  setdiff(first_arg, .)
-setdiff(first_arg, value)
-#> [1]  2  4  6  8 10
-
-#涉及到一系列操作
-cjb %>% {
-  my_data <- .
-  rbind(head(my_data), tail(my_data))
-}
-
-cjb_bak <- cjb
-cjb <- cjb_bak
-#dplyr
-# mutate() adds new variables that are functions of existing variables
-# select() picks variables based on their names.
-# filter() picks cases based on their values.
-# summarise() reduces multiple values down to a single summary.
-# arrange() changes the ordering of the rows.
-
-View(cjb)
-str(cjb)
-# Classes ‘tbl_df’, ‘tbl’ and 'data.frame':	775 obs. of  13 variables:
-# $ xm  : chr  "周黎" "汤海明" "舒江辉" "翁柯" ...
-# $ bj  : int  1101 1101 1101 1101 1101 1101 1101 1101 1101 1101 ...
-# $ xb  : chr  "女" "男" "男" "女" ...
-# $ yw  : int  94 87 92 91 85 92 88 81 88 94 ...
-# $ sx  : int  82 94 79 84 92 82 72 89 77 81 ...
-# $ wy  : int  96 89 86 96 82 85 86 87 95 88 ...
-# $ zz  : int  97 95 98 93 93 91 94 97 94 91 ...
-# $ ls  : int  97 94 95 97 87 90 87 94 84 85 ...
-# $ dl  : int  98 94 96 94 88 92 88 96 94 98 ...
-# $ wl  : int  95 90 89 82 95 82 89 81 87 81 ...
-# $ hx  : int  94 90 94 90 94 98 98 88 94 88 ...
-# $ sw  : int  88 89 87 83 93 90 94 83 82 88 ...
-# $ wlfk: chr  "文科" "文科" "文科" "文科" ...
 
 #选择某些列
 cjb %>%
-  select(xm, yw, sx) %>%
+  select(xm, yw, sx) %>% #注意xm, yw, sx无需用引号括起来
   head(n = 3)
-#> # A tibble: 3 x 3
-#> xm        yw    sx
-#> <chr>  <dbl> <dbl>
-#> 1 周黎      94    82
-#> 2 汤海明    87    94
-#> 3 舒江辉    92    79
-cjb_sub <- cjb[, c("xm", "yw", "sx")]
-head(cjb_sub)
 
+cjb %>%
+  select("xm", "yw", "sx") %>% #用引号括起来当然也可以
+  head(n = 3)
+
+#选择某些列之后，对列进行重命名
+#一般来讲，在编代码时不建议用中文做变量名或列名
+#即将显示的时候，可以改为中文
 cjb %>%
   select(xm, yw, sx) %>%
   set_names(c("姓名", "语文", "数学")) %>%
   head(n = 3)
-#> # A tibble: 3 x 3
-#> 姓名    语文  数学
-#> <chr>  <dbl> <dbl>
-#> 1 周黎      94    82
-#> 2 汤海明    87    94
-#> 3 舒江辉    92    79
 
-cjb_sub <- cjb[, c("xm", "yw", "sx")]
-names(cjb_sub) <- c("姓名", "语文", "数学")
-head(cjb_sub)
-
+#通过正整数来选择
 cjb %>%
   select(1, 4:12) %>%
   head(n = 3)
-#> # A tibble: 3 x 10
-#> xm       yw    sx    wy    zz    ls    dl    wl    hx
-#> <chr> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#> 1 周黎     94    82    96    97    97    98    95    94
-#> 2 汤海明~    87    94    89    95    94    94    90    90
-#> 3 舒江辉~    92    79    86    98    95    96    89    94
 
-
-cjb_sub <- cjb[, c(1, 4:12)]
-head(cjb_sub, n = 10)
-
+#连续选择某些列
 cjb %>%
-  select(xm, yw:sw) %>%
+  select(xm, yw:sw) %>% #注意：这里是列名yw:sw
   head(n = 3)
 
-
-#无对应的写法
-
-
-#选择符合某些条件记录
+#修改某些列
+#修改或是新增，都是直接赋值
 cjb %>%
-  filter(yw < 60)
-#> # A tibble: 2 x 13
-#> xm       bj xb       yw    sx    wy    zz    ls    dl
-#> <chr> <dbl> <chr> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#>   1 滑亚   1113 男       33    46    30    65    82    76
-#> 2 张良平~  1115 男        0     0     0     0     0     0
-#> # ... with 4 more variables: wl <dbl>, hx <dbl>,
-#> #   sw <dbl>, wlfk <chr>
+  mutate_at(vars(bj, xb, wlfk), factor) %>%
+  mutate(zcj = rowSums(.[4:12])) %>%
+  arrange(desc(zcj)) %>%
+  tail(n = 2)
 
-
-cjb %>%
-  filter_at(vars(4:12), any_vars(. < 60))
-#> # A tibble: 52 x 13
-#> xm        bj xb       yw    sx    wy    zz    ls
-#> <chr>  <dbl> <chr> <dbl> <dbl> <dbl> <dbl> <dbl>
-#>   1 凌诗雨  1101 女       84    55    95    90    86
-#> 2 邓洪涛  1101 男       79    74    75    95    97
-#> 3 罗云    1101 女       92    69    85    91    84
-#> 4 徐明    1101 男       83    65    90    94    86
-#> 5 吕绥    1101 女       83    59    77    90    81
-#> 6 庞琴    1101 女       84    57    73    92    84
-#> 7 金滔    1101 男       81    59    77    83    69
-#> 8 于知平  1101 男       70    67    74    92    73
-#> 9 郝佳红  1102 女       89    58    88    87    71
-#> 10 昝美君  1102 女       88    83    80    93    83
-#> # ... with 42 more rows, and 5 more variables:
-#> #   dl <dbl>, wl <dbl>, hx <dbl>, sw <dbl>, wlfk <chr>
-
-
-
-lower60_idx <- apply(cjb[, 4:12], 1, function(x) {
-  any(x < 60)
-})
-cjb[lower60_idx, ]
-
-
-
-
+#上述操作只是产生临时对象，cjb本身的值未动
+#采用%<>%操作符
 cjb %<>%
   mutate_at(vars(bj, xb, wlfk), factor) %>%
   mutate(zcj = rowSums(.[4:12])) %>%
   arrange(desc(zcj))
-cjb <- cjb %>%
+cjb <- cjb %>% #和上述语句等价
   mutate_at(vars(bj, xb, wlfk), factor) %>%
   mutate(zcj = rowSums(.[4:12])) %>%
   arrange(desc(zcj))
-cjb
 
 
-#分组统计
+#以下再来看看行操作
+#找出语文成绩不及格的同学
+cjb %>%
+  filter(yw < 60)
+
+#找出有不及格科目的同学
+cjb %>%
+  filter_at(vars(4:12), any_vars(. < 60))
+
+
+#按照性别进行分组统计
 cjb %>%
   filter(zcj != 0) %>%
   group_by(xb) %>%
@@ -1627,175 +1548,26 @@ cjb %>%
             max = max(zcj),
             mean = mean(zcj),
             min = min(zcj))
-# # A tibble: 2 x 5
-#   xb    count   max  mean   min
-# <fct> <int> <dbl> <dbl> <dbl>
-# 1 男      368   885  793.   523
-# 2 女      406   879  797.   647
 
-
-#剔除其中异常点
-with_zeros <- cjb %>%
-  group_by(bj) %>%
-  summarise(count = n(),
-            max = max(zcj),
-            mean = mean(zcj),
-            median = median(zcj),
-            min = min(zcj)) %>%
-  arrange(median)
-
-without_zeros <- cjb %>%
-  filter(zcj != 0) %>%
-  group_by(bj) %>%
-  summarise(count = n(),
-            max = max(zcj),
-            mean = mean(zcj),
-            median = median(zcj),
-            min = min(zcj)) %>%
-  arrange(median)
-View(with_zeros)
-View(without_zeros)
+#数据的长宽变换
+#宽数据变成长数据：
+#-->多列变两列
+#-->一行变多行
+cjb %>%
+  gather(key = ke_mu, value = cheng_ji, yw:sw) %>%
+  arrange(xm)
 
 
 #按科目进行汇总统计
 cjb %>%
-  gather(key = ke_mu, value = cheng_ji, yw:sw) %>%
-  arrange(xm)
-# # A tibble: 6,975 x 7
-# xm       bj    xb    wlfk    zcj ke_mu cheng_ji
-# <chr>    <fct> <fct> <fct> <dbl> <chr>    <dbl>
-# 1 艾春莲   1103  女    文科    713 yw          86
-# 2 艾春莲   1103  女    文科    713 sx          59
-# 3 艾春莲   1103  女    文科    713 wy          87
-# 4 艾春莲   1103  女    文科    713 zz          89
-# 5 艾春莲   1103  女    文科    713 ls          85
-# 6 艾春莲   1103  女    文科    713 dl          92
-# 7 艾春莲   1103  女    文科    713 wl          73
-# 8 艾春莲   1103  女    文科    713 hx          74
-# 9 艾春莲   1103  女    文科    713 sw          68
-# 10 艾阳芳芳 1112  女    理科    820 yw          89
-# # ... with 6,965 more rows
-
-cjb %>%
   filter(zcj != 0) %>%
   gather(key = ke_mu, value = cheng_ji, yw:sw) %>%
-  group_by(ke_mu) %>%
-  summarise(max = max(cheng_ji),
-            mean = mean(cheng_ji),
-            median = median(cheng_ji),
-            min = min(cheng_ji),
-            sd = sd(cheng_ji)) %>%
-  arrange(desc(mean))
-
-#> # A tibble: 9 x 6
-#> ke_mu   max  mean median   min    sd
-#> <chr> <dbl> <dbl>  <dbl> <dbl> <dbl>
-#>   1 dl      100  93.0     94    70  4.87
-#> 2 zz      100  92.3     93    65  4.56
-#> 3 hx      100  91.7     94    52  7.60
-#> 4 ls      100  89.1     90     0  7.66
-#> 5 wy       99  87.5     88    30  7.00
-#> 6 yw       96  87.4     88    33  4.94
-#> 7 sw      100  86.4     88    55  8.26
-#> 8 sx      100  86.2     89    26 10.5 
-#> 9 wl      100  81.2     83    21 12.1 
-
-View(cjb)
-
-cjb_urlcheng_ji_biao %>%
-  filter(zong_cheng_ji != 0) %>%
-  select(yu_wen:sheng_wu) %>%
-  gather(key = ke_mu, value = cheng_ji) %>%
   group_by(ke_mu) %>%
   summarise(max = max(cheng_ji),
             mean = mean(cheng_ji),
             median = median(cheng_ji),
             min = min(cheng_ji)) %>%
-  View()
-
-
-cheng_ji_biao %>%
-  select(xing_ming, xing_bie, yu_wen:sheng_wu) %>%
-  gather(key, value, yu_wen:sheng_wu) %>%
-  arrange(xing_ming, xing_bie) %>%
-  View()
-
-cjb %>%
-  select(xm, xb, yw:sw) %>%
-  gather(key, value, yw:sw) %>%
-  arrange(xm, xb) %>%
-  spread(key, value) %>%
-  View()
-
-
-
-
-
-set.seed(2012)
-cjb[sample(1:775, 20), ] %>%
-  write.csv("D://desktop/sample.csv")
-cjb %>%
-  filter_at(sample(1:nrow(.), 20)) %>%
-  View()
-View(cjb)
-
-plot(cjb$sx, cjb$wl, col = c("red", "black")[cjb$wlfk])
-cjb %>%
-  mutate(sx_wl = sx + wl) %>%
-  arrange(desc(sx_wl, wlfk)) %>%
-  select(xm, sx, wl, wlfk) %>%
-  View()
-
-
-xm_selected <- c(
-  "和伍姣",
-  "羿城城",
-  "农佳亲",
-  "邹雪艳",
-  "钱瑞英",
-  "穆映雪",
-  "傅午莲"
-  
-)
-cjb %>%
-  filter(xm %in% xm_selected) %>%
-  ggplot(aes(x = sx, y = wl, colour = wlfk))+
-  geom_point() +
-  xlim(80, 102)+
-  ylim(80, 102)+
-  xlab("数学")+
-  ylab("物理")+
-  geom_text(aes(x = sx, y = wl+0.8, label = xm))+
-  theme(legend.position = "none")
-ggsave("D://desktop/demo.png", dpi = 600)
-cjb %>%
-  filter(xm %in% xm_selected) %>%
-  select(xm, sx, wl) %>%
-  write.csv("D://desktop/demo.csv")
-
-
-#增加或修改某些列
-cjb <- cjb_bak
-cjb %>%
-  mutate_at(vars(bj, xb, wlfk), factor) %>%
-  mutate(zcj = rowSums(.[4:12])) %>%
-  arrange(desc(zcj)) %>%
-  tail(n = 2)
-#> # A tibble: 2 x 14
-#> xm    bj    xb       yw    sx    wy    zz    ls    dl
-#> <chr> <fct> <fct> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-#> 1 滑亚  1113  男       33    46    30    65    82    76
-#> 2 张良平~ 1115  男        0     0     0     0     0     0
-#> # ... with 5 more variables: wl <dbl>, hx <dbl>,
-#> #   sw <dbl>, wlfk <fct>, zcj <dbl>
-
-cjb$bj <- factor(cjb$bj)
-cjb$xb <- factor(cjb$xb)
-cjb$wlfk <- factor(cjb$wlfk)
-cjb$zcj <- rowSums(cjb[, 4:12])
-idx_ordered <- order(cjb$zcj, decreasing = TRUE)
-cjb <- cjb[idx_ordered, ]
-tail(cjb)
+  arrange(desc(mean))
 
 
 
