@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·认识数据》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V8
-## 时间：2018年3月
+## 版本：V9
+## 时间：2018年8月
 ##
 ##*****************************************************
 ##
-## ch04_Get to Know Your Data_V8
+## ch04_Get to Know Your Data_V9
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -150,6 +150,9 @@ stem(sx_1101, scale = 0.5)
 stem(sx_1110, scale = 2)
 
 results <- hist(cjb$zz,
+                breaks = "Sturges")
+
+results <- hist(cjb$zz,
                 breaks = "Sturges",
                 plot = FALSE)
 results$breaks
@@ -175,17 +178,19 @@ nclass.Sturges(cjb$zz)
 #在接下来的具体代码演示过程中，
 #这一点小伙伴们也许多加留意
 
-load("data/cjb.rda")
-
 #看一看数据分布的形状
 sx_hist_results <- hist(cjb$sx,
                      plot = FALSE)
+?hist
 #查看sx_hist_results的类型
 typeof(sx_hist_results)
 #> [1] "list"
 #查看列表的组成
 names(sx_hist_results)
 #> [1] "breaks"   "counts"   "density"  "mids"     "xname"    "equidist"
+sx_hist_results$density
+sx_hist_results$counts / length(cjb$sx) * 2 - sx_hist_results$density
+
 library(tidyverse)
 ggplot(data = cjb, mapping = aes(sx)) +
   geom_histogram(
@@ -196,7 +201,19 @@ ggplot(data = cjb, mapping = aes(sx)) +
            geom = "text",
            aes(label = ..count..)) +
   coord_flip()
-ggsave("D://desktop/histogram1.png", dpi = 600)
+
+ggplot(data = cjb, mapping = aes(sx)) +
+  geom_histogram(
+    breaks = sx_hist_results$breaks,
+    color = "darkgray",
+    fill = "white") +
+  stat_bin(breaks = sx_hist_results$breaks,
+           geom = "text",
+           aes(label = ..count..)) +
+  coord_flip()
+
+
+ggsave("histogram1.png", dpi = 600)
 
 ggplot(data = cjb, mapping = aes(sx)) +
   geom_histogram(
@@ -206,8 +223,7 @@ ggplot(data = cjb, mapping = aes(sx)) +
   stat_bin(breaks = sx_hist_results$breaks,
            geom = "text",
            aes(label = ..count..))
-ggsave("D://desktop/histogram2.png", dpi = 600)
-
+ggsave("histogram2.png", dpi = 600)
 
 #获取直方图相关参数
 sx_hist_results <- hist(cjb$sx,
@@ -215,17 +231,15 @@ sx_hist_results <- hist(cjb$sx,
 #绘制直方图
 ggplot(data = cjb, mapping = aes(sx)) +
   geom_histogram(
-    aes(y = ..density..),
+    aes(y = ..count..),
     breaks = sx_hist_results$breaks,
     color = "darkgray",
     fill = "white") +
   #绘制概率密度曲线
-  geom_density(colour = "blue")
-ggsave("D://desktop/histogram2+density.png", dpi = 600)
+  geom_density(colour = "red")
+ggsave("histogram2+density.png", dpi = 600)
 
 #概率密度图
-
-#> [1] 82 94 79 84 92 82 72 89 77 81
 data_points <- head(cjb$sx, n = 10)
 sx_density <- density(data_points)
 gaussian_kernel <- function(X, x, h) {
@@ -298,9 +312,13 @@ arrows(-5, 0, 5, 0,length = 0.1)
 ggplot(cjb, aes(x = factor(0), y = sx)) +
   geom_violin(fill = "orange", alpha = 0.2)+
   coord_flip()
-ggsave("D://desktop/violin.png", dpi = 600)
+ggsave("violin.png", dpi = 600)
 
 
+ggplot(cjb, aes(x = factor(0), y = sx)) +
+  geom_violin(fill = "orange", alpha = 0.2)+
+  geom_boxplot(width = 0.25, fill ="blue", alpha = 0.2)+
+  coord_flip()
 
 #箱线图
 set.seed(2012)
@@ -354,7 +372,9 @@ cjb %>%
            size = 0.1,
            sides = "b") +
   coord_flip()
-ggsave("D://desktop/boxplot1.png", dpi = 600)
+ggsave("boxplot1.png", dpi = 600)
+
+
 cjb %>%
   ggplot(aes(x = factor(0), y = sx)) +
   geom_boxplot(width = 0.25,
@@ -366,7 +386,7 @@ cjb %>%
            size = 0.1,
            sides = "b") +
   coord_flip()
-ggsave("D://desktop/boxplot2.png", dpi = 600)
+ggsave("boxplot2.png", dpi = 600)
 
 
 boxplot_results <- boxplot.stats(cjb$sx)
@@ -432,7 +452,7 @@ cjb %>%
 round(apply(cjb[, 4:12], 2, function(x) {
   c(mean = mean(x),
     median = median(x),
-    range = max(x) - min(x),
+    range = diff(range(x)),
     IQR = IQR(x))
 }))
 
@@ -512,14 +532,17 @@ cjb %>%
     type = "value"
   )
 
+
+
+cjb %>%
+  group_by(bj, wlfk) %>%
+  summarise(count = n())
+
 #######################################################
 #连续变量vs连续变量
 #散点图是最常见、但同时也应该是最有用的图之一
 #散点图可用来观察变量之间可能存在的模式
 #同时也是二位数据空间形态的最直接的体现
-library(ggplot2)
-
-
 library(ggplot2)
 ggplot(cjb, 
        aes(x = sx,
@@ -532,9 +555,8 @@ ggplot(cjb,
        colour = "文理分科",
        shape = "文理分科")
 #散点图矩阵
-library()
 GGally::ggpairs(cjb, columns = 4:12)
-ggsave("D://desktop/scatter_pairs.png", dpi = 600)
+ggsave("scatter_pairs.png", dpi = 600)
 View(cjb)
 
 
@@ -620,7 +642,7 @@ saveGIF(
       print(p)
     }
   },
-  movie.name = "D://desktop/animation5.gif",
+  movie.name = "animation5.gif",
   convert = "gm convert",
   interval = 1
 )
@@ -686,7 +708,7 @@ saveGIF(
       print(p)
     }
   },
-  movie.name = "D://desktop/animation6.gif",
+  movie.name = "animation6.gif",
   convert = "gm convert",
   interval = 1
 )
@@ -751,7 +773,7 @@ saveGIF(
       print(p)
     }
   },
-  movie.name = "D://desktop/animation7.gif",
+  movie.name = "animation7.gif",
   convert = "gm convert",
   interval = 1
 )
@@ -762,6 +784,7 @@ Y <- rnorm(100)
 inner_prod <- sapply(1:1000000, function(x) {
   sum(sample(X)*sample(Y))
 })
+#上边的代码，当然也可以用replicate改写
 sum(sort(X) * sort(Y))
 range(inner_prod)
 
@@ -795,15 +818,13 @@ cor_coef %>%
   geom_tile(colour="white", size = 1.5) +
   geom_text(aes(label = format(cor_num, digits = 2))) +
   scale_fill_brewer(palette = "YlGn",name="相关系数区间")
-ggsave("D://desktop/cor_coef.png", dpi = 600)
+ggsave("cor_coef.png", dpi = 600)
 
 #######################################################
 #离散变量vs连续变量
 #主要是分组绘图
 #对不同的组别进行比较
 
-load("data/cjb.rda")
-str(cjb)
 #分组绘制箱线图
 #看看不同班级数学成绩的分布
 library(ggplot2)
@@ -815,7 +836,7 @@ ggplot(cjb, aes(x = bj,
                outlier.size = 1) +
   labs(x = "班级", y = "数学成绩") +
   theme(legend.position = "none")
-ggsave("D://desktop/grouped_boxplots.png", dpi = 600)
+ggsave("grouped_boxplots.png", dpi = 600)
 
 #其余图形如直方图、概率密度图等，请自行联系
 
@@ -832,7 +853,7 @@ ggplot(cjb, aes(x = sx, y = bj, fill = ..x..)) +
     name = "数学成绩", 
     option = "C") +
   labs(x = "数学", y = "班级")
-ggsave("D://desktop/density_ridges.png", dpi = 600)
+ggsave("density_ridges.png", dpi = 600)
 
 
 #对于分类问题而言，在进行数据描述时
@@ -856,12 +877,12 @@ featurePlot(
 #也就是说，当我们知道某个自变量时
 #有助于因变量不确定性的减少
 library(infotheo)
-condentropy(cjb$文理分科) -
-  condentropy(cjb$文理分科, cjb$性别)
+condentropy(cjb$wlfk) -
+  condentropy(cjb$wlfk, cjb$xb)
 
 library(FSelectorRcpp)
 information_gain(x = cjb[, c(1, 3)],
-                 y = cjb$文理分科)
+                 y = cjb$wlfk)
 #实际上，信息增益也是特征选择常用的方法
 
 #######################################################
@@ -869,7 +890,6 @@ information_gain(x = cjb[, c(1, 3)],
 ##多变量之间的关系
 #######################################################
 #三维散点图
-load("data/cjb.rda")
 library(rgl)
 plot3d(
   x = cjb$sx,
@@ -881,11 +901,6 @@ plot3d(
   type = "s",
   size = 0.6,
   col = c("red", "green")[cjb$wlfk])
-movie3d(spin3d(axis = c(0, 0, 1), rpm = 2), duration = 10, movie="TestMovie9",
-        type="gif", dir=("D://desktop/test"))
-#GifCam增加反向帧，否则在PPT中不会循环播放
-
-
 
 # Define point shapes
 myshapes = c(16, 17, 18)
@@ -975,7 +990,7 @@ saveGIF(
     }
     
   },
-  movie.name = "D://desktop/animation5.gif",
+  movie.name = "animation5.gif",
   convert = "gm convert",
   interval = 1
 )
@@ -986,12 +1001,12 @@ dev.off()
 
 #除了三维之外，可以继续向多维扩展
 #比如脸谱图
-load("data/cjb.rda")
 library(aplpack)
 selected_cols <- c("wl", "hx", "sw")
 selected_rows <- 
   c(488, 393, 490,  440,
     287, 289,  292, 293)
+View(cjb[selected_rows,])
 faces(cjb[selected_rows, 
           selected_cols],
       ncol.plot = 4, 
@@ -1016,9 +1031,6 @@ faces(cjb[selected_rows,
 #> "width of ear    "  "hx"
 #> "height of ear   "  "sw"
 
-library(tidyverse)
-load("data/cjb.rda")
-
 #绘制平行坐标图
 cjb_top_wen <- cjb %>%
   filter(wlfk == "文科") %>%
@@ -1039,7 +1051,7 @@ ggparcoord(cjb_top,
            groupColumn = 10) +
   geom_point()
 
-ggsave("D://desktop/par2.png", dpi = 600)
+ggsave("par2.png", dpi = 600)
 
 
 
@@ -1078,30 +1090,39 @@ cjb %>%
 
 cjb %>%
   select(wl, sx) %>%
-  mutate_at(vars(wl, sx), 
-            function(x) {
-              cut(x, breaks = c(0, seq(50, 100, len = 11)))
-            }) %>%
+  ggplot(aes(x = wl, y = sx)) +
+  geom_point()
+breaks <-  c(0,seq(50, 100, len=11))
+wl_sx_freq <- cjb %>%
+  select(wl, sx) %>%
+  mutate_at(
+    vars(wl, sx), 
+    function(x) {
+      cut(x, breaks = breaks)
+    }) %>%
   group_by(wl, sx) %>%
   summarise(freq = n()) %>%
-  complete(wl, sx, fill = list(freq = 0)) %>%
-  ggplot(aes(x = wl, y = sx, fill = freq)) +
+  complete(wl, sx, fill = list(freq = 0))
+ggplot(wl_sx_freq, aes(x = wl, y = sx, fill = freq)) +
   geom_tile(colour="white", size = 0.5) +
   geom_text(aes(label = freq), size = 3) +
-  scale_fill_gradient(low = "white", high = "red")+
-  theme(axis.text.x = element_text(
-    angle = 90, 
-    hjust = 1, 
-    vjust = 0.5)) +
+  scale_fill_gradient(
+    low = "white", 
+    high = "red")+
+  theme(axis.text.x = 
+          element_text(
+            angle = 90, 
+            hjust = 1, 
+            vjust = 0.5)) +
   coord_fixed()
-
+ggsave("density.png", dpi = 300)
 
 #感兴趣的小伙伴可以用stat_density2d
 #或是stat_bin2d实现类似的效果
 
 #接下来考虑另一种计算密度的方法
 #每一个点，半径为epsilon领域内点的多少
-selected_cols <- c("数学", "物理", "生物")
+selected_cols <- c("sx", "wl", "sw")
 shu_wu_sheng <- cjb[, selected_cols]
 sws_dist <- as.matrix(dist(shu_wu_sheng,
                  diag = TRUE,
@@ -1148,7 +1169,7 @@ for(i in seq(nrow(grd))){
   #设定长宽高
   icube3d <- scale3d(icube3d, length, width, height)
   #将长方体移动至指定位置
-  icube3d <- translate3d(icube3d, grd$数学[i], grd$物理[i], grd$生物[i])
+  icube3d <- translate3d(icube3d, grd$sx[i], grd$wl[i], grd$sw[i])
   #绘制长方体
   shade3d(icube3d, alpha = grd$alpha[i])
 }
@@ -1158,20 +1179,8 @@ for(i in seq(nrow(grd))){
 #均匀分布的话，趋近于0.5
 #倾斜的话，趋近于0
 clustertend::hopkins(cjb[, 4:12], n = 100)
-
-
-library(FSelectorRcpp)
-imp <- information_gain(x = cjb[, 3:12],
-                 y = cjb$文理分科, 
-                 type = "gainratio")
-imp$attributes <- factor(imp$attributes,
-                         levels = imp$attributes)
-library(ggplot2)
-ggplot(imp, aes(x = attributes, 
-                y = importance,
-                fill = importance)) +
-  geom_bar(stat = "identity")
-
+#> $`H`
+#> [1] 0.1549145
 
 
 #这里展示的，只是数据可视化的一部分图形
