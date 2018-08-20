@@ -126,6 +126,8 @@ sapply(my_libs, require, character.only = TRUE)
 
 #打开R的帮助页面
 help.start()
+#进入该页面之后，点击其中的packages，可以查看已安装所有包的帮助文档
+
 #打开函数c()的帮助页面
 ?c
 ?plot
@@ -134,6 +136,7 @@ help.start()
 #也可以打开相应的帮助文档
 ?'+'
 ?"if"
+
 #模糊查找包含某些字符的函数
 #比如，查找一下R所支持的假设检验
 apropos("test")
