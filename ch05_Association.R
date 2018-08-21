@@ -11,7 +11,7 @@
 ##
 ##*****************************************************
 ##
-## ch05_Association Rules_V9
+## ch05_Association_V9
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
