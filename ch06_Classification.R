@@ -384,15 +384,16 @@ global_performance
 #考虑到每种方法都要采用交叉检验的方法，
 #根据事不过三法则，反反复复拷贝、更改以上代码是不合适的
 #为此，将上述代码改写为相应的函数
-kfold_cross_validation <- function(learner, ...) {
+kfold_cross_validation <- function(
+  formula, data, kfolds, learner, ...) {
   sp <- Sys.time() #记录开始时间
   cat("\n[Start at:", as.character(sp))
   lapply(kfolds, function(curr_fold) {
-    train_set <- cjb[-curr_fold,] #训练集
-    test_set <- cjb[curr_fold,] #测试集
+    train_set <- data[-curr_fold,] #训练集
+    test_set <- data[curr_fold,] #测试集
     predictions <- do.call(
       learner, args = c(
-        list(formula = wlfk ~ ., train = train_set, test = test_set), 
+        list(formula = formula, train = train_set, test = test_set), 
         list(...)))
     imetrics(learner, "Train", predictions$predicted_train, train_set$wlfk)
     imetrics(learner, "Test", predictions$predicted_test, test_set$wlfk)
@@ -413,7 +414,12 @@ learn.kknn <- function(formula, train, test, ...) {
 }
 
 global_performance <- NULL
-kfold_cross_validation("learn.kknn", k = best_k, kernel = best_kernel)
+kfold_cross_validation(
+  formula = wlfk~., 
+  data = cjb, 
+  kfolds = kfolds, 
+  learner = "learn.kknn", 
+  k = best_k, kernel = best_kernel)
 
 
 #######################################################
@@ -576,7 +582,11 @@ learn.rpart <- function(formula, train, test, ...) {
   return(list(predicted_train = predicted_train,
               predicted_test = predicted_test))
 }
-kfold_cross_validation("learn.rpart")
+kfold_cross_validation(
+  formula = wlfk~., 
+  data = cjb, 
+  kfolds = kfolds, 
+  learner = "learn.rpart")
 
 
 #######################################################
@@ -637,7 +647,11 @@ learn.randomForest <- function(formula, train, test, ...) {
   return(list(predicted_train = predicted_train,
               predicted_test = predicted_test))
 }
-kfold_cross_validation("learn.randomForest", ntree = which.min(rf_ces))
+kfold_cross_validation(
+  formula = wlfk~., 
+  data = cjb, 
+  kfolds = kfolds, 
+  learner = "learn.randomForest", ntree = which.min(rf_ces))
 
 
 #######################################################
@@ -665,7 +679,11 @@ learn.naiveBayes <- function(formula, train, test, ...) {
   return(list(predicted_train = predicted_train,
               predicted_test = predicted_test))
 }
-kfold_cross_validation("learn.naiveBayes")
+kfold_cross_validation(
+  formula = wlfk~., 
+  data = cjb, 
+  kfolds = kfolds, 
+  learner = "learn.naiveBayes")
 
 
 #######################################################
@@ -764,7 +782,12 @@ learn.LogisticRegression <- function(formula, train, test, ...) {
   return(list(predicted_train = predicted_train,
               predicted_test = predicted_test))
 }
-kfold_cross_validation("learn.LogisticRegression", best_threshold = threshold_range[which.min(ce_set)])
+kfold_cross_validation(
+  formula = wlfk~., 
+  data = cjb, 
+  kfolds = kfolds, 
+  learner = "learn.LogisticRegression", 
+  best_threshold = threshold_range[which.min(ce_set)])
 
 #######################################################
 ##人工神经网络
@@ -880,10 +903,15 @@ learn.nnet <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 
-kfold_cross_validation("learn.nnet", 
-                       decay = imodel$bestTune$decay,
-                       size = imodel$bestTune$size,
-                       maxit = 2000)
+kfold_cross_validation(
+  formula = wlfk ~ .,
+  data = cjb,
+  kfolds = kfolds,
+  learner = "learn.nnet",
+  decay = imodel$bestTune$decay,
+  size = imodel$bestTune$size,
+  maxit = 2000
+)
 
 
 
@@ -932,7 +960,12 @@ learn.svm <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  "learn.svm", C = imodel$bestTune$C, gamma = imodel$bestTune$sigma)
+  formula = wlfk~., 
+  data = cjb, 
+  kfolds = kfolds, 
+  learner = "learn.svm",
+  C = imodel$bestTune$C, 
+  gamma = imodel$bestTune$sigma)
 
 
 
@@ -976,7 +1009,7 @@ global_performance %>%
   ggplot(aes(x = fct_inorder(method), y = mean_error_rate, 
              fill = type)) +
   geom_bar(stat= "identity", position = "dodge") +
-  geom_text(aes(label = format(mean_error_rate, digits = 1)),
+  geom_text(aes(label = format(mean_error_rate, digits = 3)),
             position = position_dodge(width = 1))+
   scale_fill_manual(values=c("orange","darkgrey")) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
