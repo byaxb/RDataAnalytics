@@ -3,15 +3,15 @@
 #######################################################
 #######################################################
 ##
-## 名称：《R语言数据分析·分类与回归》
+## 名称：《R语言数据分析·分类》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V8
-## 时间：2018年3月
+## 版本：V9
+## 时间：2018年9月
 ##
 ##*****************************************************
 ##
-## ch06_Classification and Regression_V8
+## ch06_Classification_V9
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -41,9 +41,7 @@
 
 #在R语言里，caret包提供了分类与回归的统一框架
 #caret包也是R里边使用最广泛的包之一
-#本实验将主要基于caret包开展
-#除了caret这些工业级的函数外，也将提供一些手工版代码
-#帮助小伙伴们理解其中的算法模型
+#小伙伴们可以多加留意
 
 #######################################################
 ##认识数据
@@ -51,153 +49,23 @@
 #清空内存
 rm(list = ls())
 library(tidyverse)
-library(magrittr)
+#加载数据
 cjb_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
-
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
-
-head(cjb)
-
-#查看数据结构
-str(cjb)
-
-#作必要的数据预处理
-#比如：
-#这份数据中，虽然没有直接标记为NA的缺失值，
-#但容易看出，总成绩为0的同学，未参加考试
-#对于这种缺失情况，直接删除
 cjb %<>%
-  mutate(zcj = rowSums(.[4:12])) %>%
-  filter(zcj != 0) %>%#剔除脏数据
-  mutate_at(vars(xb, wlfk), factor) #类型转换
-
-
-#数据汇总描述
-summary(cjb)
-
-
-#进一步对数据进行描述
-# library(Hmisc)
-# describe(cjb)
-# #里边有一些量，不那么直观，比如Gmd和Info
-# #没关系，手工实现一下，就彻底理解了
-# #Gmd: Gini mean difference?
-# #the mean absolute 
-# #difference between any pairs of observations
-# #可自行实现如下
-# #找出所有两两组合
-# zcj_cb <- combn(cjb$sw, 2)
-# #求出两两之间的绝对差
-# absolute_difference <- apply(zcj_cb, 2, function(x) {
-#   abs(diff(x))
-# })
-# #求出Gmd
-# (Gmd <- mean(absolute_difference))
-# #Info:
-# #one minus the sum of 
-# #the cubes of relative frequencies of values 
-# #divided by 
-# #one minus the square of the reciprocal of the sample size
-# cal_info <- function(x) {
-#   freqs <- table(x) / sum(table(x))
-#   (1-sum(freqs^3)) / (1 - (1/nrow(cjb))^2)
-#   
-# }
-# apply(cjb, 2, cal_info)
-# #分位数信息
-# quantile(cjb$zcj,
-#          c(0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95))
-# #求出最低和最高的五个分数
-# lowest_highest <- function(x) {
-#   uniques <- unique(sort(x))
-#   lowest <- head(uniques, 5)
-#   highest <- tail(uniques, 5)
-#   return(list(lo = lowest, hi = highest))
-# }
-# lowest_highest(cjb$zcj)
-
-
-#tidyverse所提供的summarize函数，可用于揭示数据分布信息
-#分班级统计总成绩
-library(tidyverse)
-zcj_stats <- cjb %>%
-  group_by(bj) %>%
-  arrange(desc(zcj)) %>%
-  summarise(
-    count = n(),
-    highest = first(zcj),
-    high03 = nth(zcj, 3),
-    high10 = nth(zcj, 10),
-    mean = mean(zcj),
-    median = median(zcj),
-    lowest = last(zcj),
-    sd = sd(zcj),
-    iqr = IQR(zcj),
-    mad = mad(zcj))
-View(zcj_stats)
-#按照班级、性别进行分组统计
-sx_stats <- cjb %>%
-  group_by(xb) %>%
-  summarise(
-    count = n(),
-    max = max(sx),
-    mean = mean(sx),
-    median = median(sx),
-    min = min(sx),
-    sd = sd(sx),
-    iqr = IQR(sx),
-    mad = mad(sx))
-sx_stats
-#> # A tibble: 2 x 9
-#> xb    count   max  mean median   min    sd   iqr
-#> <fct> <int> <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl>
-#>   1 男      368   100  86.2     90    26 11.0   14.2
-#> 2 女      406   100  86.2     89    51  9.90  13  
-#> # ... with 1 more variable: mad <dbl>
-View(sx_stats)
-
-#根据我们的问题情境，
-#容易看出，姓名、班级是不需要作为特征的
-#根据姓名判断是否文理科，
-#要么是缘木求鱼，要么是八卦算命
-#都不是科学
-cjb %<>%
-  select(-(1:2))#剔除无关变量
-#那哪些特征，对于我们最后的分类是有效的呢？
-#一般来讲，特征的选取，要与具体的问题情境相结合，
-#究竟选择哪些属性特征，要籍助领域专家的帮助
-
-
-#虽然我们在《认识数据》一章中，
-#看到有众多的异常值（野值/离群点）
-#我们先标记出这些离群点，在建模的过程中，
-#可以对照删除离群点前后准确率的变化
-#找出离群值
-(outliers <- boxplot.stats(cjb$zcj)$out)
-#离群值标签
-
-(outliers_idx <- which(cjb$zcj
-                       %in% outliers))
-#如有必要，可以考虑剔除异常点
-# cjb %<>%
-#   slice(-outliers_idx)#剔除离群值
-
-
-#简单找一下相互之间的关系
-mosaic::favstats(sx~wlfk, data = cjb)
-#> wlfk min Q1 median Q3 max     mean        sd   n
-#> 1 理科  46 86     93 96 100 89.78158  8.728818 380
-#> 2 文科  26 75     84 92 100 82.73096 10.814123 394
-#看得出来，理科生的数学成绩高于文科生，
+  mutate(zcj = rowSums(.[, 4:12])) %>%
+  mutate_at(vars(xb, bj, wlfk), factor) %>%
+  filter(zcj != 0) %>%
+  select(xb:wlfk)
+#按照一般的数据分析流程，自然应该是先对数据进行探索性分析
+#小伙伴们可以参照之前Get to Know Your Data相关代码，认识这份数据
 
 #对于分类与回归问题，除了认识数据中的其他一些数据探索外
 #通常需要观察不同自变量，相对于不同因变量取值时的数据分布
 #考察其分类的潜力
 #我们可以借助caret::featurePlot()和plotluck::plotluck()来进行观察
-library(tidyverse)
 library(caret)
-#install.packages("ellipse")
 featurePlot(
   x = cjb %>%
     select(yw:sw),
@@ -210,6 +78,7 @@ featurePlot(
   ),
   adjust = 1.5,
   pch = "|")
+
 # library(devtools)
 # devtools::install_github("stefan-schroedl/plotluck")
 library(plotluck)
@@ -217,7 +86,7 @@ plotluck(cjb, wlfk~xb)
 #绘制不同所有自变量、因变量各自分布
 plotluck(cjb, .~1)
 #绘制自变量相对于因变量的分组分布
-plotluck(cjb, wlfk~., 
+plotluck(cjb, wlfk~.,
          opts = plotluck.options(verbose=TRUE))
 #上述代码出图顺序，并非变量原有顺序，
 #而是conditional entropy从小打到排列的结果
@@ -225,7 +94,6 @@ plotluck(cjb, wlfk~.,
          opts=plotluck.options(verbose=TRUE,
                                multi.entropy.order = FALSE))
 plotluck(cjb, wlfk~yw+sx)
-plotluck(cjb[-outliers_idx, ], wlfk~yw+sx)
 
 
 #######################################################
@@ -267,34 +135,45 @@ plotluck(cjb[-outliers_idx, ], wlfk~yw+sx)
 #留出法hold-out
 #手工版
 set.seed(2012)
-train_set_idx <- 
-  sample(nrow(cjb), nrow(cjb)*0.7)
-
-#工业级
-train_set_idx <-
-  caret::createDataPartition(cjb$wlfk,
-                      p = 0.7, list = FALSE)
+train_set_idx <- sample(nrow(cjb), nrow(cjb)*0.7)
 str(train_set_idx)
+#> int [1:541] 169 576 218 722 575 673 411 700 687 696 ...
 length(train_set_idx) / nrow(cjb)
+#> [1] 0.6989664
 train_set <- cjb[train_set_idx, ]
 # test_set <- ?
 
+# #工业级
+# train_set_idx <-
+#   caret::createDataPartition(cjb$wlfk,
+#                       p = 0.7, list = FALSE)
+# str(train_set_idx)
+# length(train_set_idx) / nrow(cjb)
+# train_set <- cjb[train_set_idx, ]
+# # test_set <- ?
+
 #k折交叉检验
 cv_kfold <- function(data, k = 10, seed = 2012) {
-  #计算数据的行数
-  n <- nrow(data)
-  #重复1:k共计ceiling(n/k)次
-  #若能整除，则长度正好为n；若不能整除，则取其中前1:n个元素
-  n_foldmarkers <- rep(1:k, ceiling(n / k))[1:n]
+  n_row <- nrow(data)#计算数据的行数
+  n_foldmarkers <- rep(1:k, ceiling(n_row / k))[1:n_row]
   set.seed(seed)
-  #打乱顺序，作好下标1:n属于某一折的标记
-  n_foldmarkers <- sample(n_foldmarkers)
+  n_foldmarkers <- sample(n_foldmarkers)  #打乱顺序
   kfold <- lapply(1:k, function(i){
-    (1:n)[n_foldmarkers == i]
+    (1:n_row)[n_foldmarkers == i]
   })
   return(kfold)
 }
-sapply(cv_kfold(iris), length)
+cv_kfold(cjb)
+#> [[1]]
+#> [1]   7  14  15  25  35  48  56  59  60  61  65  91  92
+#> [14] 102 109 114 128 130 135 141 156 169 178 180 181 185
+#> [27] 189 190 191 196 208 217 244 245 247 263 280 282 291
+#> [40] 293 301 309 319 324 327 328 329 330 332 356 361 362
+#> [53] 376 384 412 413 446 456 485 489 499 500 519 525 531
+#> [66] 534 550 559 578 585 586 598 607 619 620 675 685 719
+sapply(cv_kfold(cjb), length)
+#>  [1] 78 78 78 78 77 77 77 77 77 77
+
 
 #k的具体取值，没有统一的标准，视数据量大小，
 #可以取5、10等
@@ -324,7 +203,7 @@ sapply(kfolds, length)
 #以及二者的调和平均数F1值等
 #从plotluck()的结果可以看出，我们所拿到的数据，并不存在
 #类不平衡问题
-plotluck(cjb, .~1)
+#plotluck(cjb, .~1)
 #由于类是相对均衡的，本实验仅采用分类正确率和错误率
 #手工版如下：
 global_performance <- NULL
@@ -337,7 +216,8 @@ imetrics <- function(method, type, predicted, actual) {
     error_rate = 1 - sum(diag(con_table)) / sum(con_table)
   )
   assign("global_performance", 
-         rbind(get("global_performance", envir = .GlobalEnv) , cur_one), 
+         rbind(get("global_performance", envir = .GlobalEnv) , 
+               cur_one), 
          envir = .GlobalEnv)
 }
 #有很多专门的包，已经实现了各种模型评估指标
@@ -356,16 +236,20 @@ imetrics <- function(method, type, predicted, actual) {
 #   global_performance <<- rbind(global_performance, cur_one)
 # }
 
-#分类回归模型，有数十种
-#各类改进的模型，更是数以百计
-available_models <- modelLookup()
-unique(available_models$model)
-length(unique(available_models$model))
-#> [1] 237
-#想穷尽所有的算法模型，几乎是不可能的
-#本实验仅涉及部分经典算法模型
-#包括决策树、近邻法、朴素贝叶斯、
-#人工神经网络、支持向量机和随机森林
+# #分类回归模型，有数十种
+# #各类改进的模型，更是数以百计
+# available_models <- modelLookup()
+# unique(available_models$model)
+# #> [1] "ada"                 "AdaBag"             
+# #> [3] "adaboost"            "AdaBoost.M1"  
+# #> [235] "xgbLinear"           "xgbTree"            
+# #> [237] "xyf" 
+# length(unique(available_models$model))
+# #> [1] 237
+# #想穷尽所有的算法模型，几乎是不可能的
+# #本实验仅涉及部分经典算法模型
+# #包括决策树、近邻法、朴素贝叶斯、
+# #人工神经网络、支持向量机和随机森林
 
 #######################################################
 ##近邻法
@@ -378,13 +262,14 @@ imodel <- kknn(wlfk ~ .,
 predicted_train <- imodel$fit
 #ce: classification error
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
-#> [1] 0.1107011
+#> [1] 0.1090573
+#作为惰性学习法，训练和测试同时进行
 imodel <- kknn(wlfk ~ .,
                    train = cjb[train_set_idx, ],
                    test = cjb[-train_set_idx, ])
 predicted_test <- imodel$fit
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
-#[1] 0.2586207
+#> [1] 0.1888412
 
 #选取最优的k和核
 train_kk <- train.kknn(
@@ -392,133 +277,243 @@ train_kk <- train.kknn(
   data = cjb,
   kmax = 100,
   kernel = c(
-    "rectangular" ,
-    "epanechnikov" ,
-    "cos",
-    "inv",
-    "gaussian" ,
-    "optimal"
-  )
-)
+    "rectangular", "epanechnikov",
+    "cos", "inv", "gaussian", "optimal"))
+
 #查看具体结果
 train_kk
-#通过ggplot2进行绘制
-ce_kk <- train_kk$MISCLASS
+#> Call:
+#>   train.kknn(formula = wlfk ~ ., data = cjb, kmax = 100,
+#>              kernel = c("rectangular",     "epanechnikov", 
+#>                         "cos", "inv", "gaussian", "optimal"))
+#> 
+#> Type of response variable: nominal
+#> Minimal misclassification: 0.2105943
+#> Best kernel: gaussian
+#> Best k: 49
+
+#不同的k和核所对应的分类错误率
+train_kk$MISCLASS
+#     rectangular epanechnikov       cos       inv  gaussian   optimal
+# 1     0.2919897    0.2919897 0.2919897 0.2919897 0.2919897 0.2919897
+# 2     0.2984496    0.2919897 0.2919897 0.2919897 0.2919897 0.2919897
+# 3     0.2661499    0.2739018 0.2751938 0.2661499 0.2661499 0.2919897
+# 4     0.2713178    0.2661499 0.2648579 0.2519380 0.2532300 0.2919897
+# 5     0.2583979    0.2571059 0.2596899 0.2571059 0.2558140 0.2558140
+# 6     0.2609819    0.2558140 0.2532300 0.2441860 0.2454780 0.2532300
+
+#显然，上述矩阵中，序号就是相应的k
+  
+       
 #最佳的k值
 best_k <- train_kk$best.parameters$k
+best_k
+#> [1] 49
 best_kernel <- train_kk$best.parameters$kernel
+best_kernel
+#> [1] "gaussian"
+
 #最小的误分率
 min_ce <- train_kk$MISCLASS[best_k,
                             train_kk$best.parameters$kernel]
 #下边这种方法更简单
+min(train_kk$MISCLASS)
+
+#提取不同k和核相应的分类错误率
+ce_kk <- train_kk$MISCLASS
+#View(ce_kk)
+#最小错误率
 min_ce <- min(train_kk$MISCLASS)
-View(ce_kk)
 str(ce_kk)
+#通过ggplot2进行绘制
 ce_kk %>%
   as.data.frame() %>%
-  mutate(k = 1:nrow(ce_kk)) %>%
+  mutate(k = row_number()) %>%
   gather(key = "kernel", value = "ce", -k) %>%
   ggplot(aes(x = k, y = ce, colour = kernel)) +
-  geom_vline(aes(xintercept = best_k), 
-             linetype = "dashed") +
-  geom_hline(aes(yintercept = min_ce), 
-             linetype = "dashed") +
+  geom_vline(aes(xintercept = best_k), linetype = "dashed") +
+  geom_hline(aes(yintercept = min_ce), linetype = "dashed") +
   geom_line() +
   geom_point(aes(shape = kernel)) +
-  theme(legend.position = c(0.8,0.8))
+  theme(legend.position = c(0.9,0.8))
 
 #进行k-折交叉检验k-fold cross validation
 library(kknn)
 sp <- Sys.time() #记录开始时间
 cat("\n[Start at:", as.character(sp))
 for (i in 1:length(kfolds)) {
-  #获取当前折一折
   curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
   train_set <- cjb[-curr_fold,] #训练集
   test_set <- cjb[curr_fold,] #测试集
-  #没有训练的过程
-  #在训练集上做模型评估
-  predicted_train <-  kknn(
-    wlfk ~ .,
-    train = train_set,
-    test = train_set,
-    k = best_k,
-    kernel = best_kernel
-  )$fit
+  predicted_train <- kknn(
+    wlfk ~ ., train = train_set, test = train_set,
+    k = best_k, kernel = best_kernel)$fit
   imetrics("kknn", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
   predicted_test <- kknn(
-    wlfk ~ .,
-    train = train_set,
-    test = test_set,
-    k = best_k,
-    kernel = best_kernel
-  )$fit
+    wlfk ~ ., train = train_set, test = test_set,
+    k = best_k, kernel = best_kernel)$fit
   imetrics("kknn", "Test", predicted_test, test_set$wlfk)
 }
 ep <- Sys.time()
 cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
+cat("[Time Ellapsed:\t", difftime(ep, sp, units = "secs"), " seconds]\n")
+global_performance
+#>     method  type  accuracy error_rate
+#> 1    kknn Train 0.8333333  0.1666667
+#> 2    kknn  Test 0.8076923  0.1923077
+#> 3    kknn Train 0.8405172  0.1594828
+#> 4    kknn  Test 0.8076923  0.1923077
+#> 5    kknn Train 0.8333333  0.1666667
+#> 6    kknn  Test 0.8461538  0.1538462
+#> 7    kknn Train 0.8405172  0.1594828
+#> 8    kknn  Test 0.7564103  0.2435897
+#> 9    kknn Train 0.8350072  0.1649928
+#> 10   kknn  Test 0.7922078  0.2077922
+#> 11   kknn Train 0.8278336  0.1721664
+#> 12   kknn  Test 0.7922078  0.2077922
+#> 13   kknn Train 0.8378766  0.1621234
+#> 14   kknn  Test 0.8051948  0.1948052
+#> 15   kknn Train 0.8350072  0.1649928
+#> 16   kknn  Test 0.7792208  0.2207792
+#> 17   kknn Train 0.8307030  0.1692970
+#> 18   kknn  Test 0.6623377  0.3376623
+#> 19   kknn Train 0.8278336  0.1721664
+#> 20   kknn  Test 0.7792208  0.2207792
+
+
+#考虑到每种方法都要采用交叉检验的方法，
+#根据事不过三法则，反反复复拷贝、更改以上代码是不合适的
+#为此，将上述代码改写为相应的函数
+kfold_cross_validation <- function(learner, ...) {
+  sp <- Sys.time() #记录开始时间
+  cat("\n[Start at:", as.character(sp))
+  lapply(kfolds, function(curr_fold) {
+    train_set <- cjb[-curr_fold,] #训练集
+    test_set <- cjb[curr_fold,] #测试集
+    predictions <- do.call(
+      learner, args = c(
+        list(formula = wlfk ~ ., train = train_set, test = test_set), 
+        list(...)))
+    imetrics(learner, "Train", predictions$predicted_train, train_set$wlfk)
+    imetrics(learner, "Test", predictions$predicted_test, test_set$wlfk)
+  })
+  ep <- Sys.time()
+  cat("\tFinised at:", as.character(ep), "]\n")
+  cat("[Time Ellapsed:\t", difftime(ep, sp, units = "secs"), " seconds]\n")
+}
+
+
+learn.kknn <- function(formula, train, test, ...) {
+  predicted_train <- kknn(
+    formula, train = train, test = train, ...)$fit
+  predicted_test <- kknn(
+    formula, train = train, test = test, ...)$fit
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
+}
+
+global_performance <- NULL
+kfold_cross_validation("learn.kknn", k = best_k, kernel = best_kernel)
+
 
 #######################################################
 ##决策树
 #######################################################
-View(cjb[, -ncol(cjb)])
-#几种不纯度的比较
-#信息熵、基尼指数、分类错误率
-p1 <- seq(0.001, 0.999, len = 5000)
-p2 <- 1 - p1
-#信息熵
-entropy <- 0.5*(-p1*log2(p1) - p2*log2(p2))
-#基尼指数
-gini <- 1- (p1^2 + p2^2)
-#分类错误率
-classification_error <- 1- apply(data.frame(p1, p2), 1, max)
-egc <- data.frame(
-  p = p1,
-  entropy = entropy,
-  gini = gini,
-  ce = classification_error)
-egc_gathered <- egc %>%
-  gather(key = "type", value = "value", -p) %>%
-  mutate(type = forcats::fct_inorder(type))
-
-library(ggplot2)
-ggplot(egc_gathered, 
-       aes(x = p, y = value, colour = type)) +
-  geom_line(size = 1.5)
-
-
 #决策树的生长
 #rpart.plot包会自动加载rpart包
 library(rpart.plot)
-imodel <-
-  rpart(wlfk   ~ .,
-            data = cjb[train_set_idx,])
+imodel <- rpart(wlfk~., 
+                data = cjb[train_set_idx,])
 imodel
-predicted_train <-
+# n= 541 
+# 
+# node), split, n, loss, yval, (yprob)
+# * denotes terminal node
+# 
+# 1) root 541 258 文科 (0.47689464 0.52310536)  
+#   2) wl>=85.5 230  70 理科 (0.69565217 0.30434783)  
+#     4) sx>=87.5 185  41 理科 (0.77837838 0.22162162)  
+#       8) yw< 91.5 132  19 理科 (0.85606061 0.14393939) *
+#       9) yw>=91.5 53  22 理科 (0.58490566 0.41509434)  
+#         18) wl>=88.5 38  10 理科 (0.73684211 0.26315789) *
+#         19) wl< 88.5 15   3 文科 (0.20000000 0.80000000) *
+#     5) sx< 87.5 45  16 文科 (0.35555556 0.64444444)  
+#       10) xb=男 23  10 理科 (0.56521739 0.43478261) *
+#       11) xb=女 22   3 文科 (0.13636364 0.86363636) *
+#   3) wl< 85.5 311  98 文科 (0.31511254 0.68488746)  
+#     6) xb=男 127  61 文科 (0.48031496 0.51968504)  
+#       12) yw< 88.5 98  43 理科 (0.56122449 0.43877551)  
+#         24) hx>=93 21   4 理科 (0.80952381 0.19047619) *
+#         25) hx< 93 77  38 文科 (0.49350649 0.50649351)  
+#           50) ls< 86.5 41  16 理科 (0.60975610 0.39024390)  
+#             100) yw>=77.5 34  10 理科 (0.70588235 0.29411765) *
+#             101) yw< 77.5 7   1 文科 (0.14285714 0.85714286) *
+#           51) ls>=86.5 36  13 文科 (0.36111111 0.63888889) *
+#       13) yw>=88.5 29   6 文科 (0.20689655 0.79310345) *
+#     7) xb=女 184  37 文科 (0.20108696 0.79891304)  
+#       14) sw>=81.5 110  32 文科 (0.29090909 0.70909091)  
+#         28) ls< 91.5 62  27 文科 (0.43548387 0.56451613)  
+#           56) sx>=91.5 14   2 理科 (0.85714286 0.14285714) *
+#           57) sx< 91.5 48  15 文科 (0.31250000 0.68750000) *
+#         29) ls>=91.5 48   5 文科 (0.10416667 0.89583333) *
+#       15) sw< 81.5 74   5 文科 (0.06756757 0.93243243) *
+
+
+predicted_train <- 
   predict(imodel,
           newdata = cjb[train_set_idx,],
           type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
-#> [1] 0.1715867
-predicted_test <-
+#> [1] 0.1959335
+
+#当然，我们更关注的是测试误差
+predicted_test <- 
   predict(imodel,
           newdata = cjb[-train_set_idx, ],
           type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
-#> [1] 0.2844828
+#> [1] 0.2575107
 
 #决策树剪枝
-printcp(imodel, digits = 6)
+printcp(imodel, digits = 2)
+#> Classification tree:
+#>   rpart(formula = wlfk ~ ., data = cjb[train_set_idx, ])
+#> 
+#> Variables actually used in tree construction:
+#>   [1] hx ls sw sx wl wy xb
+#> 
+#> Root node error: 266/542 = 0.49
+#> 
+#> n= 542 
+#> 
+#>      CP nsplit rel error xerror  xstd
+#> 1 0.349      0      1.00   1.00 0.045
+#> 2 0.050      1      0.65   0.69 0.042
+#> 3 0.023      2      0.60   0.70 0.042
+#> 4 0.019      4      0.55   0.67 0.042
+#> 5 0.017      7      0.50   0.67 0.042
+#> 6 0.013      9      0.46   0.67 0.042
+#> 7 0.012     12      0.42   0.66 0.042
+#> 8 0.010     13      0.41   0.65 0.042
 plotcp(imodel)
+
+imodel$cptable
+#>            CP nsplit rel error    xerror       xstd
+#> 1 0.34883721      0 1.0000000 1.0000000 0.04502822
+#> 2 0.05038760      1 0.6511628 0.6627907 0.04191607
+#> 3 0.02325581      2 0.6007752 0.6589147 0.04184977
+#> 4 0.01937984      4 0.5542636 0.6666667 0.04198161
+#> 5 0.01744186      7 0.4961240 0.6627907 0.04191607
+#> 6 0.01291990      9 0.4612403 0.6434109 0.04157683
+#> 7 0.01162791     12 0.4224806 0.6356589 0.04143566
+#> 8 0.01000000     13 0.4108527 0.6356589 0.04143566
+imodel$cptable
+#剪枝的一般方法
 opt <- which.min(imodel$cptable[, "xerror"])
 cp <- imodel$cptable[opt, "CP"]
+#> [1] 0.01
 imodel_pruned <- prune(imodel, cp = cp)
 print(imodel_pruned)
 
@@ -528,13 +523,13 @@ predicted_train <- predict(imodel_pruned,
       type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx],
       predicted_train)
-#> [1] 0.1715867
+#> [1] 0.1959335
 predicted_test <- predict(imodel_pruned,
       newdata = cjb[-train_set_idx,],
       type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], 
       predicted_test)
-#> [1] 0.2844828
+#> 0.2575107
 
 
 #绘制决策树的基本方法
@@ -550,7 +545,7 @@ rpart.plot(imodel_pruned,
     branch.col="gray", 
     branch.lwd=2, 
     extra=108, #extra参数的含义需留意
-    under=T,split.cex=0.8)
+    under=T,split.cex=1)
 
 #除了可视化之外，我们还希望把这个树导成规则
 library(rattle)
@@ -569,55 +564,64 @@ rules <- asRules(imodel_pruned, compact=TRUE)
 #> R  8 [23%,0.13] sx>=85.5 wl>=86.5 ls< 95.5
 
 #进行k-折交叉检验k-fold cross validation
-sp <- Sys.time() #记录开始时间
-cat("\n[Start at:", as.character(sp))
-library(rpart)
-for(i in 1:length(kfolds)) {
-  #获取当前折一折
-  curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
-  train_set <- cjb[-curr_fold, ] #训练集
-  test_set <- cjb[curr_fold, ] #测试集
-  #生长树
-  imodel_kfold <- rpart(wlfk~., train_set) #模型训练
-  #剪枝
+learn.rpart <- function(formula, train, test, ...) {
+  imodel_kfold <- rpart(formula, train) #模型训练
   opt <- which.min(imodel_kfold$cptable[, "xerror"])
   cp <- imodel_kfold$cptable[opt, "CP"]
   imodel_kfold <- prune(imodel_kfold, cp = cp)
-  #在训练集上做模型评估
-  predicted_train <- predict(imodel_kfold, train_set, type = "class")
-  imetrics("rpart", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
-  predicted_test <- predict(imodel_kfold, test_set, type = "class")
-  imetrics("rpart", "Test", predicted_test, test_set$wlfk)
+  predicted_train <- predict(
+    imodel_kfold, train, type = "class")
+  predicted_test <- predict(
+    imodel_kfold, test, type = "class")
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
 }
-ep <- Sys.time()
-cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
+kfold_cross_validation("learn.rpart")
 
 
 #######################################################
 ##随机森林
 ##RandomForest
 #######################################################
+
 library(randomForest)
 set.seed(2012)
-imodel <- randomForest(wlfk~., 
-                           data = cjb[train_set_idx, ])
+imodel <- randomForest(wlfk~.,
+                       ntree = 25,
+                       data = cjb[train_set_idx, ])
 predicted_train <- predict(imodel,
                            newdata = cjb[train_set_idx,],
                            type = "response")
 Metrics::ce(cjb$wlfk[train_set_idx], 
             predicted_train)
-#[1] 0
+#>[1] 0.001848429
 predicted_test <- predict(imodel,
                           newdata = cjb[-train_set_idx,],
                           type = "response")
 Metrics::ce(cjb$wlfk[-train_set_idx], 
             predicted_test)
-#> [1] 0.2112069
+#> [1] 0.1845494
+
+
+rf_ces <- sapply(1:500, function(x) {
+  set.seed(2012)
+  imodel <- randomForest(wlfk~.,
+                         ntree = x,
+                         data = cjb[train_set_idx, ])
+  predicted_train <- predict(imodel,
+                             newdata = cjb[train_set_idx,],
+                             type = "response")
+  Metrics::ce(cjb$wlfk[train_set_idx], 
+              predicted_train)
+  #>[1] 0
+  predicted_test <- predict(imodel,
+                            newdata = cjb[-train_set_idx,],
+                            type = "response")
+  Metrics::ce(cjb$wlfk[-train_set_idx], 
+              predicted_test)
+})
+which.min(rf_ces)
+plot(rf_ces, type = "o")
 
 #基于OOB的误分率
 imodel$confusion
@@ -626,31 +630,14 @@ imodel$confusion
 #> 文科   54  222   0.1956522
 
 #进行k-折交叉检验k-fold cross validation
-library(randomForest)
-sp <- Sys.time() #记录开始时间
-cat("\n[Start at:", as.character(sp))
-for (i in 1:length(kfolds)) {
-  #获取当前折一折
-  curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
-  train_set <- cjb[-curr_fold,] #训练集
-  test_set <- cjb[curr_fold,] #测试集
-  #训练模型
-  imodel_kfold <- randomForest(wlfk~., 
-                                   data = train_set)
-  #在训练集上做模型评估
-  predicted_train <-  predict(imodel_kfold, train_set, type = "response")
-  imetrics("randomForest", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
-  predicted_test <- predict(imodel_kfold, test_set, type = "response")
-  imetrics("randomForest", "Test", predicted_test, test_set$wlfk)
+learn.randomForest <- function(formula, train, test, ...) {
+  imodel_kfold <- randomForest(formula, train, ...)
+  predicted_train <-  predict(imodel_kfold, train, type = "response")
+  predicted_test <- predict(imodel_kfold, test, type = "response")
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
 }
-ep <- Sys.time()
-cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
-
+kfold_cross_validation("learn.randomForest", ntree = which.min(rf_ces))
 
 
 #######################################################
@@ -663,40 +650,22 @@ predicted_train <- predict(imodel,
       newdata = cjb[train_set_idx,],
       type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
-#> [1] 0.3173432
+#> [1] 0.2920518
 predicted_test <- predict(imodel,
       newdata = cjb[-train_set_idx,],
       type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
-#> [1] 0.2801724
+#> [1] 0.27897
 
 #进行k-折交叉检验k-fold cross validation
-library(e1071)
-sp <- Sys.time() #记录开始时间
-cat("\n[Start at:", as.character(sp))
-for (i in 1:length(kfolds)) {
-  #获取当前折一折
-  curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
-  train_set <- cjb[-curr_fold,] #训练集
-  test_set <- cjb[curr_fold,] #测试集
-  #训练模型
-  imodel_kfold <- naiveBayes(wlfk~., 
-                                 data = train_set)
-  #在训练集上做模型评估
-  predicted_train <-  predict(imodel_kfold, train_set, type = "class")
-  imetrics("naiveBayes", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
-  predicted_test <- predict(imodel_kfold, test_set, type = "class")
-  imetrics("naiveBayes", "Test", predicted_test, test_set$wlfk)
+learn.naiveBayes <- function(formula, train, test, ...) {
+  imodel_kfold <- naiveBayes(formula, train)
+  predicted_train <-  predict(imodel_kfold, train, type = "class")
+  predicted_test <- predict(imodel_kfold, test, type = "class")
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
 }
-ep <- Sys.time()
-cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
-
-
+kfold_cross_validation("learn.naiveBayes")
 
 
 #######################################################
@@ -737,7 +706,7 @@ predicted_train <-
   rep(levels(cjb$wlfk)[2], length(train_set_idx))
 predicted_train[predicted_logit < 0.5] <- levels(cjb$wlfk)[1]
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
-#> [1] 0.204797
+#> [1] 0.2181146
 predicted_logit <- predict(imodel,
                            newdata = cjb[-train_set_idx, ],
                            type = "response")
@@ -746,8 +715,7 @@ predicted_test <-
 predicted_test[predicted_logit < 0.5] <-
   levels(cjb$wlfk)[1]
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
-#> [1] 0.1853448
-
+#> [1] 0.1888412
 
 #找到最好的分隔阈值
 best_threshold <- NA
@@ -765,47 +733,38 @@ for (cur_threshold in seq(0.1, 0.9, by = 0.001)) {
     min_err <- cur_err
   }
 }
+best_threshold
+#> [1] 0.592
 
-
-#
-library(InformationValue)
-optCutOff <- optimalCutoff(as.numeric(cjb$wlfk[-train_set_idx]), as.numeric(factor(predicted_test)))[1] 
+#当然，也可以用下边这种写法
+threshold_range <- seq(0.1, 0.9, by = 0.001)
+ce_set <- sapply(threshold_range, function(cur_threshold) {
+  predicted_test <-
+    rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
+  predicted_test[predicted_logit < cur_threshold] <-
+    levels(cjb$wlfk)[1]
+  cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
+                         predicted_test)
+})
+#最佳阈值
+threshold_range[which.min(ce_set)]
+#相应的分类错误率
+min(ce_set)
 
 #进行k-折交叉检验k-fold cross validation
-sp <- Sys.time() #记录开始时间
-cat("\n[Start at:", as.character(sp))
-for (i in 1:length(kfolds)) {
-  #获取当前折一折
-  curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
-  train_set <- cjb[-curr_fold,] #训练集
-  test_set <- cjb[curr_fold,] #测试集
-  #训练模型
-  imodel_kfold <- glm(wlfk~.,
-                          data = train_set,
-                          family=binomial(link="logit"))
-  #在训练集上做模型评估
-  predicted_logit <- predict(imodel_kfold,
-                          newdata = train_set, 
-                          type = "response")
-  predicted_train <- rep(levels(cjb$wlfk)[2], nrow(train_set))
-  predicted_train[predicted_logit < best_threshold] <- levels(cjb$wlfk)[1]
-  imetrics("LogisticRegression", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
-  predicted_logit <- predict(imodel_kfold,
-                             newdata = test_set, 
-                             type = "response")
-  predicted_test <- rep(levels(cjb$wlfk)[2], nrow(test_set))
-  predicted_test[predicted_logit < best_threshold] <- levels(cjb$wlfk)[1]
-  imetrics("LogisticRegression", "Test", predicted_test, test_set$wlfk)
+learn.LogisticRegression <- function(formula, train, test, ...) {
+  dot_args <- list(...)
+  imodel_kfold <- glm(formula, train, family=binomial(link="logit"))
+  predicted_logit <- predict(imodel_kfold, train, type = "response")
+  predicted_train <- rep(levels(cjb$wlfk)[2], nrow(train))
+  predicted_train[predicted_logit < dot_args[["best_threshold"]]] <- levels(cjb$wlfk)[1]
+  predicted_logit <- predict(imodel_kfold, test, type = "response")
+  predicted_test <- rep(levels(cjb$wlfk)[2], nrow(test))
+  predicted_test[predicted_logit < dot_args[["best_threshold"]]] <- levels(cjb$wlfk)[1]
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
 }
-ep <- Sys.time()
-cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
-
-
+kfold_cross_validation("learn.LogisticRegression", best_threshold = threshold_range[which.min(ce_set)])
 
 #######################################################
 ##人工神经网络
@@ -815,17 +774,43 @@ set.seed(2012)
 imodel <- nnet(wlfk~., 
       data = cjb[train_set_idx, ],
       size = 7)
+names(imodel)
+#> [1] "n"             "nunits"        "nconn"        
+#> [4] "conn"          "nsunits"       "decay"        
+#> [7] "entropy"       "softmax"       "censored"     
+#> [10] "value"         "wts"           "convergence"  
+#> [13] "fitted.values" "residuals"     "lev"          
+#> [16] "call"          "terms"         "coefnames"    
+#> [19] "contrasts"     "xlevels" 
+
+imodel$n
+#> [1] 10  7  1
+imodel$wts
+#> [1]   -0.394367962    0.341672486   -0.305656476
+#> [4]    0.609244299    0.344983392    0.524696717
+#> [7]    0.049098761    0.577261671    0.553892391
+#> [79]    0.851107738    0.275935098   -0.237562349
+#> [82]    0.109386068    0.637609693   -2.774100396
+#> [85]    0.019783268
+imodel$fitted.values
+#     [,1]
+# 1   0.8048857
+# 2   0.2047307
+# 3   0.8048857
+# 
+# 540 0.8048857
+# 541 0.2047307
+
 predicted_train <- predict(imodel,
       newdata = cjb[train_set_idx,],
       type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
-#> [1] 0.4907749
+#> [1] 0.1996303
 predicted_test <- predict(imodel,
       newdata = cjb[-train_set_idx,],
       type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
-#> [1] 0.4913793
-#对于神经网络而言，不调参数的话，几乎不可用的
+#> [1] 0.1759657
 
 #神经网络参数的设置相对比较复杂
 #一般来讲，没有绝对的套路可循
@@ -833,18 +818,25 @@ Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #不过，类似于e1071::tune.nnet()已经替我们作了很多工作
 #下面，采用的是caret包中的方法
 #通过caret包中的grid搜索来进行参数选择
+tune_results <- e1071::tune.nnet(wlfk~., data = cjb, 
+                                 decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9),
+                                 size = 1:7)
+
 library(caret)
-nn_grid <- expand.grid(size = c(1, 3, 7), 
-                      decay = c(0.001, 0.01, 0.03, 0.1, 0.3))
+set.seed(2012)
+nn_grid <- expand.grid(size = c(1, 3, 7, 9), 
+                      decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9))
+# nn_grid <- expand.grid(.decay = c(0.5, 0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7), 
+#                        .size = c(3, 5, 10, 20))
 imodel <- train(
   wlfk ~ .,
   data = cjb,
   method = "nnet",
-  maxit = 2000,
+  maxit = 10000,
   tuneGrid = nn_grid)
 imodel$bestTune
 #>    size decay
-#> 9    3   0.1
+#> 9    1  0.6
 #查看训练结果
 plot(imodel)
 
@@ -880,33 +872,19 @@ plotnet(imodel2,
 
 
 #进行k-折交叉检验k-fold cross validation
-library(nnet)
-sp <- Sys.time() #记录开始时间
-cat("\n[Start at:", as.character(sp))
-for (i in 1:length(kfolds)) {
-  #获取当前折一折
-  curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
-  train_set <- cjb[-curr_fold,] #训练集
-  test_set <- cjb[curr_fold,] #测试集
-  #训练模型
-  imodel_kfold <-  nnet(wlfk ~ .,
-                            data = train_set,
-                            decay = imodel$bestTune$decay,
-                            size = imodel$bestTune$size,
-                            maxit = 2000)
-  #在训练集上做模型评估
-  predicted_train <-  predict(imodel_kfold, train_set, type = "class")
-  imetrics("nnet", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
-  predicted_test <- predict(imodel_kfold, test_set, type = "class")
-  imetrics("nnet", "Test", predicted_test, test_set$wlfk)
+learn.nnet <- function(formula, train, test, ...) {
+  imodel_kfold <-  nnet(formula, train, ...)
+  predicted_train <-  predict(imodel_kfold, train, type = "class")
+  predicted_test <- predict(imodel_kfold, test, type = "class")
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
 }
-ep <- Sys.time()
-cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
+
+kfold_cross_validation("learn.nnet", 
+                       decay = imodel$bestTune$decay,
+                       size = imodel$bestTune$size,
+                       maxit = 2000)
+
 
 
 #######################################################
@@ -921,12 +899,12 @@ predicted_train <- predict(imodel,
       newdata = cjb[train_set_idx,],
       type = "response")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
-#> [1] 0.1383764
+#> [1] 0.1497227
 predicted_test <- predict(imodel,
       newdata = cjb[-train_set_idx,],
       type = "response")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
-#> [1] 0.2025862
+#> [1] 0.1759657
 imodel
 #当然也可以通过caret来进行调参
 library(caret)
@@ -946,35 +924,15 @@ imodel$bestTune
 plot(imodel)
 
 #进行k-折交叉检验k-fold cross validation
-library(kernlab)
-sp <- Sys.time() #记录开始时间
-cat("\n[Start at:", as.character(sp))
-for (i in 1:length(kfolds)) {
-  #获取当前折一折
-  curr_fold <- kfolds[[i]] #当前这一折
-  #划分测试集和训练集
-  train_set <- cjb[-curr_fold,] #训练集
-  test_set <- cjb[curr_fold,] #测试集
-  #训练模型
-  imodel_kfold <-  ksvm(wlfk~., 
-                            C = imodel$bestTune$C,
-                            gamma = imodel$bestTune$sigma,
-                            data = train_set)
-  #在训练集上做模型评估
-  predicted_train <-  predict(imodel_kfold, train_set, type = "response")
-  imetrics("ksvm", "Train", predicted_train, train_set$wlfk)
-  #在测试集上做模型评估
-  predicted_test <- predict(imodel_kfold, test_set, type = "response")
-  imetrics("ksvm", "Test", predicted_test, test_set$wlfk)
+learn.svm <- function(formula, train, test, ...) {
+  imodel_kfold <-  ksvm(formula, train, ...)
+  predicted_train <-  predict(imodel_kfold, train, type = "response")
+  predicted_test <- predict(imodel_kfold, test, type = "response")
+  return(list(predicted_train = predicted_train,
+              predicted_test = predicted_test))
 }
-ep <- Sys.time()
-cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t",
-    difftime(ep, sp, units = "secs"),
-    " seconds]\n")
-
-
-
+kfold_cross_validation(
+  "learn.svm", C = imodel$bestTune$C, gamma = imodel$bestTune$sigma)
 
 
 
@@ -1005,63 +963,25 @@ randomForest::importance(imodel) %>%
   geom_bar(stat = "identity", width = 0.5) +
   geom_text(aes(y = MeanDecreaseGini * 1.02,
                 label = format(MeanDecreaseGini, digits = 4)))
-#变量重要性的分析
-randomForest::importance(imodel) %>%
-  as.data.frame() %>%
-  rownames_to_column(var = "variables") %>%
-  arrange(desc(MeanDecreaseGini)) %>%
-  mutate(variables = forcats::fct_inorder(variables)) %>%
-  ggplot(aes(x = variables, 
-             y = MeanDecreaseGini,
-             fill = variables)) +
-  geom_bar(stat = "identity", width = 0.5) +
-  geom_text(aes(y = MeanDecreaseGini * 1.02,
-                label = format(MeanDecreaseGini, digits = 4)))
-#里边涉及到排序之后对因子水平进行重排序
-#也有一个更简洁的版本
-randomForest::importance(imodel) %>%
-  as.data.frame() %>%
-  rownames_to_column(var = "variables") %>%
-  mutate(variables = forcats::fct_reorder(variables,
-                                          MeanDecreaseGini,
-                                          .desc = TRUE)) %>%
-  ggplot(aes(x = variables, 
-             y = MeanDecreaseGini,
-             fill = variables)) +
-  geom_bar(stat = "identity", width = 0.5) +
-  geom_text(aes(y = MeanDecreaseGini * 1.02,
-                label = format(MeanDecreaseGini, digits = 4)))
+
 
 #######################################################
 ##模型综合评估
 #######################################################
 #模型进行评估
-metrics_com <- global_performance %>%
-  group_by(method, type) %>%
-  summarise(mean_error_rate = mean(error_rate)) %>%
-  spread(key = type, value = mean_error_rate)
-metrics_com$method <- factor(as.character(metrics_com$method),
-                             levels = c("kknn", "rpart", "randomForest", 
-                                        "naiveBayes", "LogisticRegression",
-                                        "nnet", "ksvm"))
-View(metrics_com[c(6, 1, 3:4, 2, 5), c(1, 3, 2)])
 global_performance %>%
   group_by(method, type) %>%
   summarise(mean_error_rate = mean(error_rate)) %>%
-  ggplot(aes(x = method, y = mean_error_rate, fill = type)) +
+  arrange(type, mean_error_rate) %>%
+  ggplot(aes(x = fct_inorder(method), y = mean_error_rate, 
+             fill = type)) +
   geom_bar(stat= "identity", position = "dodge") +
-  geom_text(aes(label = format(mean_error_rate, digits = 3)),
+  geom_text(aes(label = format(mean_error_rate, digits = 1)),
             position = position_dodge(width = 1))+
   scale_fill_manual(values=c("orange","darkgrey")) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
-metrics_com %>%
-  gather(key = "type", value = "mean_error_rate", - method) %>%
-  arrange(type, mean_error_rate)%>%
-  ggplot(aes(x = fct_inorder(method), y = mean_error_rate, fill = type)) +
-  geom_bar(stat= "identity", position = "dodge") +
-  geom_text(aes(label = format(mean_error_rate, digits = 3)),
-            position = position_dodge(width = 1))+
-  scale_fill_manual(values=c("orange","darkgrey"))
+
+
 
 #本实验中，为了减少小伙伴们熟悉问题背景本身的成本
 #再次使用了学生成绩这份数据
@@ -1091,6 +1011,8 @@ metrics_com %>%
 #GBDT: xgboost::xgboost
 #即便是演示过得算法，参数调优过程也显得比较粗糙
 #更多的精彩，由小伙伴们自行探索吧
+#毕竟，这份代码只是一个引导性的参考，
+#并不是可以简单套用的标准模板
 
 
 #######################################################
