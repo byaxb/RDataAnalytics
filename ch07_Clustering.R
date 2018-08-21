@@ -6,12 +6,12 @@
 ## 名称：《R语言数据分析·聚类分析》
 ## 作者：艾新波
 ## 学校：北京邮电大学
-## 版本：V8
-## 时间：2018年3月
+## 版本：V9
+## 时间：2018年8月
 ##
 ##*****************************************************
 ##
-## ch07_Cluster Analysis_V8
+## ch07_Clustering_V8
 ## Data Analytics with R
 ## Instructed by Xinbo Ai
 ## Beijing University of Posts and Telecommunications
@@ -51,12 +51,11 @@ library(tidyverse)
 library(magrittr)
 library(GGally)
 cjb_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
-
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
 cjb %<>%
   mutate(zcj = rowSums(.[4:12])) %>%
-  #filter(zcj != 0) %>%#剔除脏数据
+  filter(zcj != 0) %>%#剔除脏数据
   mutate_at(vars(xb, wlfk), factor) #类型转换
 
 
@@ -64,176 +63,10 @@ cjb %<>%
 #这里的空间结构，主要就是距离结构
 #拿到数据之后，同样是进行数据点散布的观测
 
-#先采用平行坐标观测高维空间的数据分布
-#平行坐标图
-#结果与Get to Know Your Data一样
-#但是采用pipe方式重写了
-cjb %>%
-  group_by(wlfk) %>%
-  arrange(desc(zcj)) %>%
-  head(n = 300) %>%
-  ungroup() %>%
-  ggparcoord(columns = 3:12,
-             groupColumn = 13) +
-  geom_point()
-#平行坐标图的结果，形如渔网
-#但更应观测其中具有辨识能力的变量
-#如生物、物理、数学等
-
-raw_cj <-  cjb%>%
-  group_by(wlfk) %>%
-  arrange(desc(zcj)) %>%
-  head(n = 300) %>%
-  ungroup()
-cj_jittered <- as.data.frame(cjb)
-for(j in 3:12) {
-  cj_jittered[, j] <- jitter(as.numeric(cj_jittered[, j]))
-}
-cj_jittered %>%
-  group_by(wlfk) %>%
-  arrange(desc(zcj)) %>%
-  head(n = 300) %>%
-  ungroup() %>%
-  ggparcoord(columns = 3:12,
-             alpha = 0.5, 
-             groupColumn = 13) +
-  geom_point(size = 1.2)
 
 
 
-#聚类，本质上是识别数据点在数据空间的（距离）结构
-#可以先看看在生物、物理二维空间里是怎么分布的
-library(ggplot2)
-ggplot(cjb, aes(x = wl, y = sx)) +
-  geom_point(aes(colour = wlfk, shape = wlfk))
-#数据空间的密度
-#将50~100细分为N份，看每一个有多少落入其间
-ibreaks <- seq(50, 100, len = 21)
-cjb %>%
-  select(wl, sx) %>%
-  mutate(wl = cut(wl, breaks = ibreaks),
-           sx = cut(sx, breaks = ibreaks)) %>%
-  group_by(wl, sx) %>%
-  summarise(freq = n()) %>%
-  complete(wl, sx) %>%
-  mutate(freq = ifelse(is.na(freq), 0, freq)) %>%
-  ggplot(aes(x = wl, y = sx, fill = freq)) +
-  geom_tile(colour="white", size = 0.5) +
-  geom_text(aes(label = freq), size = 3) +
-  scale_fill_gradient(low = "white", high = "red")+
-  theme(axis.text.x = element_text(angle = 90))
-
-
-#三维散点图
-library(rgl)
-plot3d(
-  x = cjb$sx,
-  y = cjb$wl,
-  z = cjb$sw,
-  xlab = "Mathematics", 
-  ylab = "Physics",
-  zlab = "Biology",
-  type = "s",
-  size = 0.5,
-  col = c("red", "green")[cjb$wlfk])
-
-#剔除其中的缺失值和异常值
-na_idx <- which(cjb$zcj == 0)
-cjb <- cjb[-na_idx, ]
-(outliers <- boxplot.stats(cjb$zcj)$out)
-#离群值标签
-(outliers_idx <- which(cjb$zcj
-                       %in% outliers))
-cjb <- cjb[-outliers_idx, ]
-#重新运行前述plot3d代码
-library(rgl)
-plot3d(
-  x = cjb$sx,
-  y = cjb$wl,
-  z = cjb$sw,
-  xlab = "Mathematics", 
-  ylab = "Physics",
-  zlab = "Biology",
-  type = "s",
-  radius = 0.5,
-  col = c("red", "green")[cjb$wlfk])
-
-#绘制其中的密度分布
-selected_cols <- c("sx", "wl", "sw")
-shu_wu_sheng <- cjb[, selected_cols]
-sws_dist <- as.matrix(dist(shu_wu_sheng,
-                           diag = TRUE,
-                           upper = TRUE))
-iseq <- seq(50, 100, len = 10)
-imatrix <- expand.grid(iseq, iseq, iseq)
-names(imatrix) <- selected_cols
-dist_imatrix <- apply(imatrix, 1, function(x) {
-  apply(shu_wu_sheng, 1, function(y) {
-    sqrt(sum((y - x)^2))
-  })
-})
-#定义半径为平均距离
-epsilon <- mean(sws_dist)
-#计算半径范围之内的点数作为密度
-sws_density <- apply(dist_imatrix, 2, function(x) {
-  sum(x < epsilon)
-})
-#调颜色
-my_color_ramp <- function(colors, values) {
-  v <- (values - min(values))/diff(range(values))
-  x <- colorRamp(colors)(v)
-  rgb(x[,1], x[,2], x[,3], maxColorValue = 255)
-}
-cols <- my_color_ramp(c("white", "red"), sws_density) 
-#绘制图形
-grd <- imatrix
-grd$col <- cols
-length <- width <- height <- (max(iseq) - min(iseq)) / length(iseq)
-for(i in seq(nrow(grd))){
-  #创建一个长方体
-  icube3d <- cube3d(col = grd$col[i])
-  #设定长宽高
-  icube3d <- scale3d(icube3d, length, width, height)
-  #将长方体移动至指定位置
-  icube3d <- translate3d(icube3d, grd$sx[i], grd$wl[i], grd$sw[i])
-  #绘制长方体
-  shade3d(icube3d, alpha = 0.05)
-}
-
-
-#从三维图之中，已经能直观的看到数据的散布情况
-#及其密度分布
-#对数据进行聚类，有一个逻辑前提：
-#数据不是均匀分布的
-#而是呈现一定的模式
-#这里的模式，就是表现为数据是倾斜的，而非均匀的
-
-#数据能聚类么？
-#霍普金斯统计量
-set.seed(2012)
-cj_matri <- cjb %>%
-  select(yw:sw) %>%
-  as.matrix()
-clustertend::hopkins(cj_matri, n = 100)
-#> $`H`
-#> [1] 0.2087974
-#取值偏向于0.5时，是均匀的
-#偏向于0时，是倾斜的
-
-#当然，我们也可以同时取多个值
-hopkins_metrics <- sapply((1:10)*50, function(x) {
-  clustertend::hopkins(cj_matri, x)
-})
-unlist(hopkins_metrics)
-#>0.2086024 0.2020664 0.1915297 0.1859097 0.1997344 
-#>0.2050931 0.2071697 0.1960066 0.1915444 0.2002765 
-mean(unlist(hopkins_metrics))
-#> [1] 0.1987933
-#由此可见，目前这份数据进行聚类还是可行的
-
-
-#再看看数据点之间的距离关系
-#现在考虑所有维度，求欧氏距离
+#聚类主要是考察数据点之间的距离关系
 #在R里边，最常用的是dist()函数
 #可以求取欧氏距离、明氏距离等
 #但不能求取混合类型数据的距离
@@ -325,48 +158,38 @@ cj_mds_plus %>%
   geom_text(aes(label = name, colour = type), 
             size = 3, alpha = 0.75)
 
-#莫非增加性别之后就把他们区别开来了？
-cj_mds_plus %>%
-  as.data.frame() %>%
-  mutate(name = cjb$xm,
-         type = cjb$wlfk,
-         sex = cjb$xb) %>%
-  setNames(c("x", "y", "name", "type", "sex")) %>%
-  ggplot(aes(x = x, y = y)) + 
-  geom_text(aes(label = name, colour = sex), 
-            size = 3, alpha = 0.75)
-#由此可见，数据空间，并没有很好地区分为文理科两类
 
-
-#主成分分析
-library(stats)
-
-cj_pc <- princomp(cjb[, 4:12])
-cj_pc <- prcomp(cjb[, 4:12])
-str(cj_pc)
-cj_pc$sdev[1] / sum(cj_pc$sdev)
-cj_pc$sdev[2] / sum(cj_pc$sdev)
-
-biplot(cj_pc)
-
-str(cj_pc$loadings)
-cj_reduced <- predict(cj_pc, cjb[, 4:12])
-cj_reduced <- cj_reduced %>%
-  as.data.frame() %>%
-  mutate(type = cjb$wlfk)
-ggplot(cj_reduced, aes(x = PC1, y = PC2, colour = type)) +
-  geom_point()
+#数据能聚类么？
+#霍普金斯统计量
+#对数据进行聚类，有一个逻辑前提：
+#数据不是均匀分布的
+#而是呈现一定的模式
+#这里的模式，就是表现为数据是倾斜的，而非均匀的
+library(clustertend)
+set.seed(2012)
+scores <- cjb %>%
+  select(yw:sw)
+n <- floor(nrow(cjb) * 0.05)
+hopkins_100 <- unlist(replicate(100,  hopkins(scores, n)))
+mean(hopkins_100)
+#> [1] 0.1577968
+ggplot(data.frame(H = hopkins_100), aes(x = factor(0), y = H)) +
+  geom_boxplot(width = 0.5) +
+  geom_rug(position = "jitter",
+           sides = "b") +
+  coord_flip()
+#取值偏向于0.5时，是均匀的
+#偏向于0时，是倾斜的
+#由此可见，目前这份数据进行聚类还是可行的
 
 
 #######################################################
 ##k-means算法
 #######################################################
 
-
 #先直观展示一下kmeans的迭代过程
 #小伙伴们也可以如法炮制
 #写一些简单版的算法，有助于理解算法原理
-library(tidyverse)
 library(animation)
 library(deldir)
 saveGIF(
@@ -444,158 +267,274 @@ saveGIF(
   ani.height = diff(range(iris$Petal.Width))*100
 )
 
-
-
-cj <- cjb[, 4:12]
+scores <- cjb %>%
+  select(yw:sw)
 #stats包中的kmeans()函数
 set.seed(2012)
-imodel <- kmeans(cj, centers = 2, iter.max = 5000)
+imodel <- kmeans(scores, 
+                 centers = 2)
+names(imodel)
+#> [1] "cluster"      "centers"      "totss"       
+#> [4] "withinss"     "tot.withinss" "betweenss"   
+#> [7] "size"         "iter"         "ifault"
+
+imodel$cluster
+#> [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1
+#> [24] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+#> [47] 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1
+#> [714] 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2
+#> [737] 2 2 2 2 2 2 2 2 2 1 2 2 2 1 1 1 1 1 1 1 1 1 1
+#> [760] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+
+imodel$centers
+#>    yw       sx       wy       zz       ls
+#> 1 85.07616 77.06623 83.24172 90.54967 84.85430
+#> 2 88.85169 92.03178 90.24153 93.46822 91.88559
+#>    dl       wl       hx       sw
+#> 1 90.08940 71.22185 85.64901 79.58609
+#> 2 94.91949 87.58475 95.54661 90.72034
+
+imodel$totss
+#> [1] 431975.9
+imodel$withinss
+#> [1] 168392.4 105535.6
+imodel$tot.withinss
+#> [1] 273928
+imodel$betweenss
+#> [1] 158047.9
+
+imodel$size
+#> [1] 472 302
+
+cluster_idx <- imodel$cluster
+
+#手工实现一次代码
+global_center <- apply(scores, 2, mean)
+total_SS <- sum(apply(scores, 1, function(x) {
+  sum((x - global_center)^2)
+}))
+total_SS
+#> [1] 431975.9
+
+
+library(fpc)
+kmeans_results <- kmeansruns(scores,
+                             criterion="asw") 
+kmeans_results
+#> Available components:
+#>   
+#>   [1] "cluster"      "centers"      "totss"       
+#> [4] "withinss"     "tot.withinss" "betweenss"   
+#> [7] "size"         "iter"         "ifault"      
+#> [10] "crit"         "bestk" 
+
+kmeans_results$crit
+#> [1] 0.0000000 0.3330389 0.2490188 0.2453507
+#> [5] 0.1889768 0.1652665 0.1603259 0.1579961
+#> [9] 0.1552047 0.1401957
+
+plot(kmeans_results$crit, type = "o")#> 后续有更好的展示方式，当然本质上是一样的
+
+kmeans_results$bestk
+#> [1] 2
+
+library(factoextra)
+fviz_nbclust(scores, 
+             kmeans, 
+             method = "silhouette", 
+             k.max = 20) +
+  geom_vline(xintercept = 2, linetype = 2)
+
+#绘制聚类效果图
+library(factoextra)
+fviz_cluster(imodel,
+             data = scores, 
+             ellipse.type = "convex") +
+  theme_minimal()
+
+require(cluster)
+scores_dist <- dist(scores)
+imodel2 <- kmeans(scores, 2)
+cluster_idx2 <- imodel2$cluster
+#计算轮廓系数
+kmeans_k2_silhouette <- silhouette(cluster_idx2, scores_dist)
+#绘制轮廓系数
+fviz_silhouette(kmeans_k2_silhouette)
+imodel3 <- kmeans(scores, 3) 
+cluster_idx3 <- imodel3$cluster
+k3_silhouette <- silhouette(cluster_idx3, scores_dist)
+fviz_silhouette(k3_silhouette)
+
+
+
+fviz_cluster(imodel, data = scores,
+             palette = c("#2E9FDF", "#00AFBB"),
+             ellipse.type = "euclid", # Concentration ellipse
+             star.plot = TRUE, # Add segments from centroids to items
+             #repel = TRUE, # Avoid label overplotting (slow)
+             ggtheme = theme_minimal()
+)
+
 min(Metrics::ce(cjb$wlfk, 
                 c( "理科", "文科")[imodel$cluster]),
     1- Metrics::ce(cjb$wlfk, 
                    c( "理科", "文科")[imodel$cluster]))
-#[1] 0.36 未剔除异常点
-#[1] 0.3464567 剔除异常点
-
-#绘制聚类效果图
-factoextra::fviz_cluster(imodel,
-             data = cj, 
-             ellipse.type = "convex") +
-  theme_minimal()
+#> [1] 0.3540052
 
 #是特征越多越好么？
 #未必如此
 set.seed(2012)
-imodel <- kmeans(cj[, c("sw", "wl", "sx")], centers = 2, iter.max = 5000)
+imodel <- kmeans(scores[, c("sw", "wl", "sx")],
+                 centers = 2)
 table(cjb$wlfk, c("文科", "理科")[imodel$cluster])
 min(Metrics::ce(cjb$wlfk, 
                 c( "理科", "文科")[imodel$cluster]),
     1- Metrics::ce(cjb$wlfk, 
                    c( "理科", "文科")[imodel$cluster]))
-#[1] 0.3277419未剔除异常点
-#[1] 0.3228346 剔除异常点
+#> [1] 0.3294574
 
-library(flexclust)
-mycont = list(iter=5000, initcent = "kmeanspp")
-as(mycont, "flexclustControl")
-imodel_kmeans2 <- kcca(cj[, c("sw", "wl", "sx")], 
-                       k = 2, 
-                       family=kccaFamily("kmeans"),
-                       control = mycont)
-min(Metrics::ce(cjb$wlfk, 
-            c( "理科", "文科")[imodel_kmeans2@cluster]),
-    1- Metrics::ce(cjb$wlfk, 
-                   c( "理科", "文科")[imodel_kmeans2@cluster]))
-#[1] 0.3303226 未剔除异常点
-#[1] 0.312336 剔除异常点
+Metrics::ce(cjb$wlfk, c("理科","文科")[imodel$cluster])
+imodel$centers
 
 
-#######################################################
-##中心点算法
-#######################################################
-
-library("cluster")
-imodel <- pam(cj, 2)
-min(Metrics::ce(cjb$wlfk, 
-                c( "理科", "文科")[imodel$cluster]),
-    1- Metrics::ce(cjb$wlfk, 
-                   c( "理科", "文科")[imodel$cluster]))
-#[1] 0.3225806 未剔除异常点
-#[1] 0.3215223 剔除异常点
-
-imodel <- pam(cj[, c("sw", "wl", "sx")], 2)
-min(Metrics::ce(cjb$wlfk, 
-                c( "理科", "文科")[imodel$cluster]),
-    1- Metrics::ce(cjb$wlfk, 
-                   c( "理科", "文科")[imodel$cluster]))
-#[1] 0.3109677 未剔除异常点
-#[1] 0.3097113 剔除异常点
-#将近百分之七十的正确率，已经和某些有监督学习算法相近了
-
-#绘制聚类效果图
-fviz_cluster(imodel)
 
 #######################################################
 ##层次聚类法
 #######################################################
-cj_dist <- dist(cjb %>%
-                  select(yw:zz))
-imodel_hc <- hclust(cj_dist, method = "ward.D")
-imodel_hc_cut2 <- cutree(imodel_hc, k = 2)
-(ic_metric <- min(Metrics::ce(cjb$wlfk, 
-                             c( "理科", "文科")[imodel_hc_cut2]),
-                 1- Metrics::ce(cjb$wlfk, 
-                                c( "理科", "文科")[imodel_hc_cut2])))
-#[1] 0.2860892
+#Demo
+selected_students <- c(
+  "伊礼贤", "鲁孟秋", "焦金音", "宁琦", "赖旺",
+  "于知平", "方顺", "谭思缘", "僪福星", "尚玉芳")
+scores <- cjb %>%
+  filter(xm %in% selected_students) %>%
+  select(xm, yw:sw) %>%
+  column_to_rownames(var = "xm")
+row.names(scores)
+#计算距离矩阵
+demo_dist <- dist(scores)
+#利用hclust进行聚类
+imodel <- hclust(demo_dist)
+imodel
+#> 
+#> Call:
+#>   hclust(d = demo_dist)
+#> 
+#> Cluster method   : complete 
+#> Distance         : euclidean 
+#> Number of objects: 10 
+names(imodel)
+#> [1] "merge"       "height"      "order"       "labels"     
+#> [5] "method"      "call"        "dist.method"
+imodel$merge
+#>       [,1] [,2]
+#> [1,]   -7   -8
+#> [2,]   -6   -9
+#> [3,]    1    2
+#> [4,]   -2  -10
+#> [5,]   -3    4
+#> [6,]   -5    5
+#> [7,]   -1    6
+#> [8,]   -4    7
+#> [9,]    3    8
+
+min(dist(scores))
+imodel$height
+#> [1]   4.000000
+#> [2]   5.291503
+#> [3]   7.937254
+#> [4]  24.819347
+#> [5]  29.933259
+#> [6]  41.073106
+#> [7]  44.068129
+#> [8]  76.360985
+#> [9] 134.000000
+imodel$height
+#> [1]   4.000000   5.291503   7.937254  24.819347
+#> [5]  29.933259  41.073106  44.068129  76.360985
+#> [9] 134.000000
+sort(dist(scores))
+#> [1]   4.000000   5.196152   5.291503   5.567764
+#> [5]   7.000000   7.937254  24.819347  26.888659
+#> [9]  27.092434  29.933259  32.572995  36.891733
+#> [13]  38.639358  41.073106  43.347434  44.068129
+#> [17]  54.194096  57.271284  63.229740  70.285134
+#> [21]  76.360985  76.674637  77.485483  77.833155
+#> [25]  79.517294  81.492331  82.042672  82.788888
+#> [29]  83.928541  90.752410  90.901045  91.010988
+#> [33]  91.021975  91.656969  92.238820  92.293012
+#> [37]  93.616238 100.682670 100.935623 101.113797
+#> [41] 102.815369 132.461315 133.540256 133.787144
+#> [45] 134.000000
+imodel$order
+#> [1]  7  8  6  9  4  1  5  3  2 10
+imodel$labels
+#> [1] "于知平" "僪福星" "谭思缘" "赖旺"   "尚玉芳"
+#> [6] "焦金音" "伊礼贤" "鲁孟秋" "宁琦"   "方顺"
+imodel$method
+#>[1] "complete"
+imodel$call
+#>hclust(d = demo_dist)
+imodel$dist.method
+#>[1] "euclidean"
+
+imodel$order <- rev(imodel$order)
+plot(imodel, hang = -1)
+
+cluster_idx <- cutree(imodel, k = 2)
+#> 于知平 僪福星 谭思缘 
+#> 1      1      1 
+#> 赖旺 尚玉芳 焦金音 
+#> 1      1      2 
+#> 伊礼贤 鲁孟秋   宁琦 
+#> 2      2      2 
+#> 方顺 
+#> 1 
+plot(imodel, hang = -1)
+rect.hclust(imodel, k = 2)
+
+library(factoextra)
+res <- hcut(
+  dist(scores), k = 2,
+  hc_func = "hclust", hc_method = "complete",
+  hc_metric = "euclidean", stand = FALSE,
+  graph = FALSE)
+fviz_dend(
+  res, rect = TRUE, cex = 0.75,
+  horiz = TRUE, type = "rectangle",
+  k_colors = c("#CD534CFF","#0073C2FF"))
+
+require(cluster)
+scores <- cjb %>%
+  select(yw:sw)
+scores_dist <- dist(scores)
+imodel <- hclust(scores_dist, method = "ward.D")
+cluster_idx <- cutree(imodel, k = 2)
+#计算轮廓系数
+kmeans_k2_silhouette <- silhouette(cluster_idx, scores_dist)
+#绘制轮廓系数
+fviz_silhouette(kmeans_k2_silhouette)
+cluster_idx <- cutree(imodel, k = 3)
+k3_silhouette <- silhouette(cluster_idx, scores_dist)
+fviz_silhouette(k3_silhouette)
+
+
+fviz_nbclust(scores, 
+             FUNcluster = hcut, 
+             method = "silhouette",
+             kmax = 20) +
+  geom_vline(xintercept = 2, linetype = 2)
+
+
+imodel <- hclust(scores_dist, method = "ward.D")
+cluster_idx <- cutree(imodel, k = 2)
+(ic_metric <- min(Metrics::ce(
+  cjb$wlfk,
+  c( "理科", "文科")[cluster_idx]),
+  1- Metrics::ce(
+    cjb$wlfk,
+    c( "理科", "文科")[cluster_idx])))
+#> [1] 0.2860892
 #分类准确率挺近70%大关
-
-#这当然也取决于参数的设置
-#可以写以下循环来获取最优参数配置
-hc_metric_com <- NULL
-for (dist_method in c("euclidean",
-                      "maximum",
-                      "manhattan",
-                      "canberra",
-                      "binary",
-                      "minkowski")) {
-  for (hc_method in c(
-    "ward.D",
-    "ward.D2",
-    "single",
-    "complete",
-    "average",
-    "mcquitty",
-    "median",
-    "centroid"
-  )) {
-    cat("Processing ", hc_method, "\t", dist_method, "\n")
-    imodel_hc <- hclust(stats::dist(cjb[,  4:12],
-                                    method = dist_method),
-                        method = hc_method)
-    imodel_hc_cut2 <- cutree(imodel_hc, k = 2)
-    hc_metric <- min(Metrics::ce(cjb$wlfk,
-                                 c("理科", "文科")[imodel_hc_cut2]),
-                     1 - Metrics::ce(cjb$wlfk,
-                                     c("理科", "文科")[imodel_hc_cut2]))
-    hc_metric_com <- rbind(
-      hc_metric_com,
-      data.frame(
-        hc_method = hc_method,
-        dist_method = dist_method,
-        hc_metric = hc_metric
-      )
-    )
-  }
-}
-View(hc_metric_com)
-
-
-#绘制图形
-imodel_hc <- hclust(cj_dist, method = "ward.D")
-plot(imodel_hc, cex = 0.01,hang = -1)
-rect.hclust(imodel_hc, k = 2, border = 2:3)
-
-#层次聚类，画的更好看一点
-library(dendextend)
-dend_hc <- as.dendrogram(imodel_hc)
-dend <- rotate(dend_hc, 1:nrow(cjb))
-# Color the branches based on the clusters:
-dend <- color_branches(dend, k = 2) 
-# Manually match the labels, as much as possible, to the real classification of the flowers:
-labels_colors(dend) <-
-  colorspace::rainbow_hcl(2)[sort_levels_values(as.numeric(cjb$wlfk)[order.dendrogram(dend)])]
-#Hang the dendrogram a bit:
-dend <- hang.dendrogram(dend, hang_height = 0.1)
-dend <- set(dend, "labels_cex", 0.25)
-plot(
-  dend,
-  main = "Clustered Student Scores",
-  horiz =  FALSE,
-  nodePar = list(cex = .007)
-)
-legend("topright",
-       legend = levels(cjb$wlfk),
-       fill = colorspace::rainbow_hcl(2))
 
 
 #######################################################
@@ -606,33 +545,24 @@ legend("topright",
 #对其开展研究
 library(DMwR)
 out_rank <- outliers.ranking(
-  dist(cjb[, 4:12]),
-  clus = list(dist = "euclidean",
-              alg = "hclust",
-              meth = "ward.D"
-              )
-  )
+  scores_dist,
+  clus = list(
+    dist = "euclidean",
+    alg = "hclust", meth = "ward.D"))
 cjb %>%
   arrange(desc(out_rank$prob.outliers)) %>%
   View()
+#与箱线图异常值检测作比较
+(outliers <- boxplot.stats(cjb$zcj)$out)
+outliers_idx <- which(cjb$zcj %in% outliers)
+View(cjb[outliers_idx, ])
+
 out_rank$prob.outliers
 cjb[order(out_rank$prob.outliers, decreasing = TRUE)[1:10], ] %>%
   View()
 (outliers <- boxplot.stats(cjb$zcj)$out)
-#异常点的标签
 outliers_idx <- which(cjb$zcj %in% outliers)
-#显示异常点
 View(cjb[outliers_idx, ])
-
-
-#######################################################
-##聚类评估
-#######################################################
-#轮廓系数
-require(cluster)
-fviz_silhouette(pam(cj_matri, k = 2))
-fviz_silhouette(pam(cj_matri, k = 3))
-fviz_silhouette(pam(cj_matri, k = 4))
 
 
 
