@@ -10,7 +10,4 @@ Author: byaxb <br>
 Email:axb@bupt.edu.cn  <br>
 QQ:23127789 <br>
 WeChat:13641159546 <br>
-URL:https://github.com/byaxb <br>
-
-(c)2012~2019
-
+URL:https://github.com/byaxb
