@@ -1,5 +1,6 @@
 
-# import data -------------------------------------------------------------
+# Data Import -------------------------------------------------------------
+
 library(readxl)
 cjb <- readxl::read_excel("data/cjb.xlsx")
 View(cjb)
