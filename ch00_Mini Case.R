@@ -2,8 +2,13 @@
 # Data Import -------------------------------------------------------------
 
 library(readxl)
+#在当前工作路径下新建data子文件夹
+#并从github中下载cjb.xlsx
+#https://github.com/byaxb/RDataAnalytics
+#将cjb.xlsx置于data子文件夹
 cjb <- readxl::read_excel("data/cjb.xlsx")
 View(cjb)
+
 
 # Data Exploration --------------------------------------------------------
 
@@ -15,6 +20,7 @@ cjb %>%
     y = sx,
     fill = wlfk)) +
   geom_boxplot(width = 0.5)
+
 
 # Data Preparation --------------------------------------------------------
 as_five_grade_scores <- function(x) {
@@ -32,6 +38,7 @@ cjb <- cjb %>%
   mutate_at(vars(yw:sw), as_five_grade_scores)#数据分箱
 View(cjb)
 
+
 # Model -------------------------------------------------------------------
 
 library(arulesViz)
@@ -39,6 +46,7 @@ my_model <- cjb %>%
   select(xb:wlfk) %>%
   apriori(parameter = list(supp = 0.06, conf = 0.8),
   appearance = list(rhs = paste0("wlfk=", c("文科", "理科"))))
+
 
 # Visualization -----------------------------------------------------------
 inspectDT(my_model)
