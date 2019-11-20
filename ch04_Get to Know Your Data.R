@@ -1,35 +1,5 @@
 
-
-#######################################################
-#######################################################
-##
-## 名称：《R语言数据分析·认识数据》
-## 作者：艾新波
-## 学校：北京邮电大学
-## 版本：V9
-## 时间：2018年8月
-##
-##*****************************************************
-##
-## ch04_Get to Know Your Data_V9
-## Data Analytics with R
-## Instructed by Xinbo Ai
-## Beijing University of Posts and Telecommunications
-##
-##*****************************************************
-##
-## Author: byaxb
-## Email:axb@bupt.edu.cn
-## QQ:23127789
-## WeChat:13641159546
-## URL:https://github.com/byaxb
-##
-##*****************************************************
-##
-## (c)2012~2018
-##
-#######################################################
-#######################################################
+# ch04_Get to Know Your Data ----------------------------------------------
 
 
 #了解一个人，可能是先看其长相，了解其言谈举止
@@ -48,9 +18,9 @@
 #尤其是变量之间的关系和数据空间的结构
 #认识数据，亦然~！
 
-#######################################################
-##获取数据
-#######################################################
+
+# Data Import -------------------------------------------------------------
+
 #为保持课程的一致性，减少小伙伴们熟悉业务背景的成本
 #本次课程同样采用前述的《学生文理分科》的数据
 #采用真实数据的目的很简单：所得结果是鲜活的
@@ -83,10 +53,9 @@ load("data/cjb.rda",
 #也可以采用下边这种方式选取
 #load(file.choose())
 
-#######################################################
-##一维数据空间形态
-##单变量数据分布
-#######################################################
+
+# 1D-univariate -----------------------------------------------------------
+
 
 #机器学习的核心任务
 #是揭示变量之间的关系和数据空间的结构
@@ -106,6 +75,8 @@ load("data/cjb.rda",
 
 #一维数据空间，毫无疑问就是一条直线
 
+
+# Stem --------------------------------------------------------------------
 
 #一维空间的数据形态，可以通过茎叶图或是Wikinson点图
 #来直观表示
@@ -149,6 +120,10 @@ cjb%>%
 stem(sx_1101, scale = 0.5)
 stem(sx_1110, scale = 2)
 
+
+
+# Histogram ---------------------------------------------------------------
+
 results <- hist(cjb$zz,
                 breaks = "Sturges")
 
@@ -157,7 +132,7 @@ results <- hist(cjb$zz,
                 plot = FALSE)
 results$breaks
 
-(max(cjb$zz) - min(cjb$zz)) / 
+(max(cjb$zz) - min(cjb$zz)) /
   (ceiling(log2(nrow(cjb))) + 1)
 nclass.Sturges(cjb$yw)
 nclass.Sturges(cjb$zz)
@@ -225,6 +200,9 @@ ggplot(data = cjb, mapping = aes(sx)) +
            aes(label = ..count..))
 ggsave("histogram2.png", dpi = 600)
 
+
+# Density -----------------------------------------------------------------
+
 #获取直方图相关参数
 sx_hist_results <- hist(cjb$sx,
                         plot = FALSE)
@@ -263,7 +241,7 @@ points(data_points, rep(0, n), col = "red")
 #方窗
 u <- c(-2.5, -2.5, 2.5, 2.5)
 kernel_2 <- c(0, 0.5, 0.5, 0)
-plot(u, kernel_2, type = "l", 
+plot(u, kernel_2, type = "l",
      xaxt = "n",
      yaxt = "n",
      axes=F,
@@ -275,7 +253,7 @@ arrows(-5, 0, 5, 0,length = 0.1)
 #三角窗
 u <- c(-2.5, 0, 2.5)
 kernel_2 <- c(0, 0.5, 0)
-plot(u, kernel_2, type = "l", 
+plot(u, kernel_2, type = "l",
      xaxt = "n",
      yaxt = "n",
      axes=F,
@@ -287,7 +265,7 @@ arrows(-5, 0, 5, 0,length = 0.1)
 #正态窗
 u <- seq(-4, 4, len = 10000)
 kernel_2 <- 1 / sqrt(2*pi) * exp(-0.5 * (u^2) )
-plot(u, kernel_2, type = "l", 
+plot(u, kernel_2, type = "l",
      xaxt = "n",
      yaxt = "n",
      axes=F,
@@ -299,7 +277,7 @@ arrows(-5, 0, 5, 0,length = 0.1)
 #指数窗
 u <- seq(-4, 4, len = 10000)
 kernel_2 <- 1 / 2 * exp(-abs(u) )
-plot(u, kernel_2, type = "l", 
+plot(u, kernel_2, type = "l",
      xaxt = "n",
      yaxt = "n",
      axes=F,
@@ -308,12 +286,17 @@ plot(u, kernel_2, type = "l",
 arrows(0, 0, 0, 0.6,length = 0.1)
 arrows(-5, 0, 5, 0,length = 0.1)
 
+
+# Violin ------------------------------------------------------------------
+
 #绘制小提琴图
 ggplot(cjb, aes(x = factor(0), y = sx)) +
   geom_violin(fill = "orange", alpha = 0.2)+
   coord_flip()
 ggsave("violin.png", dpi = 600)
 
+
+# Boxplot -----------------------------------------------------------------
 
 ggplot(cjb, aes(x = factor(0), y = sx)) +
   geom_violin(fill = "orange", alpha = 0.2)+
@@ -392,13 +375,13 @@ ggsave("boxplot2.png", dpi = 600)
 boxplot_results <- boxplot.stats(cjb$sx)
 # $`stats`
 # [1]  60  81  89  95 100
-# 
+#
 # $n
 # [1] 774
-# 
+#
 # $conf
 # [1] 88.20491 89.79509
-# 
+#
 # $out
 # [1] 55 59 57 59 58 51 56 55 59 26 58 46 59 59
 sort(boxplot_results$out)
@@ -407,6 +390,10 @@ typeof(boxplot_results)
 names(boxplot_results)
 boxplot_results$stats
 fivenum(cjb$sx)
+
+
+
+# Location ----------------------------------------------------------------
 
 #前边是数据形态的直观展示
 #我们需要有一些定量指标来对数据形态进行刻画
@@ -435,6 +422,8 @@ cjb %>%
     sx_mean = mean(sx))#均值
 
 
+# Scale -------------------------------------------------------------------
+
 cjb %>%
   group_by(wlfk) %>%#按文理分科分组统计
   summarise(
@@ -457,17 +446,19 @@ round(apply(cjb[, 4:12], 2, function(x) {
 }))
 
 
+# More Plots --------------------------------------------------------------
+
 cjb %>%
   filter(bj == "1110") %>%
   select(xm, sx) %>%
   mutate(sx_z = (sx - mean(sx)) / sd(sx),
          sx_type = ifelse(sx_z >= 0, "above", "below")) %>%
   arrange(sx_z) %>%
-  ggplot(aes(x = fct_inorder(xm), y = sx_z, label = sx_z)) + 
+  ggplot(aes(x = fct_inorder(xm), y = sx_z, label = sx_z)) +
   geom_bar(stat='identity', aes(fill= sx_type), width=.5)  +
-  scale_fill_manual(name="Math Score", 
-                    labels = c("Above Average", "Below Average"), 
-                    values = c("above"="#00ba38", "below"="#f8766d")) + 
+  scale_fill_manual(name="Math Score",
+                    labels = c("Above Average", "Below Average"),
+                    values = c("above"="#00ba38", "below"="#f8766d")) +
   coord_flip()
 
 cjb %>%
@@ -476,11 +467,11 @@ cjb %>%
   mutate(sx_z = (sx - mean(sx)) / sd(sx),
          sx_type = ifelse(sx_z >= 0, "above", "below")) %>%
   arrange(sx_z) %>%
-  ggplot(aes(x = fct_inorder(xm), y = sx_z, label = sx_z)) + 
+  ggplot(aes(x = fct_inorder(xm), y = sx_z, label = sx_z)) +
   geom_bar(stat='identity', aes(fill= sx_type), width = 0.5)  +
-  scale_fill_manual(name="Math Score", 
-                    labels = c("Above Average", "Below Average"), 
-                    values = c("above"="#00ba38", "below"="#f8766d")) + 
+  scale_fill_manual(name="Math Score",
+                    labels = c("Above Average", "Below Average"),
+                    values = c("above"="#00ba38", "below"="#f8766d")) +
   coord_flip() +
   theme_bw()
 
@@ -489,26 +480,32 @@ g <- ggplot(cjb, aes(sx))
 sx_hist_results <- hist(cjb$sx,
                         plot = FALSE)
 library(tidyverse)
-g + geom_histogram(aes(fill=bj), 
+g + geom_histogram(aes(fill=bj),
                    breaks = sx_hist_results$breaks,
-                   col="black", 
+                   col="black",
                    size=.1) + scale_fill_brewer(palette = "Spectral")
-#######################################################
-##二维数据空间形态
-##变量两两之间的关系
-#######################################################
 
-#######################################################
+
+
+
+# 2D-Two Variables --------------------------------------------------------
+
+
+
+
+# Treemap-Cat vs cat ------------------------------------------------------
+
 #离散变量vs离散变量
 #形式可以有很多种，比如马赛克图
 #本实验中推荐的是矩形树图
+
 library(tidyverse)
 library(treemap)
-cjb_sum <- cjb %>% 
-  group_by(wlfk) %>% 
+cjb_sum <- cjb %>%
+  group_by(wlfk) %>%
   summarise(count = n())
-cjb_sum <- cjb %>% 
-  group_by(wlfk,xb) %>% 
+cjb_sum <- cjb %>%
+  group_by(wlfk,xb) %>%
   summarise(count = n())
 treemap(as.data.frame(cjb_sum) ,
         index=c("wlfk", "xb"),
@@ -538,13 +535,15 @@ cjb %>%
   group_by(bj, wlfk) %>%
   summarise(count = n())
 
-#######################################################
+
+# Numeric vs numeric ------------------------------------------------------
+
 #连续变量vs连续变量
 #散点图是最常见、但同时也应该是最有用的图之一
 #散点图可用来观察变量之间可能存在的模式
 #同时也是二位数据空间形态的最直接的体现
 library(ggplot2)
-ggplot(cjb, 
+ggplot(cjb,
        aes(x = sx,
            y = sw,
            shape = wlfk,
@@ -559,6 +558,8 @@ GGally::ggpairs(cjb, columns = 4:12)
 ggsave("scatter_pairs.png", dpi = 600)
 View(cjb)
 
+
+# cor and cov -------------------------------------------------------------
 
 #协方差以及内积的含义
 #请大家进一步思考加减乘除的物理含义
@@ -595,8 +596,8 @@ saveGIF(
     W <- t(apply(W, 1, function(x) {
       x / sqrt(x[1]^2 + x[2]^2)
     }))
-    
-    
+
+
     XY <- expand.grid(Xs, Ys)
     names(XY) <- c("Xs", "Ys")
     XY_bak <- XY
@@ -610,10 +611,10 @@ saveGIF(
         sum(x * w)
       })
       names(XY) <- c("x", "y", "Inner_Product")
-      w_label <- paste0("(", 
-                        round(w[1], digits = 2), 
-                        ",", 
-                        round(w[2], digits = 2), 
+      w_label <- paste0("(",
+                        round(w[1], digits = 2),
+                        ",",
+                        round(w[2], digits = 2),
                         ")")
       library(ggplot2)
       p <- ggplot(XY, aes(
@@ -633,7 +634,7 @@ saveGIF(
           size = 1.2,
           arrow = arrow(length = unit(0.03, "npc"))
         ) +
-        geom_text(aes(x = w[1], y = w[2], 
+        geom_text(aes(x = w[1], y = w[2],
                       label = w_label),
                   colour = "blue") +
         #scale_colour_gradient2(low="#22FF00", mid="white", high="#FF0000", midpoint=0) +
@@ -664,8 +665,8 @@ saveGIF(
     W <- t(apply(W, 1, function(x) {
       x / sqrt(x[1]^2 + x[2]^2)
     }))
-    
-    
+
+
     XY <- expand.grid(Xs, Ys)
     names(XY) <- c("Xs", "Ys")
     XY_bak <- XY
@@ -678,10 +679,10 @@ saveGIF(
         sum(x * w) > b
       })
       names(XY) <- c("x", "y", "Inner_Product")
-      w_label <- paste0("(", 
-                        round(w[1], digits = 2), 
-                        ",", 
-                        round(w[2], digits = 2), 
+      w_label <- paste0("(",
+                        round(w[1], digits = 2),
+                        ",",
+                        round(w[2], digits = 2),
                         ")")
       library(ggplot2)
       p <- ggplot(XY, aes(
@@ -701,7 +702,7 @@ saveGIF(
           size = 1.2,
           arrow = arrow(length = unit(0.03, "npc"))
         ) +
-        geom_text(aes(x = w[1], y = w[2], 
+        geom_text(aes(x = w[1], y = w[2],
                       label = w_label),
                   colour = "blue") +
         coord_fixed()
@@ -729,8 +730,8 @@ saveGIF(
     W <- t(apply(W, 1, function(x) {
       x / sqrt(x[1]^2 + x[2]^2)
     }))
-    
-    
+
+
     XY <- expand.grid(Xs, Ys)
     names(XY) <- c("Xs", "Ys")
     XY_bak <- XY
@@ -743,10 +744,10 @@ saveGIF(
         sum(x * w) > b
       })
       names(XY) <- c("x", "y", "Inner_Product")
-      w_label <- paste0("(", 
-                        round(w[1], digits = 2), 
-                        ",", 
-                        round(w[2], digits = 2), 
+      w_label <- paste0("(",
+                        round(w[1], digits = 2),
+                        ",",
+                        round(w[2], digits = 2),
                         ")")
       library(ggplot2)
       p <- ggplot(XY, aes(
@@ -766,7 +767,7 @@ saveGIF(
           size = 1.2,
           arrow = arrow(length = unit(0.03, "npc"))
         ) +
-        geom_text(aes(x = w[1], y = w[2], 
+        geom_text(aes(x = w[1], y = w[2],
                       label = w_label),
                   colour = "blue") +
         coord_fixed()
@@ -805,13 +806,15 @@ cor_coef <- cjb%>%
 #> hx 0.38 0.59 0.44 0.28 0.33 0.44 0.62 1.00 0.69
 #> sw 0.40 0.60 0.44 0.28 0.38 0.46 0.65 0.69 1.00
 
+# Tile for cor ------------------------------------------------------------
+
 library(ggplot2)
 library(tidyverse)
 cor_coef %>%
   as.data.frame() %>%
   rownames_to_column(var = "km1") %>%
   gather(key = km2, value = cor_num, -km1) %>%
-  mutate(cor_level = cut(cor_num, 
+  mutate(cor_level = cut(cor_num,
                          breaks= c(0, 0.3, 0.5, 0.8, 1),
                          right = FALSE)) %>%
   ggplot(aes(x = fct_inorder(km1), y = fct_inorder(km2), fill = cor_level)) +
@@ -820,10 +823,15 @@ cor_coef %>%
   scale_fill_brewer(palette = "YlGn",name="相关系数区间")
 ggsave("cor_coef.png", dpi = 600)
 
-#######################################################
+
+# Catetorial vs Numeric ---------------------------------------------------
+
 #离散变量vs连续变量
 #主要是分组绘图
 #对不同的组别进行比较
+
+
+# Grouped boxplots --------------------------------------------------------
 
 #分组绘制箱线图
 #看看不同班级数学成绩的分布
@@ -838,7 +846,10 @@ ggplot(cjb, aes(x = bj,
   theme(legend.position = "none")
 ggsave("grouped_boxplots.png", dpi = 600)
 
-#其余图形如直方图、概率密度图等，请自行联系
+#其余图形如直方图、概率密度图等，请自行练习
+
+
+# Grouped density plots ---------------------------------------------------
 
 #当然，如果分组太多，显然不适合全都叠加在一起
 #可以采用以下方式
@@ -846,15 +857,17 @@ library(ggridges)#绘制层峦叠嶂图
 library(viridis)#采用其中的颜色
 ggplot(cjb, aes(x = sx, y = bj, fill = ..x..)) +
   geom_density_ridges_gradient(
-    scale = 2, 
+    scale = 2,
     rel_min_height = 0.01,
     gradient_lwd = 1) +
   scale_fill_viridis(
-    name = "数学成绩", 
+    name = "数学成绩",
     option = "C") +
   labs(x = "数学", y = "班级")
 ggsave("density_ridges.png", dpi = 600)
 
+
+# featurePlot -------------------------------------------------------------
 
 #对于分类问题而言，在进行数据描述时
 #最关键的，当属因变量vs自变量了
@@ -885,22 +898,27 @@ information_gain(x = cjb[, c(1, 3)],
                  y = cjb$wlfk)
 #实际上，信息增益也是特征选择常用的方法
 
-#######################################################
-##高维数据空间形态
-##多变量之间的关系
-#######################################################
+
+
+# More Variables ----------------------------------------------------------
+
+
+
+# 3D-scatter --------------------------------------------------------------
+
 #三维散点图
 library(rgl)
 plot3d(
   x = cjb$sx,
   y = cjb$wl,
   z = cjb$sw,
-  xlab = "Mathematics", 
+  xlab = "Mathematics",
   ylab = "Physics",
   zlab = "Biology",
   type = "s",
   size = 0.6,
   col = c("red", "green")[cjb$wlfk])
+
 
 # Define point shapes
 myshapes = c(16, 17, 18)
@@ -919,12 +937,12 @@ bty <- c("b", "b2", "f", "g", "bl", "bl2", "u", "n")
 scatter3D(
   x = cjb$sx,
   y = cjb$wl,
-  z = cjb$sw, 
-  pch = 16, 
+  z = cjb$sw,
+  pch = 16,
   bty = "g",
   colkey = FALSE,
-  xlab = "数学", 
-  ylab = "物理", 
+  xlab = "数学",
+  ylab = "物理",
   zlab = "生物",
   main ="数学、物理、生物散点图",
   #col.panel ="lightgreen",
@@ -948,15 +966,15 @@ cjb %>%
   column_to_rownames(var = "wl") %>%
   as.matrix() %>%
   hist3D(z = .,
-         scale = FALSE, 
-         expand = 0.02, 
-         bty = "g", 
+         scale = FALSE,
+         expand = 0.02,
+         bty = "g",
          phi = rotated_angle,
-         col = "#0072B2", 
-         border ="black", 
-         shade = 0.2, 
+         col = "#0072B2",
+         border ="black",
+         shade = 0.2,
          ltheta = 90,
-         space = 0.3, 
+         space = 0.3,
          ticktype = "detailed")
 
 
@@ -964,7 +982,7 @@ cjb %>%
 library(animation)
 saveGIF(
   expr = {
-    
+
     for(rotated_angle in seq(20, 380, by = 5)){
       cjb %>%
         select(wl, sx) %>%
@@ -975,20 +993,20 @@ saveGIF(
         column_to_rownames(var = "wl") %>%
         as.matrix() %>%
         hist3D(z = .,
-               scale = FALSE, 
-               expand = 0.02, 
-               bty = "g", 
+               scale = FALSE,
+               expand = 0.02,
+               bty = "g",
                phi = 20,
-               col = "#0072B2", 
-               border ="black", 
-               shade = 0.2, 
+               col = "#0072B2",
+               border ="black",
+               shade = 0.2,
                ltheta = 90,
                theta = rotated_angle,
-               space = 0.3, 
+               space = 0.3,
                ticktype = "detailed")
-      
+
     }
-    
+
   },
   movie.name = "animation5.gif",
   convert = "gm convert",
@@ -997,24 +1015,24 @@ saveGIF(
 dev.off()
 
 
-
+# faces -------------------------------------------------------------------
 
 #除了三维之外，可以继续向多维扩展
 #比如脸谱图
 library(aplpack)
 selected_cols <- c("wl", "hx", "sw")
-selected_rows <- 
+selected_rows <-
   c(488, 393, 490,  440,
     287, 289,  292, 293)
 View(cjb[selected_rows,])
-faces(cjb[selected_rows, 
+faces(cjb[selected_rows,
           selected_cols],
-      ncol.plot = 4, 
+      ncol.plot = 4,
       nrow.plot = 2,
       face.type = 1)
 
 #> effect of variables:
-#>   modified item       Var 
+#>   modified item       Var
 #> "height of face   " "wl"
 #> "width of face    " "hx"
 #> "structure of face" "sw"
@@ -1030,6 +1048,9 @@ faces(cjb[selected_rows,
 #> "width of nose   "  "wl"
 #> "width of ear    "  "hx"
 #> "height of ear   "  "sw"
+
+
+# parallel coordinate plot ------------------------------------------------
 
 #绘制平行坐标图
 cjb_top_wen <- cjb %>%
@@ -1054,6 +1075,8 @@ ggparcoord(cjb_top,
 ggsave("par2.png", dpi = 600)
 
 
+
+# Density revisited -------------------------------------------------------
 
 #我们当然可以对这个三维数据进行直观展示，
 #但这显然是不够的，我们只有进行了量化，
@@ -1084,8 +1107,8 @@ cjb %>%
   geom_text(aes(label = freq), size = 3) +
   scale_fill_gradient(low = "white", high = "red")+
   theme(axis.text.x = element_text(
-    angle = 90, 
-    hjust = 1, 
+    angle = 90,
+    hjust = 1,
     vjust = 0.5))
 
 cjb %>%
@@ -1096,7 +1119,7 @@ breaks <-  c(0,seq(50, 100, len=11))
 wl_sx_freq <- cjb %>%
   select(wl, sx) %>%
   mutate_at(
-    vars(wl, sx), 
+    vars(wl, sx),
     function(x) {
       cut(x, breaks = breaks)
     }) %>%
@@ -1107,12 +1130,12 @@ ggplot(wl_sx_freq, aes(x = wl, y = sx, fill = freq)) +
   geom_tile(colour="white", size = 0.5) +
   geom_text(aes(label = freq), size = 3) +
   scale_fill_gradient(
-    low = "white", 
+    low = "white",
     high = "red")+
-  theme(axis.text.x = 
+  theme(axis.text.x =
           element_text(
-            angle = 90, 
-            hjust = 1, 
+            angle = 90,
+            hjust = 1,
             vjust = 0.5)) +
   coord_fixed()
 ggsave("density.png", dpi = 300)
@@ -1147,7 +1170,7 @@ my_color_ramp <- function(colors, values) {
   x <- colorRamp(colors)(v)
   rgb(x[,1], x[,2], x[,3], maxColorValue = 255)
 }
-cols <- my_color_ramp(c("white", "red"), sws_density) 
+cols <- my_color_ramp(c("white", "red"), sws_density)
 #绘制图形
 library(rgl)
 #绘制“空”间
@@ -1155,7 +1178,7 @@ plot3d(
   x = imatrix,
   size =2,
   type = "n",
-  xlab = "Mathematics", 
+  xlab = "Mathematics",
   ylab = "Physics",
   zlab = "Biology",
   col = cols)
@@ -1174,6 +1197,10 @@ for(i in seq(nrow(grd))){
   shade3d(icube3d, alpha = grd$alpha[i])
 }
 
+
+
+# Hopkins -----------------------------------------------------------------
+
 #数据空间的均匀程度
 #可以用hopkins统计量来描述
 #均匀分布的话，趋近于0.5
@@ -1182,6 +1209,9 @@ clustertend::hopkins(cjb[, 4:12], n = 100)
 #> $`H`
 #> [1] 0.1549145
 
+
+
+# Last words --------------------------------------------------------------
 
 #这里展示的，只是数据可视化的一部分图形
 #还有很多图形尚未涉及，请小伙伴们自行研究：
@@ -1205,7 +1235,6 @@ clustertend::hopkins(cjb[, 4:12], n = 100)
 #而是透过现象看本质了
 
 
+# The End ^-^ -------------------------------------------------------------
 
-#######################################################
-##The End ^-^
-#######################################################
+

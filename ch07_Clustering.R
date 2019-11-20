@@ -1,36 +1,5 @@
 
-
-#######################################################
-#######################################################
-##
-## 名称：《R语言数据分析·聚类分析》
-## 作者：艾新波
-## 学校：北京邮电大学
-## 版本：V9
-## 时间：2018年8月
-##
-##*****************************************************
-##
-## ch07_Clustering_V8
-## Data Analytics with R
-## Instructed by Xinbo Ai
-## Beijing University of Posts and Telecommunications
-##
-##*****************************************************
-##
-## Author: byaxb
-## Email:axb@bupt.edu.cn
-## QQ:23127789
-## WeChat:13641159546
-## URL:https://github.com/byaxb
-##
-##*****************************************************
-##
-## (c)2012~2018
-##
-#######################################################
-#######################################################
-
+# ch07_Clustering ---------------------------------------------------------
 
 
 #前一实验，分类与回归，是有监督学习的代名词
@@ -42,9 +11,9 @@
 #和前述其他实验一样，
 #本实验数据依然是学生成绩
 
-#######################################################
-##观察数据
-#######################################################
+
+# Data Exploration --------------------------------------------------------
+
 #加载数据
 rm(list = ls())
 library(tidyverse)
@@ -73,7 +42,7 @@ cjb %<>%
 #先看一个简单的示例
 library(cluster)
 artificial_data <- data.frame(
-  x = as.factor(c(1, 1, 4, 1)), 
+  x = as.factor(c(1, 1, 4, 1)),
   y = c(2, 3, 7, 2),
   z = c(1, 3, 1, 1))
 dist(
@@ -142,8 +111,8 @@ cj_mds %>%
   mutate(name = cjb$xm,
          type = cjb$wlfk) %>%
   setNames(c("x", "y", "name", "type")) %>%
-  ggplot(aes(x = x, y = y)) + 
-  geom_text(aes(label = name, colour = type), 
+  ggplot(aes(x = x, y = y)) +
+  geom_text(aes(label = name, colour = type),
             size = 3, alpha = 0.75)
 #当然也可以增加性别的因素
 cj_mds_plus <- cmdscale(d = cj_dist_plus, k = 2)
@@ -154,10 +123,13 @@ cj_mds_plus %>%
          type = cjb$wlfk,
          sex = cjb$xb) %>%
   setNames(c("x", "y", "name", "type", "sex")) %>%
-  ggplot(aes(x = x, y = y)) + 
-  geom_text(aes(label = name, colour = type), 
+  ggplot(aes(x = x, y = y)) +
+  geom_text(aes(label = name, colour = type),
             size = 3, alpha = 0.75)
 
+
+
+# Hopkins -----------------------------------------------------------------
 
 #数据能聚类么？
 #霍普金斯统计量
@@ -183,9 +155,8 @@ ggplot(data.frame(H = hopkins_100), aes(x = factor(0), y = H)) +
 #由此可见，目前这份数据进行聚类还是可行的
 
 
-#######################################################
-##k-means算法
-#######################################################
+
+# k-means -----------------------------------------------------------------
 
 #先直观展示一下kmeans的迭代过程
 #小伙伴们也可以如法炮制
@@ -216,9 +187,9 @@ saveGIF(
       voronoi <-
         deldir(cur_centers$Petal.Length, cur_centers$Petal.Width)
       p <- ggplot() +
-        geom_point(data = iris, 
-                   aes(x = Petal.Length, 
-                       y = Petal.Width, 
+        geom_point(data = iris,
+                   aes(x = Petal.Length,
+                       y = Petal.Width,
                        colour = Species)) +
         geom_point(
           data = cur_centers,
@@ -241,7 +212,7 @@ saveGIF(
         ) +
         coord_fixed()+ #固定长宽比例，否则看不出垂直的效果
         theme(legend.position = "none")
-      
+
       plot(p)
       if(repeat_first) {
         plot(p)
@@ -249,8 +220,8 @@ saveGIF(
         plot(p)
         repeat_first <- FALSE
       }
-      
-      
+
+
       old_centers <- cur_centers
       #重新计算各组的中心
       cur_centers <- iris %>%
@@ -271,11 +242,11 @@ scores <- cjb %>%
   select(yw:sw)
 #stats包中的kmeans()函数
 set.seed(2012)
-imodel <- kmeans(scores, 
+imodel <- kmeans(scores,
                  centers = 2)
 names(imodel)
-#> [1] "cluster"      "centers"      "totss"       
-#> [4] "withinss"     "tot.withinss" "betweenss"   
+#> [1] "cluster"      "centers"      "totss"
+#> [4] "withinss"     "tot.withinss" "betweenss"
 #> [7] "size"         "iter"         "ifault"
 
 imodel$cluster
@@ -319,14 +290,14 @@ total_SS
 
 library(fpc)
 kmeans_results <- kmeansruns(scores,
-                             criterion="asw") 
+                             criterion="asw")
 kmeans_results
 #> Available components:
-#>   
-#>   [1] "cluster"      "centers"      "totss"       
-#> [4] "withinss"     "tot.withinss" "betweenss"   
-#> [7] "size"         "iter"         "ifault"      
-#> [10] "crit"         "bestk" 
+#>
+#>   [1] "cluster"      "centers"      "totss"
+#> [4] "withinss"     "tot.withinss" "betweenss"
+#> [7] "size"         "iter"         "ifault"
+#> [10] "crit"         "bestk"
 
 kmeans_results$crit
 #> [1] 0.0000000 0.3330389 0.2490188 0.2453507
@@ -339,16 +310,16 @@ kmeans_results$bestk
 #> [1] 2
 
 library(factoextra)
-fviz_nbclust(scores, 
-             kmeans, 
-             method = "silhouette", 
+fviz_nbclust(scores,
+             kmeans,
+             method = "silhouette",
              k.max = 20) +
   geom_vline(xintercept = 2, linetype = 2)
 
 #绘制聚类效果图
 library(factoextra)
 fviz_cluster(imodel,
-             data = scores, 
+             data = scores,
              ellipse.type = "convex") +
   theme_minimal()
 
@@ -360,7 +331,7 @@ cluster_idx2 <- imodel2$cluster
 kmeans_k2_silhouette <- silhouette(cluster_idx2, scores_dist)
 #绘制轮廓系数
 fviz_silhouette(kmeans_k2_silhouette)
-imodel3 <- kmeans(scores, 3) 
+imodel3 <- kmeans(scores, 3)
 cluster_idx3 <- imodel3$cluster
 k3_silhouette <- silhouette(cluster_idx3, scores_dist)
 fviz_silhouette(k3_silhouette)
@@ -375,9 +346,9 @@ fviz_cluster(imodel, data = scores,
              ggtheme = theme_minimal()
 )
 
-min(Metrics::ce(cjb$wlfk, 
+min(Metrics::ce(cjb$wlfk,
                 c( "理科", "文科")[imodel$cluster]),
-    1- Metrics::ce(cjb$wlfk, 
+    1- Metrics::ce(cjb$wlfk,
                    c( "理科", "文科")[imodel$cluster]))
 #> [1] 0.3540052
 
@@ -387,9 +358,9 @@ set.seed(2012)
 imodel <- kmeans(scores[, c("sw", "wl", "sx")],
                  centers = 2)
 table(cjb$wlfk, c("文科", "理科")[imodel$cluster])
-min(Metrics::ce(cjb$wlfk, 
+min(Metrics::ce(cjb$wlfk,
                 c( "理科", "文科")[imodel$cluster]),
-    1- Metrics::ce(cjb$wlfk, 
+    1- Metrics::ce(cjb$wlfk,
                    c( "理科", "文科")[imodel$cluster]))
 #> [1] 0.3294574
 
@@ -398,9 +369,8 @@ imodel$centers
 
 
 
-#######################################################
-##层次聚类法
-#######################################################
+# Hierarchical Clustering -------------------------------------------------
+
 #Demo
 selected_students <- c(
   "伊礼贤", "鲁孟秋", "焦金音", "宁琦", "赖旺",
@@ -415,15 +385,15 @@ demo_dist <- dist(scores)
 #利用hclust进行聚类
 imodel <- hclust(demo_dist)
 imodel
-#> 
+#>
 #> Call:
 #>   hclust(d = demo_dist)
-#> 
-#> Cluster method   : complete 
-#> Distance         : euclidean 
-#> Number of objects: 10 
+#>
+#> Cluster method   : complete
+#> Distance         : euclidean
+#> Number of objects: 10
 names(imodel)
-#> [1] "merge"       "height"      "order"       "labels"     
+#> [1] "merge"       "height"      "order"       "labels"
 #> [5] "method"      "call"        "dist.method"
 imodel$merge
 #>       [,1] [,2]
@@ -481,14 +451,14 @@ imodel$order <- rev(imodel$order)
 plot(imodel, hang = -1)
 
 cluster_idx <- cutree(imodel, k = 2)
-#> 于知平 僪福星 谭思缘 
-#> 1      1      1 
-#> 赖旺 尚玉芳 焦金音 
-#> 1      1      2 
-#> 伊礼贤 鲁孟秋   宁琦 
-#> 2      2      2 
-#> 方顺 
-#> 1 
+#> 于知平 僪福星 谭思缘
+#> 1      1      1
+#> 赖旺 尚玉芳 焦金音
+#> 1      1      2
+#> 伊礼贤 鲁孟秋   宁琦
+#> 2      2      2
+#> 方顺
+#> 1
 plot(imodel, hang = -1)
 rect.hclust(imodel, k = 2)
 
@@ -518,8 +488,8 @@ k3_silhouette <- silhouette(cluster_idx, scores_dist)
 fviz_silhouette(k3_silhouette)
 
 
-fviz_nbclust(scores, 
-             FUNcluster = hcut, 
+fviz_nbclust(scores,
+             FUNcluster = hcut,
              method = "silhouette",
              kmax = 20) +
   geom_vline(xintercept = 2, linetype = 2)
@@ -537,9 +507,9 @@ cluster_idx <- cutree(imodel, k = 2)
 #分类准确率挺近70%大关
 
 
-#######################################################
-##尝试一些算法创新
-#######################################################
+
+# About Model Innovation --------------------------------------------------
+
 #了解完以上的基本原理之后，
 #小伙伴们也应该有算法创造者的角度，
 #对其开展研究
@@ -566,6 +536,6 @@ View(cjb[outliers_idx, ])
 
 
 
-#######################################################
-##The End ^-^
-#######################################################
+# The End ^-^ -------------------------------------------------------------
+
+
