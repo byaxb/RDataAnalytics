@@ -1,5 +1,10 @@
 
-# ch06_Classification -----------------------------------------------------
+
+# 06_既是世间法、自当有分别------------------------------------------------
+
+
+#这里的分别，指的是分门别类
+#更具体的讲，是根据特征做出判断、作出分类
 
 #分类与回归，几乎是有监督学习的代名词
 #也是机器学习/数据挖掘最核心的内容
@@ -20,14 +25,15 @@
 rm(list = ls())
 library(tidyverse)
 #加载数据
-cjb_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <-
+    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
 cjb %<>%
-  mutate(zcj = rowSums(.[, 4:12])) %>%
-  mutate_at(vars(xb, bj, wlfk), factor) %>%
-  filter(zcj != 0) %>%
-  select(xb:wlfk)
+    mutate(zcj = rowSums(.[, 4:12])) %>%
+    mutate_at(vars(xb, bj, wlfk), factor) %>%
+    filter(zcj != 0) %>%
+    select(xb:wlfk)
 #按照一般的数据分析流程，自然应该是先对数据进行探索性分析
 #小伙伴们可以参照之前Get to Know Your Data相关代码，认识这份数据
 
@@ -37,33 +43,34 @@ cjb %<>%
 #我们可以借助caret::featurePlot()和plotluck::plotluck()来进行观察
 library(caret)
 featurePlot(
-  x = cjb %>%
-    select(yw:sw),
-  y = cjb[, "wlfk"] %>%
-    as_vector(),
-  plot = "density",
-  scales = list(
-    x = list(relation = "free"),
-    y = list(relation = "free")
-  ),
-  adjust = 1.5,
-  pch = "|")
+    x = cjb %>%
+        select(yw:sw),
+    y = cjb[, "wlfk"] %>%
+        as_vector(),
+    plot = "density",
+    scales = list(
+        x = list(relation = "free"),
+        y = list(relation = "free")
+    ),
+    adjust = 1.5,
+    pch = "|"
+)
 
 # library(devtools)
 # devtools::install_github("stefan-schroedl/plotluck")
 library(plotluck)
-plotluck(cjb, wlfk~xb)
+plotluck(cjb, wlfk ~ xb)
 #绘制不同所有自变量、因变量各自分布
-plotluck(cjb, .~1)
+plotluck(cjb, . ~ 1)
 #绘制自变量相对于因变量的分组分布
-plotluck(cjb, wlfk~.,
-         opts = plotluck.options(verbose=TRUE))
+plotluck(cjb, wlfk ~ .,
+         opts = plotluck.options(verbose = TRUE))
 #上述代码出图顺序，并非变量原有顺序，
 #而是conditional entropy从小打到排列的结果
-plotluck(cjb, wlfk~.,
-         opts=plotluck.options(verbose=TRUE,
-                               multi.entropy.order = FALSE))
-plotluck(cjb, wlfk~yw+sx)
+plotluck(cjb, wlfk ~ .,
+         opts = plotluck.options(verbose = TRUE,
+                                 multi.entropy.order = FALSE))
+plotluck(cjb, wlfk ~ yw + sx)
 
 
 
@@ -106,12 +113,12 @@ plotluck(cjb, wlfk~yw+sx)
 #留出法hold-out
 #手工版
 set.seed(2012)
-train_set_idx <- sample(nrow(cjb), nrow(cjb)*0.7)
+train_set_idx <- sample(nrow(cjb), nrow(cjb) * 0.7)
 str(train_set_idx)
 #> int [1:541] 169 576 218 722 575 673 411 700 687 696 ...
 length(train_set_idx) / nrow(cjb)
 #> [1] 0.6989664
-train_set <- cjb[train_set_idx, ]
+train_set <- cjb[train_set_idx,]
 # test_set <- ?
 
 # #工业级
@@ -125,14 +132,14 @@ train_set <- cjb[train_set_idx, ]
 
 #k折交叉检验
 cv_kfold <- function(data, k = 10, seed = 2012) {
-  n_row <- nrow(data)#计算数据的行数
-  n_foldmarkers <- rep(1:k, ceiling(n_row / k))[1:n_row]
-  set.seed(seed)
-  n_foldmarkers <- sample(n_foldmarkers)  #打乱顺序
-  kfold <- lapply(1:k, function(i){
-    (1:n_row)[n_foldmarkers == i]
-  })
-  return(kfold)
+    n_row <- nrow(data)#计算数据的行数
+    n_foldmarkers <- rep(1:k, ceiling(n_row / k))[1:n_row]
+    set.seed(seed)
+    n_foldmarkers <- sample(n_foldmarkers)  #打乱顺序
+    kfold <- lapply(1:k, function(i) {
+        (1:n_row)[n_foldmarkers == i]
+    })
+    return(kfold)
 }
 cv_kfold(cjb)
 #> [[1]]
@@ -183,17 +190,19 @@ sapply(kfolds, length)
 #手工版如下：
 global_performance <- NULL
 imetrics <- function(method, type, predicted, actual) {
-  con_table <- table(predicted, actual)
-  cur_one <- data.frame(
-    method = method, #算法模型的名称
-    type = type, #取值为train或是test
-    accuracy = sum(diag(con_table)) / sum(con_table),
-    error_rate = 1 - sum(diag(con_table)) / sum(con_table)
-  )
-  assign("global_performance",
-         rbind(get("global_performance", envir = .GlobalEnv) ,
-               cur_one),
-         envir = .GlobalEnv)
+    con_table <- table(predicted, actual)
+    cur_one <- data.frame(
+        method = method,
+        #算法模型的名称
+        type = type,
+        #取值为train或是test
+        accuracy = sum(diag(con_table)) / sum(con_table),
+        error_rate = 1 - sum(diag(con_table)) / sum(con_table)
+    )
+    assign("global_performance",
+           rbind(get("global_performance", envir = .GlobalEnv) ,
+                 cur_one),
+           envir = .GlobalEnv)
 }
 #有很多专门的包，已经实现了各种模型评估指标
 #在实际的数据分析项目中，就不用去重复造轮子了
@@ -233,28 +242,34 @@ imetrics <- function(method, type, predicted, actual) {
 library(kknn)
 set.seed(2012)
 imodel <- kknn(wlfk ~ .,
-                   train = cjb[train_set_idx, ],
-                   test = cjb[train_set_idx, ])
+               train = cjb[train_set_idx,],
+               test = cjb[train_set_idx,])
 predicted_train <- imodel$fit
 #ce: classification error
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.1090573
 #作为惰性学习法，训练和测试同时进行
 imodel <- kknn(wlfk ~ .,
-                   train = cjb[train_set_idx, ],
-                   test = cjb[-train_set_idx, ])
+               train = cjb[train_set_idx,],
+               test = cjb[-train_set_idx,])
 predicted_test <- imodel$fit
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1888412
 
 #选取最优的k和核
 train_kk <- train.kknn(
-  wlfk  ~ .,
-  data = cjb,
-  kmax = 100,
-  kernel = c(
-    "rectangular", "epanechnikov",
-    "cos", "inv", "gaussian", "optimal"))
+    wlfk  ~ .,
+    data = cjb,
+    kmax = 100,
+    kernel = c(
+        "rectangular",
+        "epanechnikov",
+        "cos",
+        "inv",
+        "gaussian",
+        "optimal"
+    )
+)
 
 #查看具体结果
 train_kk
@@ -303,36 +318,46 @@ min_ce <- min(train_kk$MISCLASS)
 str(ce_kk)
 #通过ggplot2进行绘制
 ce_kk %>%
-  as.data.frame() %>%
-  mutate(k = row_number()) %>%
-  gather(key = "kernel", value = "ce", -k) %>%
-  ggplot(aes(x = k, y = ce, colour = kernel)) +
-  geom_vline(aes(xintercept = best_k), linetype = "dashed") +
-  geom_hline(aes(yintercept = min_ce), linetype = "dashed") +
-  geom_line() +
-  geom_point(aes(shape = kernel)) +
-  theme(legend.position = c(0.9,0.8))
+    as.data.frame() %>%
+    mutate(k = row_number()) %>%
+    gather(key = "kernel", value = "ce", -k) %>%
+    ggplot(aes(x = k, y = ce, colour = kernel)) +
+    geom_vline(aes(xintercept = best_k), linetype = "dashed") +
+    geom_hline(aes(yintercept = min_ce), linetype = "dashed") +
+    geom_line() +
+    geom_point(aes(shape = kernel)) +
+    theme(legend.position = c(0.9, 0.8))
 
 #进行k-折交叉检验k-fold cross validation
 library(kknn)
 sp <- Sys.time() #记录开始时间
 cat("\n[Start at:", as.character(sp))
 for (i in 1:length(kfolds)) {
-  curr_fold <- kfolds[[i]] #当前这一折
-  train_set <- cjb[-curr_fold,] #训练集
-  test_set <- cjb[curr_fold,] #测试集
-  predicted_train <- kknn(
-    wlfk ~ ., train = train_set, test = train_set,
-    k = best_k, kernel = best_kernel)$fit
-  imetrics("kknn", "Train", predicted_train, train_set$wlfk)
-  predicted_test <- kknn(
-    wlfk ~ ., train = train_set, test = test_set,
-    k = best_k, kernel = best_kernel)$fit
-  imetrics("kknn", "Test", predicted_test, test_set$wlfk)
+    curr_fold <- kfolds[[i]] #当前这一折
+    train_set <- cjb[-curr_fold, ] #训练集
+    test_set <- cjb[curr_fold, ] #测试集
+    predicted_train <- kknn(
+        wlfk ~ .,
+        train = train_set,
+        test = train_set,
+        k = best_k,
+        kernel = best_kernel
+    )$fit
+    imetrics("kknn", "Train", predicted_train, train_set$wlfk)
+    predicted_test <- kknn(
+        wlfk ~ .,
+        train = train_set,
+        test = test_set,
+        k = best_k,
+        kernel = best_kernel
+    )$fit
+    imetrics("kknn", "Test", predicted_test, test_set$wlfk)
 }
 ep <- Sys.time()
 cat("\tFinised at:", as.character(ep), "]\n")
-cat("[Time Ellapsed:\t", difftime(ep, sp, units = "secs"), " seconds]\n")
+cat("[Time Ellapsed:\t",
+    difftime(ep, sp, units = "secs"),
+    " seconds]\n")
 global_performance
 #>     method  type  accuracy error_rate
 #> 1    kknn Train 0.8333333  0.1666667
@@ -357,45 +382,57 @@ global_performance
 #> 20   kknn  Test 0.7792208  0.2207792
 
 
+
 #考虑到每种方法都要采用交叉检验的方法，
 #根据事不过三法则，反反复复拷贝、更改以上代码是不合适的
 #为此，将上述代码改写为相应的函数
-kfold_cross_validation <- function(
-  formula, data, kfolds, learner, ...) {
-  sp <- Sys.time() #记录开始时间
-  cat("\n[Start at:", as.character(sp))
-  lapply(kfolds, function(curr_fold) {
-    train_set <- data[-curr_fold,] #训练集
-    test_set <- data[curr_fold,] #测试集
-    predictions <- do.call(
-      learner, args = c(
-        list(formula = formula, train = train_set, test = test_set),
-        list(...)))
-    imetrics(learner, "Train", predictions$predicted_train, train_set$wlfk)
-    imetrics(learner, "Test", predictions$predicted_test, test_set$wlfk)
-  })
-  ep <- Sys.time()
-  cat("\tFinised at:", as.character(ep), "]\n")
-  cat("[Time Ellapsed:\t", difftime(ep, sp, units = "secs"), " seconds]\n")
+kfold_cross_validation <- function(formula, data, kfolds, learner, ...) {
+    sp <- Sys.time() #记录开始时间
+    cat("\n[Start at:", as.character(sp))
+    lapply(kfolds, function(curr_fold) {
+        train_set <- data[-curr_fold, ] #训练集
+        test_set <- data[curr_fold, ] #测试集
+        predictions <- do.call(learner, args = c(
+            list(
+                formula = formula,
+                train = train_set,
+                test = test_set
+            ),
+            list(...)
+        ))
+        imetrics(learner,
+                 "Train",
+                 predictions$predicted_train,
+                 train_set$wlfk)
+        imetrics(learner,
+                 "Test",
+                 predictions$predicted_test,
+                 test_set$wlfk)
+    })
+    ep <- Sys.time()
+    cat("\tFinised at:", as.character(ep), "]\n")
+    cat("[Time Ellapsed:\t",
+        difftime(ep, sp, units = "secs"),
+        " seconds]\n")
 }
 
 
 learn.kknn <- function(formula, train, test, ...) {
-  predicted_train <- kknn(
-    formula, train = train, test = train, ...)$fit
-  predicted_test <- kknn(
-    formula, train = train, test = test, ...)$fit
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    predicted_train <- kknn(formula, train = train, test = train, ...)$fit
+    predicted_test <- kknn(formula, train = train, test = test, ...)$fit
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 
 global_performance <- NULL
 kfold_cross_validation(
-  formula = wlfk~.,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.kknn",
-  k = best_k, kernel = best_kernel)
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.kknn",
+    k = best_k,
+    kernel = best_kernel
+)
 
 
 # CART --------------------------------------------------------------------
@@ -403,8 +440,8 @@ kfold_cross_validation(
 #决策树的生长
 #rpart.plot包会自动加载rpart包
 library(rpart.plot)
-imodel <- rpart(wlfk~.,
-                data = cjb[train_set_idx,])
+imodel <- rpart(wlfk ~ .,
+                data = cjb[train_set_idx, ])
 imodel
 # n= 541
 #
@@ -441,18 +478,18 @@ imodel
 
 
 predicted_train <-
-  predict(imodel,
-          newdata = cjb[train_set_idx,],
-          type = "class")
+    predict(imodel,
+            newdata = cjb[train_set_idx, ],
+            type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
 #> [1] 0.1959335
 
 #当然，我们更关注的是测试误差
 predicted_test <-
-  predict(imodel,
-          newdata = cjb[-train_set_idx, ],
-          type = "class")
+    predict(imodel,
+            newdata = cjb[-train_set_idx,],
+            type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
 #> [1] 0.2575107
@@ -500,16 +537,16 @@ print(imodel_pruned)
 
 #剪枝前后效果对比
 predicted_train <- predict(imodel_pruned,
-      newdata = cjb[train_set_idx,],
-      type = "class")
+                           newdata = cjb[train_set_idx, ],
+                           type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx],
-      predicted_train)
+            predicted_train)
 #> [1] 0.1959335
 predicted_test <- predict(imodel_pruned,
-      newdata = cjb[-train_set_idx,],
-      type = "class")
+                          newdata = cjb[-train_set_idx, ],
+                          type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx],
-      predicted_test)
+            predicted_test)
 #> 0.2575107
 
 
@@ -517,20 +554,28 @@ Metrics::ce(cjb$wlfk[-train_set_idx],
 plot(imodel)
 text(imodel)
 #上边的效果小伙伴们肯定是不满意的
-rpart.plot(imodel_pruned,
-    type=4, fallen=F,
-    branch=0.5, round=0,
-    leaf.round=2, clip.right.labs=T,
-    cex = 0.85, under.cex=0.75,
-    box.palette="GnYlRd",
-    branch.col="gray",
-    branch.lwd=2,
-    extra=108, #extra参数的含义需留意
-    under=T,split.cex=1)
+rpart.plot(
+    imodel_pruned,
+    type = 4,
+    fallen = F,
+    branch = 0.5,
+    round = 0,
+    leaf.round = 2,
+    clip.right.labs = T,
+    cex = 0.85,
+    under.cex = 0.75,
+    box.palette = "GnYlRd",
+    branch.col = "gray",
+    branch.lwd = 2,
+    extra = 108,
+    #extra参数的含义需留意
+    under = T,
+    split.cex = 1
+)
 
 #除了可视化之外，我们还希望把这个树导成规则
 library(rattle)
-rules <- asRules(imodel_pruned, compact=TRUE)
+rules <- asRules(imodel_pruned, compact = TRUE)
 #> R  7 [22%,0.90] sx< 85.5 xb=女
 #> R 11 [11%,0.85] sx>=85.5 wl< 86.5 ls>=92.5
 #> R 51 [ 4%,0.79] sx< 85.5 xb=男 hx>=83 wy>=81.5 sx< 76.5
@@ -546,22 +591,21 @@ rules <- asRules(imodel_pruned, compact=TRUE)
 
 #进行k-折交叉检验k-fold cross validation
 learn.rpart <- function(formula, train, test, ...) {
-  imodel_kfold <- rpart(formula, train) #模型训练
-  opt <- which.min(imodel_kfold$cptable[, "xerror"])
-  cp <- imodel_kfold$cptable[opt, "CP"]
-  imodel_kfold <- prune(imodel_kfold, cp = cp)
-  predicted_train <- predict(
-    imodel_kfold, train, type = "class")
-  predicted_test <- predict(
-    imodel_kfold, test, type = "class")
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    imodel_kfold <- rpart(formula, train) #模型训练
+    opt <- which.min(imodel_kfold$cptable[, "xerror"])
+    cp <- imodel_kfold$cptable[opt, "CP"]
+    imodel_kfold <- prune(imodel_kfold, cp = cp)
+    predicted_train <- predict(imodel_kfold, train, type = "class")
+    predicted_test <- predict(imodel_kfold, test, type = "class")
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~.,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.rpart")
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.rpart"
+)
 
 
 
@@ -570,17 +614,17 @@ kfold_cross_validation(
 
 library(randomForest)
 set.seed(2012)
-imodel <- randomForest(wlfk~.,
+imodel <- randomForest(wlfk ~ .,
                        ntree = 25,
-                       data = cjb[train_set_idx, ])
+                       data = cjb[train_set_idx,])
 predicted_train <- predict(imodel,
-                           newdata = cjb[train_set_idx,],
+                           newdata = cjb[train_set_idx, ],
                            type = "response")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
 #>[1] 0.001848429
 predicted_test <- predict(imodel,
-                          newdata = cjb[-train_set_idx,],
+                          newdata = cjb[-train_set_idx, ],
                           type = "response")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
@@ -588,21 +632,21 @@ Metrics::ce(cjb$wlfk[-train_set_idx],
 
 
 rf_ces <- sapply(1:500, function(x) {
-  set.seed(2012)
-  imodel <- randomForest(wlfk~.,
-                         ntree = x,
-                         data = cjb[train_set_idx, ])
-  predicted_train <- predict(imodel,
-                             newdata = cjb[train_set_idx,],
-                             type = "response")
-  Metrics::ce(cjb$wlfk[train_set_idx],
-              predicted_train)
-  #>[1] 0
-  predicted_test <- predict(imodel,
-                            newdata = cjb[-train_set_idx,],
-                            type = "response")
-  Metrics::ce(cjb$wlfk[-train_set_idx],
-              predicted_test)
+    set.seed(2012)
+    imodel <- randomForest(wlfk ~ .,
+                           ntree = x,
+                           data = cjb[train_set_idx,])
+    predicted_train <- predict(imodel,
+                               newdata = cjb[train_set_idx, ],
+                               type = "response")
+    Metrics::ce(cjb$wlfk[train_set_idx],
+                predicted_train)
+    #>[1] 0
+    predicted_test <- predict(imodel,
+                              newdata = cjb[-train_set_idx, ],
+                              type = "response")
+    Metrics::ce(cjb$wlfk[-train_set_idx],
+                predicted_test)
 })
 which.min(rf_ces)
 plot(rf_ces, type = "o")
@@ -615,96 +659,105 @@ imodel$confusion
 
 #进行k-折交叉检验k-fold cross validation
 learn.randomForest <- function(formula, train, test, ...) {
-  imodel_kfold <- randomForest(formula, train, ...)
-  predicted_train <-  predict(imodel_kfold, train, type = "response")
-  predicted_test <- predict(imodel_kfold, test, type = "response")
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    imodel_kfold <- randomForest(formula, train, ...)
+    predicted_train <-
+        predict(imodel_kfold, train, type = "response")
+    predicted_test <- predict(imodel_kfold, test, type = "response")
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~.,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.randomForest", ntree = which.min(rf_ces))
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.randomForest",
+    ntree = which.min(rf_ces)
+)
 
 
 
 # NaiveBayes --------------------------------------------------------------
 
 library(e1071)
-imodel <- naiveBayes(wlfk~.,
-      data = cjb[train_set_idx, ])
+imodel <- naiveBayes(wlfk ~ .,
+                     data = cjb[train_set_idx,])
 predicted_train <- predict(imodel,
-      newdata = cjb[train_set_idx,],
-      type = "class")
+                           newdata = cjb[train_set_idx, ],
+                           type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.2920518
 predicted_test <- predict(imodel,
-      newdata = cjb[-train_set_idx,],
-      type = "class")
+                          newdata = cjb[-train_set_idx, ],
+                          type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.27897
 
 #进行k-折交叉检验k-fold cross validation
 learn.naiveBayes <- function(formula, train, test, ...) {
-  imodel_kfold <- naiveBayes(formula, train)
-  predicted_train <-  predict(imodel_kfold, train, type = "class")
-  predicted_test <- predict(imodel_kfold, test, type = "class")
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    imodel_kfold <- naiveBayes(formula, train)
+    predicted_train <-  predict(imodel_kfold, train, type = "class")
+    predicted_test <- predict(imodel_kfold, test, type = "class")
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~.,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.naiveBayes")
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.naiveBayes"
+)
 
 
 # Logistic Regression -----------------------------------------------------
 
 library(ggplot2)
-library(animation)
-saveGIF(
-  expr = {
-    mov_frame <- 5*(1:30)
-    for (i in mov_frame) {
-      x <- seq(-i, i, len = 1000)
-      y <- 1/(1 + exp(-x))
-      p <- ggplot(data.frame(x, y), aes(x = x, y = y)) +
-        geom_line()
-      if (i == head(mov_frame, 1) || i == tail(mov_frame, 1)) { #开始和结束时多停留一会儿
-        lapply(1:5, function(x) plot(p))
-      }
-      plot(p)
-    }
-  },
-  movie.name = "D://desktop/animation.gif",
-  convert = "gm convert",
-  interval = 0.2
-)
-dev.off()
 
+# 以下代码仅为复现课件中的动画，感兴趣的小伙伴可以了解一下
+# library(animation)
+# saveGIF(
+#     expr = {
+#         mov_frame <- 5 * (1:30)
+#         for (i in mov_frame) {
+#             x <- seq(-i, i, len = 1000)
+#             y <- 1 / (1 + exp(-x))
+#             p <- ggplot(data.frame(x, y), aes(x = x, y = y)) +
+#                 geom_line()
+#             if (i == head(mov_frame, 1) ||
+#                 i == tail(mov_frame, 1)) {
+#                 #开始和结束时多停留一会儿
+#                 lapply(1:5, function(x)
+#                     plot(p))
+#             }
+#             plot(p)
+#         }
+#     },
+#     movie.name = "D://desktop/animation.gif",
+#     convert = "gm convert",
+#     interval = 0.2
+# )
+# dev.off()
+#
 
 
 
 imodel <- glm(wlfk ~ .,
-                  data = cjb[train_set_idx,],
-                  family = binomial(link = "logit"))
+              data = cjb[train_set_idx, ],
+              family = binomial(link = "logit"))
 predicted_logit <- predict(imodel,
-                           newdata = cjb[train_set_idx,],
+                           newdata = cjb[train_set_idx, ],
                            type = "response")
 predicted_train <-
-  rep(levels(cjb$wlfk)[2], length(train_set_idx))
+    rep(levels(cjb$wlfk)[2], length(train_set_idx))
 predicted_train[predicted_logit < 0.5] <- levels(cjb$wlfk)[1]
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.2181146
 predicted_logit <- predict(imodel,
-                           newdata = cjb[-train_set_idx, ],
+                           newdata = cjb[-train_set_idx,],
                            type = "response")
 predicted_test <-
-  rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
+    rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx, ]))
 predicted_test[predicted_logit < 0.5] <-
-  levels(cjb$wlfk)[1]
+    levels(cjb$wlfk)[1]
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1888412
 
@@ -713,16 +766,16 @@ best_threshold <- NA
 min_err <- Inf
 cur_threshold <- 0.1
 for (cur_threshold in seq(0.1, 0.9, by = 0.001)) {
-  predicted_test <-
-    rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
-  predicted_test[predicted_logit < cur_threshold] <-
-    levels(cjb$wlfk)[1]
-  cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
-                         predicted_test)
-  if (cur_err < min_err) {
-    best_threshold <- cur_threshold
-    min_err <- cur_err
-  }
+    predicted_test <-
+        rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx, ]))
+    predicted_test[predicted_logit < cur_threshold] <-
+        levels(cjb$wlfk)[1]
+    cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
+                           predicted_test)
+    if (cur_err < min_err) {
+        best_threshold <- cur_threshold
+        min_err <- cur_err
+    }
 }
 best_threshold
 #> [1] 0.592
@@ -730,12 +783,12 @@ best_threshold
 #当然，也可以用下边这种写法
 threshold_range <- seq(0.1, 0.9, by = 0.001)
 ce_set <- sapply(threshold_range, function(cur_threshold) {
-  predicted_test <-
-    rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
-  predicted_test[predicted_logit < cur_threshold] <-
-    levels(cjb$wlfk)[1]
-  cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
-                         predicted_test)
+    predicted_test <-
+        rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx, ]))
+    predicted_test[predicted_logit < cur_threshold] <-
+        levels(cjb$wlfk)[1]
+    cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
+                           predicted_test)
 })
 #最佳阈值
 threshold_range[which.min(ce_set)]
@@ -744,32 +797,35 @@ min(ce_set)
 
 #进行k-折交叉检验k-fold cross validation
 learn.LogisticRegression <- function(formula, train, test, ...) {
-  dot_args <- list(...)
-  imodel_kfold <- glm(formula, train, family=binomial(link="logit"))
-  predicted_logit <- predict(imodel_kfold, train, type = "response")
-  predicted_train <- rep(levels(cjb$wlfk)[2], nrow(train))
-  predicted_train[predicted_logit < dot_args[["best_threshold"]]] <- levels(cjb$wlfk)[1]
-  predicted_logit <- predict(imodel_kfold, test, type = "response")
-  predicted_test <- rep(levels(cjb$wlfk)[2], nrow(test))
-  predicted_test[predicted_logit < dot_args[["best_threshold"]]] <- levels(cjb$wlfk)[1]
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    dot_args <- list(...)
+    imodel_kfold <- glm(formula, train, family = binomial(link = "logit"))
+    predicted_logit <- predict(imodel_kfold, train, type = "response")
+    predicted_train <- rep(levels(cjb$wlfk)[2], nrow(train))
+    predicted_train[predicted_logit < dot_args[["best_threshold"]]] <-
+        levels(cjb$wlfk)[1]
+    predicted_logit <- predict(imodel_kfold, test, type = "response")
+    predicted_test <- rep(levels(cjb$wlfk)[2], nrow(test))
+    predicted_test[predicted_logit < dot_args[["best_threshold"]]] <-
+        levels(cjb$wlfk)[1]
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~.,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.LogisticRegression",
-  best_threshold = threshold_range[which.min(ce_set)])
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.LogisticRegression",
+    best_threshold = threshold_range[which.min(ce_set)]
+)
 
 
 # Artificial Neural Network -----------------------------------------------
 
 library(nnet)
 set.seed(2012)
-imodel <- nnet(wlfk~.,
-      data = cjb[train_set_idx, ],
-      size = 7)
+imodel <- nnet(wlfk ~ .,
+               data = cjb[train_set_idx,],
+               size = 7)
 names(imodel)
 #> [1] "n"             "nunits"        "nconn"
 #> [4] "conn"          "nsunits"       "decay"
@@ -798,13 +854,13 @@ imodel$fitted.values
 # 541 0.2047307
 
 predicted_train <- predict(imodel,
-      newdata = cjb[train_set_idx,],
-      type = "class")
+                           newdata = cjb[train_set_idx, ],
+                           type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.1996303
 predicted_test <- predict(imodel,
-      newdata = cjb[-train_set_idx,],
-      type = "class")
+                          newdata = cjb[-train_set_idx, ],
+                          type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1759657
 
@@ -814,22 +870,26 @@ Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #不过，类似于e1071::tune.nnet()已经替我们作了很多工作
 #下面，采用的是caret包中的方法
 #通过caret包中的grid搜索来进行参数选择
-tune_results <- e1071::tune.nnet(wlfk~., data = cjb,
-                                 decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9),
-                                 size = 1:7)
+tune_results <- e1071::tune.nnet(
+    wlfk ~ .,
+    data = cjb,
+    decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9),
+    size = 1:7
+)
 
 library(caret)
 set.seed(2012)
 nn_grid <- expand.grid(size = c(1, 3, 7, 9),
-                      decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9))
+                       decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9))
 # nn_grid <- expand.grid(.decay = c(0.5, 0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7),
 #                        .size = c(3, 5, 10, 20))
 imodel <- train(
-  wlfk ~ .,
-  data = cjb,
-  method = "nnet",
-  maxit = 10000,
-  tuneGrid = nn_grid)
+    wlfk ~ .,
+    data = cjb,
+    method = "nnet",
+    maxit = 10000,
+    tuneGrid = nn_grid
+)
 imodel$bestTune
 #>    size decay
 #> 9    1  0.6
@@ -837,53 +897,57 @@ imodel$bestTune
 plot(imodel)
 
 predicted_train <- predict(imodel,
-      newdata = cjb[train_set_idx,],
-      type = "raw")
+                           newdata = cjb[train_set_idx, ],
+                           type = "raw")
 Metrics::ce(cjb$wlfk[train_set_idx],
-      predicted_train)
+            predicted_train)
 #> [1] 0.1697417
 predicted_test <- predict(imodel,
-      newdata = cjb[-train_set_idx,],
-      type = "raw")
+                          newdata = cjb[-train_set_idx, ],
+                          type = "raw")
 Metrics::ce(cjb$wlfk[-train_set_idx],
-      predicted_test)
+            predicted_test)
 #> [1] 0.1896552
 
 #绘制神经网络
 library(NeuralNetTools)
-imodel2 <-  nnet(wlfk ~ .,
-                          data = train_set,
-                          decay = imodel$bestTune$decay,
-                          size = imodel$bestTune$size,
-                          maxit = 2000)
+imodel2 <-  nnet(
+    wlfk ~ .,
+    data = train_set,
+    decay = imodel$bestTune$decay,
+    size = imodel$bestTune$size,
+    maxit = 2000
+)
 imodel2$wts
 str(imodel2)
 library(NeuralNetTools)
-plotnet(imodel2,
-        rel_rsc = c(1.8,3),
-        circle_cex = 3,
-        cex_val = 0.75,
-        bord_col = "lightblue",
-        max_sp = TRUE)
+plotnet(
+    imodel2,
+    rel_rsc = c(1.8, 3),
+    circle_cex = 3,
+    cex_val = 0.75,
+    bord_col = "lightblue",
+    max_sp = TRUE
+)
 
 
 #进行k-折交叉检验k-fold cross validation
 learn.nnet <- function(formula, train, test, ...) {
-  imodel_kfold <-  nnet(formula, train, ...)
-  predicted_train <-  predict(imodel_kfold, train, type = "class")
-  predicted_test <- predict(imodel_kfold, test, type = "class")
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    imodel_kfold <-  nnet(formula, train, ...)
+    predicted_train <-  predict(imodel_kfold, train, type = "class")
+    predicted_test <- predict(imodel_kfold, test, type = "class")
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 
 kfold_cross_validation(
-  formula = wlfk ~ .,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.nnet",
-  decay = imodel$bestTune$decay,
-  size = imodel$bestTune$size,
-  maxit = 2000
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.nnet",
+    decay = imodel$bestTune$decay,
+    size = imodel$bestTune$size,
+    maxit = 2000
 )
 
 
@@ -892,29 +956,31 @@ kfold_cross_validation(
 
 library(kernlab)
 set.seed(2012)
-imodel <- ksvm(wlfk~.,
-      data = cjb[train_set_idx, ])
+imodel <- ksvm(wlfk ~ .,
+               data = cjb[train_set_idx,])
 predicted_train <- predict(imodel,
-      newdata = cjb[train_set_idx,],
-      type = "response")
+                           newdata = cjb[train_set_idx, ],
+                           type = "response")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.1497227
 predicted_test <- predict(imodel,
-      newdata = cjb[-train_set_idx,],
-      type = "response")
+                          newdata = cjb[-train_set_idx, ],
+                          type = "response")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1759657
 imodel
 #当然也可以通过caret来进行调参
 library(caret)
-svm_grid <- expand.grid(sigma = 2^(-10:4),
-      C= -5:20)
+svm_grid <- expand.grid(sigma = 2 ^ (-10:4),
+                        C = -5:20)
 set.seed(2012)
-imodel <- train(wlfk~.,
-      data = cjb[train_set_idx, ],
-      method = "svmRadial",
-      preProc = c("center", "scale"),
-      tuneGrid = svm_grid)
+imodel <- train(
+    wlfk ~ .,
+    data = cjb[train_set_idx,],
+    method = "svmRadial",
+    preProc = c("center", "scale"),
+    tuneGrid = svm_grid
+)
 imodel$bestTune
 #>   sigma C
 #> 2  0.25 1
@@ -924,19 +990,21 @@ plot(imodel)
 
 #进行k-折交叉检验k-fold cross validation
 learn.svm <- function(formula, train, test, ...) {
-  imodel_kfold <-  ksvm(formula, train, ...)
-  predicted_train <-  predict(imodel_kfold, train, type = "response")
-  predicted_test <- predict(imodel_kfold, test, type = "response")
-  return(list(predicted_train = predicted_train,
-              predicted_test = predicted_test))
+    imodel_kfold <-  ksvm(formula, train, ...)
+    predicted_train <-
+        predict(imodel_kfold, train, type = "response")
+    predicted_test <- predict(imodel_kfold, test, type = "response")
+    return(list(predicted_train = predicted_train,
+                predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~.,
-  data = cjb,
-  kfolds = kfolds,
-  learner = "learn.svm",
-  C = imodel$bestTune$C,
-  gamma = imodel$bestTune$sigma)
+    formula = wlfk ~ .,
+    data = cjb,
+    kfolds = kfolds,
+    learner = "learn.svm",
+    C = imodel$bestTune$C,
+    gamma = imodel$bestTune$sigma
+)
 
 
 # Variable Importance -----------------------------------------------------
@@ -951,20 +1019,22 @@ kfold_cross_validation(
 #http://topepo.github.io/caret/variable-importance.html
 
 library(randomForest)
-imodel <- randomForest(wlfk~., data = cjb)
+imodel <- randomForest(wlfk ~ ., data = cjb)
 #变量重要性的分析
 randomForest::importance(imodel) %>%
-  as.data.frame() %>%
-  rownames_to_column(var = "variables") %>%
-  arrange(desc(MeanDecreaseGini)) %>%
-  mutate(variables = factor(variables,
-                            levels = variables)) %>%
-  ggplot(aes(x = variables,
-             y = MeanDecreaseGini,
-             fill = variables)) +
-  geom_bar(stat = "identity", width = 0.5) +
-  geom_text(aes(y = MeanDecreaseGini * 1.02,
-                label = format(MeanDecreaseGini, digits = 4)))
+    as.data.frame() %>%
+    rownames_to_column(var = "variables") %>%
+    arrange(desc(MeanDecreaseGini)) %>%
+    mutate(variables = factor(variables,
+                              levels = variables)) %>%
+    ggplot(aes(x = variables,
+               y = MeanDecreaseGini,
+               fill = variables)) +
+    geom_bar(stat = "identity", width = 0.5) +
+    geom_text(aes(
+        y = MeanDecreaseGini * 1.02,
+        label = format(MeanDecreaseGini, digits = 4)
+    ))
 
 
 
@@ -976,16 +1046,19 @@ randomForest::importance(imodel) %>%
 
 #模型进行评估
 global_performance %>%
-  group_by(method, type) %>%
-  summarise(mean_error_rate = mean(error_rate)) %>%
-  arrange(type, mean_error_rate) %>%
-  ggplot(aes(x = fct_inorder(method), y = mean_error_rate,
-             fill = type)) +
-  geom_bar(stat= "identity", position = "dodge") +
-  geom_text(aes(label = format(mean_error_rate, digits = 3)),
-            position = position_dodge(width = 1))+
-  scale_fill_manual(values=c("orange","darkgrey")) +
-  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+    group_by(method, type) %>%
+    summarise(mean_error_rate = mean(error_rate)) %>%
+    arrange(type, mean_error_rate) %>%
+    ggplot(aes(
+        x = fct_inorder(method),
+        y = mean_error_rate,
+        fill = type
+    )) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(aes(label = format(mean_error_rate, digits = 3)),
+              position = position_dodge(width = 1)) +
+    scale_fill_manual(values = c("orange", "darkgrey")) +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
 
 
 
@@ -1023,5 +1096,3 @@ global_performance %>%
 
 
 # The End ^-^ -------------------------------------------------------------
-
-
