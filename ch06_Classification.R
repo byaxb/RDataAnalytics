@@ -1,36 +1,5 @@
 
-
-#######################################################
-#######################################################
-##
-## 名称：《R语言数据分析·分类与回归》
-## 作者：艾新波
-## 学校：北京邮电大学
-## 版本：V9
-## 时间：2018年9月
-##
-##*****************************************************
-##
-## ch06_Classification_V9
-## Data Analytics with R
-## Instructed by Xinbo Ai
-## Beijing University of Posts and Telecommunications
-##
-##*****************************************************
-##
-## Author: byaxb
-## Email:axb@bupt.edu.cn
-## QQ:23127789
-## WeChat:13641159546
-## URL:https://github.com/byaxb
-##
-##*****************************************************
-##
-## (c)2012~2018
-##
-#######################################################
-#######################################################
-
+# ch06_Classification -----------------------------------------------------
 
 #分类与回归，几乎是有监督学习的代名词
 #也是机器学习/数据挖掘最核心的内容
@@ -43,9 +12,10 @@
 #caret包也是R里边使用最广泛的包之一
 #小伙伴们可以多加留意
 
-#######################################################
-##认识数据
-#######################################################
+
+
+# Data Exploration --------------------------------------------------------
+
 #清空内存
 rm(list = ls())
 library(tidyverse)
@@ -96,9 +66,10 @@ plotluck(cjb, wlfk~.,
 plotluck(cjb, wlfk~yw+sx)
 
 
-#######################################################
-##k折交叉检验
-#######################################################
+
+
+# k-fold Cross Validation -------------------------------------------------
+
 #在建模之前就说模型评估，
 #仿佛为时过早
 #实际上，模型评估和模型建立是同等重要的
@@ -192,6 +163,10 @@ sapply(kfolds, length)
 # kfolds <- createFolds(cjb$wlfk, k = 10)
 # sapply(kfolds, length)
 
+
+
+# Global performance ------------------------------------------------------
+
 #对于分类模型的评估，首先需要看是否存在类不平衡问题，
 #如果存在类不平衡，评估指标的选取，
 #不能单纯用正确率、错误率来评估，
@@ -215,9 +190,9 @@ imetrics <- function(method, type, predicted, actual) {
     accuracy = sum(diag(con_table)) / sum(con_table),
     error_rate = 1 - sum(diag(con_table)) / sum(con_table)
   )
-  assign("global_performance", 
-         rbind(get("global_performance", envir = .GlobalEnv) , 
-               cur_one), 
+  assign("global_performance",
+         rbind(get("global_performance", envir = .GlobalEnv) ,
+               cur_one),
          envir = .GlobalEnv)
 }
 #有很多专门的包，已经实现了各种模型评估指标
@@ -240,10 +215,10 @@ imetrics <- function(method, type, predicted, actual) {
 # #各类改进的模型，更是数以百计
 # available_models <- modelLookup()
 # unique(available_models$model)
-# #> [1] "ada"                 "AdaBag"             
-# #> [3] "adaboost"            "AdaBoost.M1"  
-# #> [235] "xgbLinear"           "xgbTree"            
-# #> [237] "xyf" 
+# #> [1] "ada"                 "AdaBag"
+# #> [3] "adaboost"            "AdaBoost.M1"
+# #> [235] "xgbLinear"           "xgbTree"
+# #> [237] "xyf"
 # length(unique(available_models$model))
 # #> [1] 237
 # #想穷尽所有的算法模型，几乎是不可能的
@@ -251,9 +226,10 @@ imetrics <- function(method, type, predicted, actual) {
 # #包括决策树、近邻法、朴素贝叶斯、
 # #人工神经网络、支持向量机和随机森林
 
-#######################################################
-##近邻法
-#######################################################
+
+
+# kknn --------------------------------------------------------------------
+
 library(kknn)
 set.seed(2012)
 imodel <- kknn(wlfk ~ .,
@@ -284,9 +260,9 @@ train_kk <- train.kknn(
 train_kk
 #> Call:
 #>   train.kknn(formula = wlfk ~ ., data = cjb, kmax = 100,
-#>              kernel = c("rectangular",     "epanechnikov", 
+#>              kernel = c("rectangular",     "epanechnikov",
 #>                         "cos", "inv", "gaussian", "optimal"))
-#> 
+#>
 #> Type of response variable: nominal
 #> Minimal misclassification: 0.2105943
 #> Best kernel: gaussian
@@ -303,8 +279,8 @@ train_kk$MISCLASS
 # 6     0.2609819    0.2558140 0.2532300 0.2441860 0.2454780 0.2532300
 
 #显然，上述矩阵中，序号就是相应的k
-  
-       
+
+
 #最佳的k值
 best_k <- train_kk$best.parameters$k
 best_k
@@ -393,7 +369,7 @@ kfold_cross_validation <- function(
     test_set <- data[curr_fold,] #测试集
     predictions <- do.call(
       learner, args = c(
-        list(formula = formula, train = train_set, test = test_set), 
+        list(formula = formula, train = train_set, test = test_set),
         list(...)))
     imetrics(learner, "Train", predictions$predicted_train, train_set$wlfk)
     imetrics(learner, "Test", predictions$predicted_test, test_set$wlfk)
@@ -415,57 +391,56 @@ learn.kknn <- function(formula, train, test, ...) {
 
 global_performance <- NULL
 kfold_cross_validation(
-  formula = wlfk~., 
-  data = cjb, 
-  kfolds = kfolds, 
-  learner = "learn.kknn", 
+  formula = wlfk~.,
+  data = cjb,
+  kfolds = kfolds,
+  learner = "learn.kknn",
   k = best_k, kernel = best_kernel)
 
 
-#######################################################
-##决策树
-#######################################################
+# CART --------------------------------------------------------------------
+
 #决策树的生长
 #rpart.plot包会自动加载rpart包
 library(rpart.plot)
-imodel <- rpart(wlfk~., 
+imodel <- rpart(wlfk~.,
                 data = cjb[train_set_idx,])
 imodel
-# n= 541 
-# 
+# n= 541
+#
 # node), split, n, loss, yval, (yprob)
 # * denotes terminal node
-# 
-# 1) root 541 258 文科 (0.47689464 0.52310536)  
-#   2) wl>=85.5 230  70 理科 (0.69565217 0.30434783)  
-#     4) sx>=87.5 185  41 理科 (0.77837838 0.22162162)  
+#
+# 1) root 541 258 文科 (0.47689464 0.52310536)
+#   2) wl>=85.5 230  70 理科 (0.69565217 0.30434783)
+#     4) sx>=87.5 185  41 理科 (0.77837838 0.22162162)
 #       8) yw< 91.5 132  19 理科 (0.85606061 0.14393939) *
-#       9) yw>=91.5 53  22 理科 (0.58490566 0.41509434)  
+#       9) yw>=91.5 53  22 理科 (0.58490566 0.41509434)
 #         18) wl>=88.5 38  10 理科 (0.73684211 0.26315789) *
 #         19) wl< 88.5 15   3 文科 (0.20000000 0.80000000) *
-#     5) sx< 87.5 45  16 文科 (0.35555556 0.64444444)  
+#     5) sx< 87.5 45  16 文科 (0.35555556 0.64444444)
 #       10) xb=男 23  10 理科 (0.56521739 0.43478261) *
 #       11) xb=女 22   3 文科 (0.13636364 0.86363636) *
-#   3) wl< 85.5 311  98 文科 (0.31511254 0.68488746)  
-#     6) xb=男 127  61 文科 (0.48031496 0.51968504)  
-#       12) yw< 88.5 98  43 理科 (0.56122449 0.43877551)  
+#   3) wl< 85.5 311  98 文科 (0.31511254 0.68488746)
+#     6) xb=男 127  61 文科 (0.48031496 0.51968504)
+#       12) yw< 88.5 98  43 理科 (0.56122449 0.43877551)
 #         24) hx>=93 21   4 理科 (0.80952381 0.19047619) *
-#         25) hx< 93 77  38 文科 (0.49350649 0.50649351)  
-#           50) ls< 86.5 41  16 理科 (0.60975610 0.39024390)  
+#         25) hx< 93 77  38 文科 (0.49350649 0.50649351)
+#           50) ls< 86.5 41  16 理科 (0.60975610 0.39024390)
 #             100) yw>=77.5 34  10 理科 (0.70588235 0.29411765) *
 #             101) yw< 77.5 7   1 文科 (0.14285714 0.85714286) *
 #           51) ls>=86.5 36  13 文科 (0.36111111 0.63888889) *
 #       13) yw>=88.5 29   6 文科 (0.20689655 0.79310345) *
-#     7) xb=女 184  37 文科 (0.20108696 0.79891304)  
-#       14) sw>=81.5 110  32 文科 (0.29090909 0.70909091)  
-#         28) ls< 91.5 62  27 文科 (0.43548387 0.56451613)  
+#     7) xb=女 184  37 文科 (0.20108696 0.79891304)
+#       14) sw>=81.5 110  32 文科 (0.29090909 0.70909091)
+#         28) ls< 91.5 62  27 文科 (0.43548387 0.56451613)
 #           56) sx>=91.5 14   2 理科 (0.85714286 0.14285714) *
 #           57) sx< 91.5 48  15 文科 (0.31250000 0.68750000) *
 #         29) ls>=91.5 48   5 文科 (0.10416667 0.89583333) *
 #       15) sw< 81.5 74   5 文科 (0.06756757 0.93243243) *
 
 
-predicted_train <- 
+predicted_train <-
   predict(imodel,
           newdata = cjb[train_set_idx,],
           type = "class")
@@ -474,7 +449,7 @@ Metrics::ce(cjb$wlfk[train_set_idx],
 #> [1] 0.1959335
 
 #当然，我们更关注的是测试误差
-predicted_test <- 
+predicted_test <-
   predict(imodel,
           newdata = cjb[-train_set_idx, ],
           type = "class")
@@ -486,14 +461,14 @@ Metrics::ce(cjb$wlfk[-train_set_idx],
 printcp(imodel, digits = 2)
 #> Classification tree:
 #>   rpart(formula = wlfk ~ ., data = cjb[train_set_idx, ])
-#> 
+#>
 #> Variables actually used in tree construction:
 #>   [1] hx ls sw sx wl wy xb
-#> 
+#>
 #> Root node error: 266/542 = 0.49
-#> 
-#> n= 542 
-#> 
+#>
+#> n= 542
+#>
 #>      CP nsplit rel error xerror  xstd
 #> 1 0.349      0      1.00   1.00 0.045
 #> 2 0.050      1      0.65   0.69 0.042
@@ -533,7 +508,7 @@ Metrics::ce(cjb$wlfk[train_set_idx],
 predicted_test <- predict(imodel_pruned,
       newdata = cjb[-train_set_idx,],
       type = "class")
-Metrics::ce(cjb$wlfk[-train_set_idx], 
+Metrics::ce(cjb$wlfk[-train_set_idx],
       predicted_test)
 #> 0.2575107
 
@@ -542,14 +517,14 @@ Metrics::ce(cjb$wlfk[-train_set_idx],
 plot(imodel)
 text(imodel)
 #上边的效果小伙伴们肯定是不满意的
-rpart.plot(imodel_pruned, 
+rpart.plot(imodel_pruned,
     type=4, fallen=F,
-    branch=0.5, round=0, 
-    leaf.round=2, clip.right.labs=T, 
+    branch=0.5, round=0,
+    leaf.round=2, clip.right.labs=T,
     cex = 0.85, under.cex=0.75,
-    box.palette="GnYlRd", 
-    branch.col="gray", 
-    branch.lwd=2, 
+    box.palette="GnYlRd",
+    branch.col="gray",
+    branch.lwd=2,
     extra=108, #extra参数的含义需留意
     under=T,split.cex=1)
 
@@ -583,16 +558,15 @@ learn.rpart <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~., 
-  data = cjb, 
-  kfolds = kfolds, 
+  formula = wlfk~.,
+  data = cjb,
+  kfolds = kfolds,
   learner = "learn.rpart")
 
 
-#######################################################
-##随机森林
-##RandomForest
-#######################################################
+
+# RandomForest ------------------------------------------------------------
+
 
 library(randomForest)
 set.seed(2012)
@@ -602,13 +576,13 @@ imodel <- randomForest(wlfk~.,
 predicted_train <- predict(imodel,
                            newdata = cjb[train_set_idx,],
                            type = "response")
-Metrics::ce(cjb$wlfk[train_set_idx], 
+Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
 #>[1] 0.001848429
 predicted_test <- predict(imodel,
                           newdata = cjb[-train_set_idx,],
                           type = "response")
-Metrics::ce(cjb$wlfk[-train_set_idx], 
+Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
 #> [1] 0.1845494
 
@@ -621,13 +595,13 @@ rf_ces <- sapply(1:500, function(x) {
   predicted_train <- predict(imodel,
                              newdata = cjb[train_set_idx,],
                              type = "response")
-  Metrics::ce(cjb$wlfk[train_set_idx], 
+  Metrics::ce(cjb$wlfk[train_set_idx],
               predicted_train)
   #>[1] 0
   predicted_test <- predict(imodel,
                             newdata = cjb[-train_set_idx,],
                             type = "response")
-  Metrics::ce(cjb$wlfk[-train_set_idx], 
+  Metrics::ce(cjb$wlfk[-train_set_idx],
               predicted_test)
 })
 which.min(rf_ces)
@@ -648,17 +622,17 @@ learn.randomForest <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~., 
-  data = cjb, 
-  kfolds = kfolds, 
+  formula = wlfk~.,
+  data = cjb,
+  kfolds = kfolds,
   learner = "learn.randomForest", ntree = which.min(rf_ces))
 
 
-#######################################################
-##朴素贝叶斯
-#######################################################
+
+# NaiveBayes --------------------------------------------------------------
+
 library(e1071)
-imodel <- naiveBayes(wlfk~., 
+imodel <- naiveBayes(wlfk~.,
       data = cjb[train_set_idx, ])
 predicted_train <- predict(imodel,
       newdata = cjb[train_set_idx,],
@@ -680,15 +654,14 @@ learn.naiveBayes <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~., 
-  data = cjb, 
-  kfolds = kfolds, 
+  formula = wlfk~.,
+  data = cjb,
+  kfolds = kfolds,
   learner = "learn.naiveBayes")
 
 
-#######################################################
-##逻辑斯蒂回归
-#######################################################
+# Logistic Regression -----------------------------------------------------
+
 library(ggplot2)
 library(animation)
 saveGIF(
@@ -783,28 +756,28 @@ learn.LogisticRegression <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~., 
-  data = cjb, 
-  kfolds = kfolds, 
-  learner = "learn.LogisticRegression", 
+  formula = wlfk~.,
+  data = cjb,
+  kfolds = kfolds,
+  learner = "learn.LogisticRegression",
   best_threshold = threshold_range[which.min(ce_set)])
 
-#######################################################
-##人工神经网络
-#######################################################
+
+# Artificial Neural Network -----------------------------------------------
+
 library(nnet)
 set.seed(2012)
-imodel <- nnet(wlfk~., 
+imodel <- nnet(wlfk~.,
       data = cjb[train_set_idx, ],
       size = 7)
 names(imodel)
-#> [1] "n"             "nunits"        "nconn"        
-#> [4] "conn"          "nsunits"       "decay"        
-#> [7] "entropy"       "softmax"       "censored"     
-#> [10] "value"         "wts"           "convergence"  
-#> [13] "fitted.values" "residuals"     "lev"          
-#> [16] "call"          "terms"         "coefnames"    
-#> [19] "contrasts"     "xlevels" 
+#> [1] "n"             "nunits"        "nconn"
+#> [4] "conn"          "nsunits"       "decay"
+#> [7] "entropy"       "softmax"       "censored"
+#> [10] "value"         "wts"           "convergence"
+#> [13] "fitted.values" "residuals"     "lev"
+#> [16] "call"          "terms"         "coefnames"
+#> [19] "contrasts"     "xlevels"
 
 imodel$n
 #> [1] 10  7  1
@@ -820,7 +793,7 @@ imodel$fitted.values
 # 1   0.8048857
 # 2   0.2047307
 # 3   0.8048857
-# 
+#
 # 540 0.8048857
 # 541 0.2047307
 
@@ -841,15 +814,15 @@ Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #不过，类似于e1071::tune.nnet()已经替我们作了很多工作
 #下面，采用的是caret包中的方法
 #通过caret包中的grid搜索来进行参数选择
-tune_results <- e1071::tune.nnet(wlfk~., data = cjb, 
+tune_results <- e1071::tune.nnet(wlfk~., data = cjb,
                                  decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9),
                                  size = 1:7)
 
 library(caret)
 set.seed(2012)
-nn_grid <- expand.grid(size = c(1, 3, 7, 9), 
+nn_grid <- expand.grid(size = c(1, 3, 7, 9),
                       decay = c(0.01, 0.03, 0.1, 0.3, 0.6, 0.9))
-# nn_grid <- expand.grid(.decay = c(0.5, 0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7), 
+# nn_grid <- expand.grid(.decay = c(0.5, 0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7),
 #                        .size = c(3, 5, 10, 20))
 imodel <- train(
   wlfk ~ .,
@@ -866,13 +839,13 @@ plot(imodel)
 predicted_train <- predict(imodel,
       newdata = cjb[train_set_idx,],
       type = "raw")
-Metrics::ce(cjb$wlfk[train_set_idx], 
+Metrics::ce(cjb$wlfk[train_set_idx],
       predicted_train)
 #> [1] 0.1697417
 predicted_test <- predict(imodel,
       newdata = cjb[-train_set_idx,],
       type = "raw")
-Metrics::ce(cjb$wlfk[-train_set_idx], 
+Metrics::ce(cjb$wlfk[-train_set_idx],
       predicted_test)
 #> [1] 0.1896552
 
@@ -886,9 +859,9 @@ imodel2 <-  nnet(wlfk ~ .,
 imodel2$wts
 str(imodel2)
 library(NeuralNetTools)
-plotnet(imodel2, 
+plotnet(imodel2,
         rel_rsc = c(1.8,3),
-        circle_cex = 3, 
+        circle_cex = 3,
         cex_val = 0.75,
         bord_col = "lightblue",
         max_sp = TRUE)
@@ -915,13 +888,11 @@ kfold_cross_validation(
 
 
 
-#######################################################
-##支持向量机
-##Support Vector Machine
-#######################################################
+# Support Vector Machine --------------------------------------------------
+
 library(kernlab)
 set.seed(2012)
-imodel <- ksvm(wlfk~., 
+imodel <- ksvm(wlfk~.,
       data = cjb[train_set_idx, ])
 predicted_train <- predict(imodel,
       newdata = cjb[train_set_idx,],
@@ -939,8 +910,8 @@ library(caret)
 svm_grid <- expand.grid(sigma = 2^(-10:4),
       C= -5:20)
 set.seed(2012)
-imodel <- train(wlfk~., 
-      data = cjb[train_set_idx, ], 
+imodel <- train(wlfk~.,
+      data = cjb[train_set_idx, ],
       method = "svmRadial",
       preProc = c("center", "scale"),
       tuneGrid = svm_grid)
@@ -960,18 +931,16 @@ learn.svm <- function(formula, train, test, ...) {
               predicted_test = predicted_test))
 }
 kfold_cross_validation(
-  formula = wlfk~., 
-  data = cjb, 
-  kfolds = kfolds, 
+  formula = wlfk~.,
+  data = cjb,
+  kfolds = kfolds,
   learner = "learn.svm",
-  C = imodel$bestTune$C, 
+  C = imodel$bestTune$C,
   gamma = imodel$bestTune$sigma)
 
 
+# Variable Importance -----------------------------------------------------
 
-#######################################################
-##变量重要性
-#######################################################
 #完成了模型训练、模型评估，故事基本告一段落
 #再回顾一下本讲开始所讲的featurePlot
 #进行完模型训练之后，咱们再通过变量重要性印证一下
@@ -988,9 +957,9 @@ randomForest::importance(imodel) %>%
   as.data.frame() %>%
   rownames_to_column(var = "variables") %>%
   arrange(desc(MeanDecreaseGini)) %>%
-  mutate(variables = factor(variables, 
+  mutate(variables = factor(variables,
                             levels = variables)) %>%
-  ggplot(aes(x = variables, 
+  ggplot(aes(x = variables,
              y = MeanDecreaseGini,
              fill = variables)) +
   geom_bar(stat = "identity", width = 0.5) +
@@ -998,15 +967,19 @@ randomForest::importance(imodel) %>%
                 label = format(MeanDecreaseGini, digits = 4)))
 
 
-#######################################################
-##模型综合评估
-#######################################################
+
+
+
+
+# Model Comparison --------------------------------------------------------
+
+
 #模型进行评估
 global_performance %>%
   group_by(method, type) %>%
   summarise(mean_error_rate = mean(error_rate)) %>%
   arrange(type, mean_error_rate) %>%
-  ggplot(aes(x = fct_inorder(method), y = mean_error_rate, 
+  ggplot(aes(x = fct_inorder(method), y = mean_error_rate,
              fill = type)) +
   geom_bar(stat= "identity", position = "dodge") +
   geom_text(aes(label = format(mean_error_rate, digits = 3)),
@@ -1037,17 +1010,18 @@ global_performance %>%
 #caret包中列举了百余种算法
 #本讲中，只是列举了比较经典的集中。有很多算法并未考虑纳入，
 #比如：
-#线性判别分析：MASS::lda()
-#逻辑斯蒂回归：stats::glm()
-#装袋法：adabag::bagging()
-#助推法：adabag::boosting()
-#GBDT: xgboost::xgboost
-#即便是演示过得算法，参数调优过程也显得比较粗糙
+#MASS::lda()
+#adabag::bagging()
+#adabag::boosting()
+#caretEnsemble::caretStack
+#xgboost::xgboost
+#即便是演示过的算法，参数调优过程也显得比较粗糙
 #更多的精彩，由小伙伴们自行探索吧
 #毕竟，这份代码只是一个引导性的参考，
 #并不是可以简单套用的标准模板
 
 
-#######################################################
-##The End ^-^
-#######################################################
+
+# The End ^-^ -------------------------------------------------------------
+
+
