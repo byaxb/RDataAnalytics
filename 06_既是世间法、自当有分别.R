@@ -731,7 +731,7 @@ library(ggplot2)
 #             plot(p)
 #         }
 #     },
-#     movie.name = "D://desktop/animation.gif",
+#     movie.name = "animation.gif",
 #     convert = "gm convert",
 #     interval = 0.2
 # )
