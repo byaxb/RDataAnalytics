@@ -101,6 +101,9 @@ p_load(igraph, infotheo)
 
 # Help --------------------------------------------------------------------
 
+# StackOverflow当然是值得关注的
+
+
 #打开R的帮助页面
 help.start()
 #进入该页面之后，点击其中的packages，可以查看已安装所有包的帮助文档
@@ -116,9 +119,6 @@ help.start()
 ? `if`
 #注意以上单引号、双引号、反单引号的用法
 
-
-# Search ------------------------------------------------------------------
-
 #模糊查找包含某些字符的函数
 #比如，查找一下R所支持的假设检验
 apropos("test")
@@ -133,6 +133,8 @@ search()
 #"https://stackoverflow.com/questions/tagged/r"
 #当然，你也可以在R里边，执行下边的语句直接打开浏览器
 browseURL("https://stackoverflow.com/questions/tagged/r")
+#如果自行打开stackoverflow搜索，注意加上[r]
+#当然，如果是搜索其他相关主题，如ggplot2，也可以直接加上[ggplot2]之类的
 
 #推荐使用sos包
 #初次使用，需要安装
@@ -162,9 +164,7 @@ browseURL("https://cran.r-project.org/web/views/WebTechnologies.html")
 # More Packages for ML and DM ---------------------------------------------
 
 #机器学习/数据挖掘相关的一些扩展包
-browseURL(
-    "https://github.com/thedataincubator/data-science-blogs/blob/master/top-r-packages.md"
-)
+browseURL("https://github.com/thedataincubator/data-science-blogs/blob/master/top-r-packages.md")
 browseURL("https://www.r-pkg.org/starred")
 
 
@@ -925,6 +925,8 @@ findRuns(x = x, k = 2)
 
 #不要让个别循环出现的异常
 #影响我们的程序运行
+#尤其是运行时间长的代码，期望第二天能出结果，结果头天晚上23:00就出问题了
+#比如在for循环中，增加异常处理，若本轮循环出问题，则直接进入下一轮
 X <- list(1, 2, "3", 4, 5)
 #注意理解为何不能用c()替换list()
 for (cur_x in X) {
