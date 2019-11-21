@@ -3,12 +3,14 @@
 # 05_相随相伴、谓之关联----------------------------------------------------
 
 #在观察完数据的长相之后，便开始深入其内在的关系结构了
-#本次实验聚焦的是伴随关系
+#本次实验聚焦的是关联规则
+#关联规则所表达的联系，本质上是伴随关系
+#因此，本章节名称为《相随相伴、谓之关联》
+
 #教材上的名称频繁项集、关联规则
 #关联规则可能是机器学习/数据挖掘领域最为知名的算法了
 #啤酒和尿不湿的故事，提供了“发现数据背后意想不到的模式”的范本，
 #也让关联规则成为数据挖掘最好的科（guang）普（gao）
-
 
 # Data Import -------------------------------------------------------------
 
@@ -19,17 +21,13 @@ n_item <- c(2:5, 10, 20, 50, 100)
 n_rules <- 3^n_item - 2^(n_item + 1) + 1
 View(data.frame(n_item, n_rules))
 
-
 library(tidyverse)
 library(readr)
-cjb_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
 
-
-
 # Discretization ----------------------------------------------------------
-
 
 #数据离散化
 #arules包只能对离散数据进行关联规则挖掘
@@ -64,7 +62,6 @@ cjb %<>%
 #> $ wlfk: Factor w/ 2 levels "理科","文科": 2 2 2 2 2 2 2 2 2 2 ...
 
 
-
 # Types of data -----------------------------------------------------------
 
 library(arules)
@@ -85,7 +82,6 @@ inspect(head(cjb_trans))
 #> [4] {xb=女,yw=优,sx=良,wy=优,zz=优,ls=优,dl=优,wl=良,hx=良,sw=良,wlfk=文科} 4
 #> [5] {xb=男,yw=良,sx=优,wy=良,zz=优,ls=良,dl=良,wl=优,hx=优,sw=优,wlfk=文科} 5
 #> [6] {xb=女,yw=优,sx=良,wy=良,zz=优,ls=良,dl=优,wl=良,hx=优,sw=良,wlfk=文科} 6
-
 
 #> items       transactionID
 #> [1] {xb=女,
@@ -138,6 +134,7 @@ cjb_trans %>%
 #还是最直接的事务记录transactions
 #都可以直接用来挖掘
 
+
 # Model with default args -------------------------------------------------
 #关于Apriori算法的原理，请参阅课程讲义
 #R中的具体实现，则简单得超乎人们的想象
@@ -145,6 +142,7 @@ cjb_trans %>%
 #对于关联规则的挖掘和可视化
 #主要用arules和arulesViz两个包
 #加载后者时，前者自动加载
+
 library(arulesViz)
 #调用apriori()函数进行挖掘
 #算法实现，只是一句话的事儿
@@ -203,7 +201,6 @@ irules_args_default@info
 #>
 #> $confidence
 #> [1] 0.8
-
 
 
 # Parameters --------------------------------------------------------------
@@ -309,8 +306,7 @@ inspect(head(irules_pruned))
 inspect(tail(irules_pruned))
 
 
-
-# Evaluation --------------------------------------------------------------
+# Model Evaluation --------------------------------------------------------
 
 #查看评估指标
 quality(irules_pruned)
@@ -600,6 +596,7 @@ irules_pruned_in_df %<>%
     vars("LHS", "RHS"),
     funs(gsub("[\\{\\} ]", "", .)))
 View(irules_pruned_in_df)
+
 #转换成data.frame之后
 #自然可以随意处置了
 #比如可以通过正则表达式任意抽取自己想要的规则
@@ -610,7 +607,6 @@ write.csv(irules_pruned_in_df,
       quote = TRUE,
       row.names=FALSE)
 
-
 #以上是R中关于关联规则的基本实现
 #感兴趣的同学，可以进一步阅读：
 #序列模式arulesSequences等主题
@@ -619,5 +615,3 @@ write.csv(irules_pruned_in_df,
 
 
 # The End ^-^ -------------------------------------------------------------
-
-
