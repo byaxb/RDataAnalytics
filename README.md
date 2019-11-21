@@ -6,7 +6,7 @@ The code is free for academic and educational purposes.
 
 No licence is given to use this code in any commercial project without the explicit permission of the author.
 
-课程知识体系：<br>
+---
 R语言数据分析<br>
 │  <br>
 ├─上部：问道<br>
@@ -66,3 +66,4 @@ R语言数据分析<br>
   │ └─13.2层次方法<br>
   │<br>
   └─第14章 庐山烟雨浙江潮<br>
+ 
