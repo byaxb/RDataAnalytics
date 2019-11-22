@@ -7,21 +7,22 @@ The code is free for academic and educational purposes.
 No licence is given to use this code in any commercial project without the explicit permission of the author.
 
 
-> R语言数据分析  
->> 上部：问道  
->>> 第1章 气象万千、数以等观  
->>> 第2章 所谓学习、归类而已  
->>> 第3章 格言联璧话学习  
->>> 第4章 源于数学、归于工程  
->中部：执具  
+R语言数据分析  
+> 上部：问道  
+>> 第1章 气象万千、数以等观  
+>> 第2章 所谓学习、归类而已  
+>> 第3章 格言联璧话学习  
+>> 第4章 源于数学、归于工程  
+>
+> 中部：执具  
 >>第5章 工欲善其事、必先利其器  
 >>[![](https://img.shields.io/badge/%E7%AC%AC6%E7%AB%A0-%E5%9F%BA%E7%A1%80%E7%BC%96%E7%A8%8B-blue)](https://github.com/byaxb/RDataAnalytics/blob/master/02_%E5%9F%BA%E7%A1%80%E7%BC%96%E7%A8%8B.R)——用别人的包和函数讲述自己的故事  
->>>6.1编程环境  
->>>6.2Mini案例  
->>>6.3站在巨人的肩膀上  
->>>6.4控制流  
->>>6.5函数（I）  
->>>6.6函数（II）  
+>>> 6.1编程环境  
+>>> 6.2Mini案例  
+>>> 6.3站在巨人的肩膀上  
+>>> 6.4控制流  
+>>> 6.5函数（I）  
+>>> 6.6函数（II）  
 >> [![](https://img.shields.io/badge/%E7%AC%AC7%E7%AB%A0-%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1-green)](https://github.com/byaxb/RDataAnalytics/blob/master/03_%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1.R)——面向数据对象学习R语言  
 >>> 7.1向量与因子（I）  
 >>> 7.2向量与因子（II）  
@@ -31,6 +32,7 @@ No licence is given to use this code in any commercial project without the expli
 >>> 7.6列表与数据框（II）  
 >> 第8章 人人都爱tidyverse  
 >> 第9章 最美不过数据框  
+>  
 > 下部：博术  
 >> [![](https://img.shields.io/badge/%E7%AC%AC10%E7%AB%A0-%E8%A7%82%E6%95%B0%E4%BB%A5%E5%BD%A2-yellow)](https://github.com/byaxb/RDataAnalytics/blob/master/04_%E8%A7%82%E6%95%B0%E4%BB%A5%E5%BD%A2.R)  
 >>> 10.1一维数据空间（I）  
