@@ -6,10 +6,11 @@ The code is free for academic and educational purposes.
 
 No licence is given to use this code in any commercial project without the explicit permission of the author.
 
+---
+
 
 R语言数据分析  
 > 上部：问道  
->> <img src="https://img.shields.io/badge/%E7%AC%AC1%E7%AB%A0-%E6%B0%94%E8%B1%A1%E4%B8%87%E5%8D%83%E3%80%81%E6%95%B0%E4%BB%A5%E7%AD%89%E8%A7%82-inactive" />  
 >> ![](https://img.shields.io/badge/%E7%AC%AC1%E7%AB%A0-%E6%B0%94%E8%B1%A1%E4%B8%87%E5%8D%83%E3%80%81%E6%95%B0%E4%BB%A5%E7%AD%89%E8%A7%82-inactive)  
 >> ![](https://img.shields.io/badge/%E7%AC%AC2%E7%AB%A0-%E6%89%80%E8%B0%93%E5%AD%A6%E4%B9%A0%E3%80%81%E5%BD%92%E7%B1%BB%E8%80%8C%E5%B7%B2-inactive)  
 >> ![](https://img.shields.io/badge/%E7%AC%AC3%E7%AB%A0-%E6%A0%BC%E8%A8%80%E8%81%94%E7%92%A7%E8%AF%9D%E5%AD%A6%E4%B9%A0-inactive)  
