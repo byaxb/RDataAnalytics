@@ -19,8 +19,8 @@ x <- 2
 sqrt(x)#熟悉的根号2
 ? sqrt #打开帮助文档，会发现sq rt = square root
 x ^ 0.5#与上一语句等价
-x ^ 8
-x ^ 2 #x的平方
+x ^ 2
+x ^ 8 #x的平方
 y <- x ^ 2 #将x的平方赋值给变量y
 
 #圆的面积
@@ -29,7 +29,7 @@ area <- pi * (r ^ 2)
 #上式中pi的含义相信大家都已经猜到了，为内置常数
 pi
 area #将面积显示出来
-print(pi, digits = 17) #显示小数点后
+print(pi, digits = 11)
 (circumference <- 2 * pi * r) #不仅给周长赋值，还显示出来
 
 log2(x)#底为2的对数
@@ -40,7 +40,7 @@ exp(x)#e的二次方
 log(x, base = c(2, exp(1), 10))#取不同的底
 
 #创建一个向量
-x <- seq(from = -10, to = 10, by = 0.03)#从-10开始，步长为0.03，最大值不超过10
+x <- seq(from = -10, to = 10, by = 0.5)#从-10开始，步长为0.05，最大值不超过10
 #x被重新赋值了
 x
 2 * x
@@ -70,7 +70,7 @@ f <- function(x, AT = 10000) {
 }
 uniroot(f, c(10000, 15000), 10000)$root
 
-#创建一个向量a
+#创建向量a
 a <- c(3, 4)
 #向量a的长度|a|
 sqrt(sum(a ^ 2))
@@ -103,7 +103,7 @@ det(A)
 eigen(A)
 
 #排列组合
-choose(3, 2)
+choose(4, 2)
 
 #解线性代数方程
 #Ax = b
@@ -116,7 +116,8 @@ solve(A)
 #等价于
 solve(A, diag(2))
 #这里diag(2)是一个单位阵
-diag(2)
+diag(2)#单位阵
+diag(1:3) #对角阵
 
 #排列组合
 choose(4, 2)
@@ -195,7 +196,7 @@ xm
 #Combine Values into a Vector or List
 #R里边，函数的调用，就是用函数名紧接着相应的小括号
 #c()这个函数的用法，请执行下述语句
-? c
+?c
 
 #找一找第1位、第3为同学分别叫什么
 xm[c(1, 3)]

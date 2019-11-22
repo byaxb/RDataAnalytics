@@ -5,12 +5,11 @@
 
 # Data Import -------------------------------------------------------------
 
-library(readxl)
-#通过getwd()得到当前工作路径，在路径下新建data子文件夹
-#并从github中下载cjb.xlsx
-#https://github.com/byaxb/RDataAnalytics
-#将cjb.xlsx置于data子文件夹
-cjb <- readxl::read_excel("data/cjb.xlsx")
+library(readr)
+cjb_url <-
+    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb <- read_csv(cjb_url,
+                locale = locale(encoding = "CP936"))
 View(cjb)
 
 
