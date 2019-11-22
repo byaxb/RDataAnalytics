@@ -23,6 +23,7 @@ R语言数据分析
 >>> 6.4控制流  
 >>> 6.5函数（I）  
 >>> 6.6函数（II）  
+>>  
 >> [![](https://img.shields.io/badge/%E7%AC%AC7%E7%AB%A0-%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1-green)](https://github.com/byaxb/RDataAnalytics/blob/master/03_%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1.R)——面向数据对象学习R语言  
 >>> 7.1向量与因子（I）  
 >>> 7.2向量与因子（II）  
@@ -39,10 +40,12 @@ R语言数据分析
 >>> 10.2一维数据空间（II）  
 >>> 10.3二维数据空间  
 >>> 10.4高维数据空间  
+>>  
 >> [![](https://img.shields.io/badge/%E7%AC%AC11%E7%AB%A0-%E7%9B%B8%E9%9A%8F%E7%9B%B8%E4%BC%B4%E3%80%81%E8%B0%93%E4%B9%8B%E5%85%B3%E8%81%94-important)](https://github.com/byaxb/RDataAnalytics/blob/master/05_%E7%9B%B8%E9%9A%8F%E7%9B%B8%E4%BC%B4%E3%80%81%E8%B0%93%E4%B9%8B%E5%85%B3%E8%81%94.R)  
 >>> 11.1关联规则（I）  
 >>> 11.2关联规则（II）  
 >>> 11.3关联规则（III）  
+>>  
 >> [![](https://img.shields.io/badge/%E7%AC%AC12%E7%AB%A0-%E6%97%A2%E6%98%AF%E4%B8%96%E9%97%B4%E6%B3%95%E3%80%81%E8%87%AA%E5%BD%93%E6%9C%89%E5%88%86%E5%88%AB-blueviolet)](https://github.com/byaxb/RDataAnalytics/blob/master/06_%E6%97%A2%E6%98%AF%E4%B8%96%E9%97%B4%E6%B3%95%E3%80%81%E8%87%AA%E5%BD%93%E6%9C%89%E5%88%86%E5%88%AB.R)  
 >>> 12.1近邻法（I）  
 >>> 12.2近邻法（II）  
@@ -54,8 +57,10 @@ R语言数据分析
 >>> 12.8人工神经网络（I）  
 >>> 12.9人工神经网络（II）  
 >>> 12.10支持向量机  
+>>  
 >> [![](https://img.shields.io/badge/%E7%AC%AC13%E7%AB%A0-%E6%96%B9%E4%BB%A5%E7%B1%BB%E8%81%9A%E3%80%81%E7%89%A9%E4%BB%A5%E7%BE%A4%E5%88%86-yellowgreen)](https://github.com/byaxb/RDataAnalytics/blob/master/07_%E6%96%B9%E4%BB%A5%E7%B1%BB%E8%81%9A%E3%80%81%E7%89%A9%E4%BB%A5%E7%BE%A4%E5%88%86.R)  
 >>> 13.1划分方法  
 >>> 13.2层次方法  
+>>
 >> 第14章 庐山烟雨浙江潮  
 
