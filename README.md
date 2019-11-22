@@ -11,13 +11,13 @@ No licence is given to use this code in any commercial project without the expli
 
 R语言数据分析  
 > 上部：问道  
->> ![](https://img.shields.io/badge/%E7%AC%AC1%E7%AB%A0-%E6%B0%94%E8%B1%A1%E4%B8%87%E5%8D%83%E3%80%81%E6%95%B0%E4%BB%A5%E7%AD%89%E8%A7%82-inactive)  
->> ![](https://img.shields.io/badge/%E7%AC%AC2%E7%AB%A0-%E6%89%80%E8%B0%93%E5%AD%A6%E4%B9%A0%E3%80%81%E5%BD%92%E7%B1%BB%E8%80%8C%E5%B7%B2-inactive)  
->> ![](https://img.shields.io/badge/%E7%AC%AC3%E7%AB%A0-%E6%A0%BC%E8%A8%80%E8%81%94%E7%92%A7%E8%AF%9D%E5%AD%A6%E4%B9%A0-inactive)  
->> ![](https://img.shields.io/badge/%E7%AC%AC4%E7%AB%A0-%E6%BA%90%E4%BA%8E%E6%95%B0%E5%AD%A6%E3%80%81%E5%BD%92%E4%BA%8E%E5%B7%A5%E7%A8%8B-inactive)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC1%E7%AB%A0-%E6%B0%94%E8%B1%A1%E4%B8%87%E5%8D%83%E3%80%81%E6%95%B0%E4%BB%A5%E7%AD%89%E8%A7%82-inactive)](https://github.com/byaxb/RDataAnalytics)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC2%E7%AB%A0-%E6%89%80%E8%B0%93%E5%AD%A6%E4%B9%A0%E3%80%81%E5%BD%92%E7%B1%BB%E8%80%8C%E5%B7%B2-inactive)](https://github.com/byaxb/RDataAnalytics)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC3%E7%AB%A0-%E6%A0%BC%E8%A8%80%E8%81%94%E7%92%A7%E8%AF%9D%E5%AD%A6%E4%B9%A0-inactive)](https://github.com/byaxb/RDataAnalytics)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC4%E7%AB%A0-%E6%BA%90%E4%BA%8E%E6%95%B0%E5%AD%A6%E3%80%81%E5%BD%92%E4%BA%8E%E5%B7%A5%E7%A8%8B-inactive)](https://github.com/byaxb/RDataAnalytics)  
 >
 > 中部：执具  
->> ![](https://img.shields.io/badge/%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E6%AC%B2%E5%96%84%E5%85%B6%E4%BA%8B%E3%80%81%E5%BF%85%E5%85%88%E5%88%A9%E5%85%B6%E5%99%A8-inactive)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E6%AC%B2%E5%96%84%E5%85%B6%E4%BA%8B%E3%80%81%E5%BF%85%E5%85%88%E5%88%A9%E5%85%B6%E5%99%A8-inactive)](https://github.com/byaxb/RDataAnalytics)  
 >> [![](https://img.shields.io/badge/%E7%AC%AC6%E7%AB%A0-%E5%9F%BA%E7%A1%80%E7%BC%96%E7%A8%8B-blue)](https://github.com/byaxb/RDataAnalytics/blob/master/02_%E5%9F%BA%E7%A1%80%E7%BC%96%E7%A8%8B.R)——用别人的包和函数讲述自己的故事  
 >>> 6.1编程环境  
 >>> 6.2Mini案例  
@@ -34,8 +34,8 @@ R语言数据分析
 >>> 7.5列表与数据框（I）  
 >>> 7.6列表与数据框（II）  
 >>
->> ![](https://img.shields.io/badge/%E7%AC%AC8%E7%AB%A0-%E4%BA%BA%E4%BA%BA%E9%83%BD%E7%88%B1tidyverse-inactive)  
->> ![](https://img.shields.io/badge/%E7%AC%AC9%E7%AB%A0-%E6%9C%80%E7%BE%8E%E4%B8%8D%E8%BF%87%E6%95%B0%E6%8D%AE%E6%A1%86-inactive)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC8%E7%AB%A0-%E4%BA%BA%E4%BA%BA%E9%83%BD%E7%88%B1tidyverse-inactive)](https://github.com/byaxb/RDataAnalytics)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC9%E7%AB%A0-%E6%9C%80%E7%BE%8E%E4%B8%8D%E8%BF%87%E6%95%B0%E6%8D%AE%E6%A1%86-inactive)](https://github.com/byaxb/RDataAnalytics)  
 >  
 > 下部：博术  
 >> [![](https://img.shields.io/badge/%E7%AC%AC10%E7%AB%A0-%E8%A7%82%E6%95%B0%E4%BB%A5%E5%BD%A2-yellow)](https://github.com/byaxb/RDataAnalytics/blob/master/04_%E8%A7%82%E6%95%B0%E4%BB%A5%E5%BD%A2.R)  
@@ -65,5 +65,5 @@ R语言数据分析
 >>> 13.1划分方法  
 >>> 13.2层次方法  
 >>
->> ![](https://img.shields.io/badge/%E7%AC%AC14%E7%AB%A0-%E5%BA%90%E5%B1%B1%E7%83%9F%E9%9B%A8%E6%B5%99%E6%B1%9F%E6%BD%AE-inactive)  
+>> [![](https://img.shields.io/badge/%E7%AC%AC14%E7%AB%A0-%E5%BA%90%E5%B1%B1%E7%83%9F%E9%9B%A8%E6%B5%99%E6%B1%9F%E6%BD%AE-inactive)](https://github.com/byaxb/RDataAnalytics)  
 
