@@ -9,6 +9,7 @@ No licence is given to use this code in any commercial project without the expli
 
 R语言数据分析  
 > 上部：问道  
+>> <img src="https://img.shields.io/badge/%E7%AC%AC1%E7%AB%A0-%E6%B0%94%E8%B1%A1%E4%B8%87%E5%8D%83%E3%80%81%E6%95%B0%E4%BB%A5%E7%AD%89%E8%A7%82-inactive" />  
 >> ![](https://img.shields.io/badge/%E7%AC%AC1%E7%AB%A0-%E6%B0%94%E8%B1%A1%E4%B8%87%E5%8D%83%E3%80%81%E6%95%B0%E4%BB%A5%E7%AD%89%E8%A7%82-inactive)  
 >> ![](https://img.shields.io/badge/%E7%AC%AC2%E7%AB%A0-%E6%89%80%E8%B0%93%E5%AD%A6%E4%B9%A0%E3%80%81%E5%BD%92%E7%B1%BB%E8%80%8C%E5%B7%B2-inactive)  
 >> ![](https://img.shields.io/badge/%E7%AC%AC3%E7%AB%A0-%E6%A0%BC%E8%A8%80%E8%81%94%E7%92%A7%E8%AF%9D%E5%AD%A6%E4%B9%A0-inactive)  
@@ -31,6 +32,7 @@ R语言数据分析
 >>> 7.4矩阵与数组（II）  
 >>> 7.5列表与数据框（I）  
 >>> 7.6列表与数据框（II）  
+>>
 >> ![](https://img.shields.io/badge/%E7%AC%AC8%E7%AB%A0-%E4%BA%BA%E4%BA%BA%E9%83%BD%E7%88%B1tidyverse-inactive)  
 >> ![](https://img.shields.io/badge/%E7%AC%AC9%E7%AB%A0-%E6%9C%80%E7%BE%8E%E4%B8%8D%E8%BF%87%E6%95%B0%E6%8D%AE%E6%A1%86-inactive)  
 >  
