@@ -10,6 +10,7 @@ cjb_url <-
     "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
+
 View(cjb)
 
 
@@ -53,6 +54,7 @@ my_model <- cjb %>%
 
 
 # Visualization -----------------------------------------------------------
+
 inspectDT(my_model)
 plot(my_model, method = "graph")
 #当然，也可采用交互的方式
