@@ -3,6 +3,10 @@
 This repository contains code and data for the postgraduate course **Data Analytics with R**, instructed by *Xinbo Ai*, at Beijing University of Posts and Telecommunications.
 
 
+本库托管了北京邮电大学艾新波《R语言数据分析》课程的代码及数据。
+
+
+
 ---
 
 
