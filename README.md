@@ -4,7 +4,7 @@ This repository contains code and data for the postgraduate course **Data Analyt
 
 
 本库托管了北京邮电大学《R语言数据分析》课程的代码及数据。   
-本课程已在学堂在线上线:<https://next.xuetangx.com/course/buptP08541002314/1462797>
+本课程已在[学堂在线](https://next.xuetangx.com/course/buptP08541002314/1462797)上线
 
 
 ---
