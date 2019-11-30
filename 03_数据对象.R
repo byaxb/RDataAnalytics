@@ -871,6 +871,7 @@ colnames(ysw) <- c("yw", "sx", "wy")
 row.names(ysw) <- xm
 View(ysw)
 
+
 #假如数据本身就是“站”着的
 #要注意其中byrow = 参数的设置
 ysw <- matrix(
@@ -885,6 +886,16 @@ ysw <- matrix(
 )
 colnames(ysw) <- c("yw", "sx", "wy")
 row.names(ysw) <- xm
+
+
+example_vector <- 1:18
+example_matrix <- matrix(example_vector, ncol = 3)
+View(example_matrix)
+
+example_vector <- 1:18
+example_matrix <- matrix(example_vector, ncol = 3, byrow = TRUE)
+View(example_matrix)
+
 
 #矩阵的基本性质
 colnames(ysw)
