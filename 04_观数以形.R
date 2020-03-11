@@ -26,7 +26,7 @@
 
 #书接前文，在观测数据的外表之前，首先还是将数据读入
 library(tidyverse)
-cjb_url <-"https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "data/cjb.csv"
 cjb <- read.csv(cjb_url,
                 stringsAsFactors = FALSE,
                 encoding = "CP936")
@@ -1089,7 +1089,7 @@ ggsave("par2.png", dpi = 600)
 #一个简单的方法：单位面积/体积内数据点的多少
 #将50~100细分为N份，看每一个有多少落入其间
 icut <- function(x) {
-  ibreaks <- c(0, seq(50, 100, len = 21))
+  ibreaks <- c(0, seq(50, 100, len = 11))
   cut(x, breaks = ibreaks)
 }
 range(cjb$wl)
@@ -1099,8 +1099,9 @@ cjb %>%
   mutate_at(vars(wl, sx), icut) %>%
   group_by(wl, sx) %>%
   summarise(freq = n()) %>%
-  complete(wl, sx) %>%
-  mutate(freq = ifelse(is.na(freq), 0, freq)) %>%
+  complete(wl, sx, fill = list(freq = 0)) %>%
+  mutate(freq = ifelse(is.na(freq), 0, freq)) %>%View
+      distinct() %>%View
   ggplot(aes(x = wl, y = sx, fill = freq)) +
   geom_tile(colour="white", size = 0.5) +
   geom_text(aes(label = freq), size = 3) +

@@ -24,8 +24,7 @@
 rm(list = ls())
 library(tidyverse)
 #加载数据
-cjb_url <-
-    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
 cjb %<>%
@@ -238,6 +237,12 @@ imetrics <- function(method, type, predicted, actual) {
 
 # kknn --------------------------------------------------------------------
 
+load('data/cjb.rda')
+cjb <- cjb %>%
+    select(4:13) %>%
+    mutate(wlfk = factor(wlfk))
+train_set_idx <- sample(nrow(cjb), 0.7 * nrow(cjb))
+test_set_idx <- (1:nrow(cjb))[-train_set_idx]
 library(kknn)
 set.seed(2012)
 imodel <- kknn(wlfk ~ .,

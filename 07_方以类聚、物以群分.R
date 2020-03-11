@@ -24,8 +24,7 @@ rm(list = ls())
 library(tidyverse)
 library(magrittr)
 library(GGally)
-cjb_url <-
-    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
 cjb %<>%

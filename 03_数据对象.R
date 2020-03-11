@@ -1372,8 +1372,7 @@ str(cjb)
 #数据不会在代码里逐字敲入
 #也不会通过控制台输入
 #毕竟采集数据和分析数据的过程是分开的
-cjb_url <-
-    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "data/cjb.csv"
 cjb <- read.csv(cjb_url,
                 head = TRUE,
                 stringsAsFactors = FALSE)
@@ -1563,8 +1562,7 @@ test_set <- cjb[-train_idx,]
 #install.packages("tidyverse")
 
 library(tidyverse)
-cjb_url <-
-    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "data/cjb.csv"
 cjb <- read.csv(cjb_url,
                 stringsAsFactors = FALSE,
                 encoding = "CP936")

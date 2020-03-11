@@ -1,13 +1,9 @@
 
 
-# 迷你小案例 --------------------------------------------------------------
-
-
 # Data Import -------------------------------------------------------------
 
 library(readr)
-cjb_url <-
-    "https://github.com/byaxb/RDataAnalytics/raw/master/data/cjb.csv"
+cjb_url <- "data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
 
@@ -62,6 +58,11 @@ plot(my_model,
      method = "graph",
      engine = "htmlwidget")
 
+
+# Reproducible ------------------------------------------------------------
+# The next two lines are for  reproducibility
+library(renv)
+renv::init()
 
 # The End ^-^ -------------------------------------------------------------
 
