@@ -26,7 +26,7 @@ month.abb
 month.name
 pi
 format(pi, digits = 17)
-T #TRUE是真正的常量，而T <- FALSE
+T #TRUE是真正的常量，而T <- TRUE
 F
 
 #数值常量
