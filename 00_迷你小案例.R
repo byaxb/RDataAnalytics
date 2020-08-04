@@ -1,8 +1,12 @@
 
 
-# Data Import -------------------------------------------------------------
 
+# Data Import -------------------------------------------------------------
 library(readr)
+#默认将cjb.csv文件置于getwd()路径下的data文件夹中
+#也可以改为绝对路径
+#从R4.0之后，可以改为：
+#cjb_url <- r'[D:\\desktop\data\cjb.csv]'
 cjb_url <- "data/cjb.csv"
 cjb <- read_csv(cjb_url,
                 locale = locale(encoding = "CP936"))
@@ -14,7 +18,7 @@ View(cjb)
 
 library(tidyverse)
 cjb %>%
-    select(sx, wlfk) %>%
+    dplyr::select(sx, wlfk) %>%
     ggplot(aes(x = wlfk,
                y = sx,
                fill = wlfk)) +
@@ -57,12 +61,6 @@ plot(my_model, method = "graph")
 plot(my_model,
      method = "graph",
      engine = "htmlwidget")
-
-
-# Reproducible ------------------------------------------------------------
-# The next two lines are for  reproducibility
-library(renv)
-renv::init()
 
 # The End ^-^ -------------------------------------------------------------
 
