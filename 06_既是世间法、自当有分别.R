@@ -1,5 +1,6 @@
 
 
+
 # 06_既是世间法、自当有分别------------------------------------------------
 
 
@@ -116,7 +117,7 @@ str(train_set_idx)
 #> int [1:541] 169 576 218 722 575 673 411 700 687 696 ...
 length(train_set_idx) / nrow(cjb)
 #> [1] 0.6989664
-train_set <- cjb[train_set_idx,]
+train_set <- cjb[train_set_idx, ]
 # test_set <- ?
 
 # #工业级
@@ -246,16 +247,16 @@ test_set_idx <- (1:nrow(cjb))[-train_set_idx]
 library(kknn)
 set.seed(2012)
 imodel <- kknn(wlfk ~ .,
-               train = cjb[train_set_idx,],
-               test = cjb[train_set_idx,])
+               train = cjb[train_set_idx, ],
+               test = cjb[train_set_idx, ])
 predicted_train <- imodel$fit
 #ce: classification error
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.1090573
 #作为惰性学习法，训练和测试同时进行
 imodel <- kknn(wlfk ~ .,
-               train = cjb[train_set_idx,],
-               test = cjb[-train_set_idx,])
+               train = cjb[train_set_idx, ],
+               test = cjb[-train_set_idx, ])
 predicted_test <- imodel$fit
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1888412
@@ -338,8 +339,8 @@ sp <- Sys.time() #记录开始时间
 cat("\n[Start at:", as.character(sp))
 for (i in 1:length(kfolds)) {
     curr_fold <- kfolds[[i]] #当前这一折
-    train_set <- cjb[-curr_fold, ] #训练集
-    test_set <- cjb[curr_fold, ] #测试集
+    train_set <- cjb[-curr_fold,] #训练集
+    test_set <- cjb[curr_fold,] #测试集
     predicted_train <- kknn(
         wlfk ~ .,
         train = train_set,
@@ -390,40 +391,43 @@ global_performance
 #考虑到每种方法都要采用交叉检验的方法，
 #根据事不过三法则，反反复复拷贝、更改以上代码是不合适的
 #为此，将上述代码改写为相应的函数
-kfold_cross_validation <- function(formula, data, kfolds, learner, ...) {
-    sp <- Sys.time() #记录开始时间
-    cat("\n[Start at:", as.character(sp))
-    lapply(kfolds, function(curr_fold) {
-        train_set <- data[-curr_fold, ] #训练集
-        test_set <- data[curr_fold, ] #测试集
-        predictions <- do.call(learner, args = c(
-            list(
-                formula = formula,
-                train = train_set,
-                test = test_set
-            ),
-            list(...)
-        ))
-        imetrics(learner,
-                 "Train",
-                 predictions$predicted_train,
-                 train_set$wlfk)
-        imetrics(learner,
-                 "Test",
-                 predictions$predicted_test,
-                 test_set$wlfk)
-    })
-    ep <- Sys.time()
-    cat("\tFinised at:", as.character(ep), "]\n")
-    cat("[Time Ellapsed:\t",
-        difftime(ep, sp, units = "secs"),
-        " seconds]\n")
-}
+kfold_cross_validation <-
+    function(formula, data, kfolds, learner, ...) {
+        sp <- Sys.time() #记录开始时间
+        cat("\n[Start at:", as.character(sp))
+        lapply(kfolds, function(curr_fold) {
+            train_set <- data[-curr_fold,] #训练集
+            test_set <- data[curr_fold,] #测试集
+            predictions <- do.call(learner, args = c(
+                list(
+                    formula = formula,
+                    train = train_set,
+                    test = test_set
+                ),
+                list(...)
+            ))
+            imetrics(learner,
+                     "Train",
+                     predictions$predicted_train,
+                     train_set$wlfk)
+            imetrics(learner,
+                     "Test",
+                     predictions$predicted_test,
+                     test_set$wlfk)
+        })
+        ep <- Sys.time()
+        cat("\tFinised at:", as.character(ep), "]\n")
+        cat("[Time Ellapsed:\t",
+            difftime(ep, sp, units = "secs"),
+            " seconds]\n")
+    }
 
 
 learn.kknn <- function(formula, train, test, ...) {
-    predicted_train <- kknn(formula, train = train, test = train, ...)$fit
-    predicted_test <- kknn(formula, train = train, test = test, ...)$fit
+    predicted_train <-
+        kknn(formula, train = train, test = train, ...)$fit
+    predicted_test <-
+        kknn(formula, train = train, test = test, ...)$fit
     return(list(predicted_train = predicted_train,
                 predicted_test = predicted_test))
 }
@@ -445,7 +449,7 @@ kfold_cross_validation(
 #rpart.plot包会自动加载rpart包
 library(rpart.plot)
 imodel <- rpart(wlfk ~ .,
-                data = cjb[train_set_idx, ])
+                data = cjb[train_set_idx,])
 imodel
 # n= 541
 #
@@ -483,7 +487,7 @@ imodel
 
 predicted_train <-
     predict(imodel,
-            newdata = cjb[train_set_idx, ],
+            newdata = cjb[train_set_idx,],
             type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
@@ -492,7 +496,7 @@ Metrics::ce(cjb$wlfk[train_set_idx],
 #当然，我们更关注的是测试误差
 predicted_test <-
     predict(imodel,
-            newdata = cjb[-train_set_idx,],
+            newdata = cjb[-train_set_idx, ],
             type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
@@ -541,13 +545,13 @@ print(imodel_pruned)
 
 #剪枝前后效果对比
 predicted_train <- predict(imodel_pruned,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
 #> [1] 0.1959335
 predicted_test <- predict(imodel_pruned,
-                          newdata = cjb[-train_set_idx, ],
+                          newdata = cjb[-train_set_idx,],
                           type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
@@ -620,15 +624,15 @@ library(randomForest)
 set.seed(2012)
 imodel <- randomForest(wlfk ~ .,
                        ntree = 25,
-                       data = cjb[train_set_idx,])
+                       data = cjb[train_set_idx, ])
 predicted_train <- predict(imodel,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "response")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
 #>[1] 0.001848429
 predicted_test <- predict(imodel,
-                          newdata = cjb[-train_set_idx, ],
+                          newdata = cjb[-train_set_idx,],
                           type = "response")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
@@ -639,15 +643,15 @@ rf_ces <- sapply(1:500, function(x) {
     set.seed(2012)
     imodel <- randomForest(wlfk ~ .,
                            ntree = x,
-                           data = cjb[train_set_idx,])
+                           data = cjb[train_set_idx, ])
     predicted_train <- predict(imodel,
-                               newdata = cjb[train_set_idx, ],
+                               newdata = cjb[train_set_idx,],
                                type = "response")
     Metrics::ce(cjb$wlfk[train_set_idx],
                 predicted_train)
     #>[1] 0
     predicted_test <- predict(imodel,
-                              newdata = cjb[-train_set_idx, ],
+                              newdata = cjb[-train_set_idx,],
                               type = "response")
     Metrics::ce(cjb$wlfk[-train_set_idx],
                 predicted_test)
@@ -684,14 +688,14 @@ kfold_cross_validation(
 
 library(e1071)
 imodel <- naiveBayes(wlfk ~ .,
-                     data = cjb[train_set_idx,])
+                     data = cjb[train_set_idx, ])
 predicted_train <- predict(imodel,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.2920518
 predicted_test <- predict(imodel,
-                          newdata = cjb[-train_set_idx, ],
+                          newdata = cjb[-train_set_idx,],
                           type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.27897
@@ -745,10 +749,10 @@ library(ggplot2)
 
 
 imodel <- glm(wlfk ~ .,
-              data = cjb[train_set_idx, ],
+              data = cjb[train_set_idx,],
               family = binomial(link = "logit"))
 predicted_logit <- predict(imodel,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "response")
 predicted_train <-
     rep(levels(cjb$wlfk)[2], length(train_set_idx))
@@ -756,10 +760,10 @@ predicted_train[predicted_logit < 0.5] <- levels(cjb$wlfk)[1]
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.2181146
 predicted_logit <- predict(imodel,
-                           newdata = cjb[-train_set_idx,],
+                           newdata = cjb[-train_set_idx, ],
                            type = "response")
 predicted_test <-
-    rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx, ]))
+    rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
 predicted_test[predicted_logit < 0.5] <-
     levels(cjb$wlfk)[1]
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
@@ -771,7 +775,7 @@ min_err <- Inf
 cur_threshold <- 0.1
 for (cur_threshold in seq(0.1, 0.9, by = 0.001)) {
     predicted_test <-
-        rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx, ]))
+        rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
     predicted_test[predicted_logit < cur_threshold] <-
         levels(cjb$wlfk)[1]
     cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
@@ -788,7 +792,7 @@ best_threshold
 threshold_range <- seq(0.1, 0.9, by = 0.001)
 ce_set <- sapply(threshold_range, function(cur_threshold) {
     predicted_test <-
-        rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx, ]))
+        rep(levels(cjb$wlfk)[2], nrow(cjb[-train_set_idx,]))
     predicted_test[predicted_logit < cur_threshold] <-
         levels(cjb$wlfk)[1]
     cur_err <- Metrics::ce(cjb$wlfk[-train_set_idx],
@@ -802,12 +806,15 @@ min(ce_set)
 #进行k-折交叉检验k-fold cross validation
 learn.LogisticRegression <- function(formula, train, test, ...) {
     dot_args <- list(...)
-    imodel_kfold <- glm(formula, train, family = binomial(link = "logit"))
-    predicted_logit <- predict(imodel_kfold, train, type = "response")
+    imodel_kfold <-
+        glm(formula, train, family = binomial(link = "logit"))
+    predicted_logit <-
+        predict(imodel_kfold, train, type = "response")
     predicted_train <- rep(levels(cjb$wlfk)[2], nrow(train))
     predicted_train[predicted_logit < dot_args[["best_threshold"]]] <-
         levels(cjb$wlfk)[1]
-    predicted_logit <- predict(imodel_kfold, test, type = "response")
+    predicted_logit <-
+        predict(imodel_kfold, test, type = "response")
     predicted_test <- rep(levels(cjb$wlfk)[2], nrow(test))
     predicted_test[predicted_logit < dot_args[["best_threshold"]]] <-
         levels(cjb$wlfk)[1]
@@ -828,7 +835,7 @@ kfold_cross_validation(
 library(nnet)
 set.seed(2012)
 imodel <- nnet(wlfk ~ .,
-               data = cjb[train_set_idx,],
+               data = cjb[train_set_idx, ],
                size = 7)
 names(imodel)
 #> [1] "n"             "nunits"        "nconn"
@@ -858,12 +865,12 @@ imodel$fitted.values
 # 541 0.2047307
 
 predicted_train <- predict(imodel,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "class")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.1996303
 predicted_test <- predict(imodel,
-                          newdata = cjb[-train_set_idx, ],
+                          newdata = cjb[-train_set_idx,],
                           type = "class")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1759657
@@ -901,13 +908,13 @@ imodel$bestTune
 plot(imodel)
 
 predicted_train <- predict(imodel,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "raw")
 Metrics::ce(cjb$wlfk[train_set_idx],
             predicted_train)
 #> [1] 0.1697417
 predicted_test <- predict(imodel,
-                          newdata = cjb[-train_set_idx, ],
+                          newdata = cjb[-train_set_idx,],
                           type = "raw")
 Metrics::ce(cjb$wlfk[-train_set_idx],
             predicted_test)
@@ -961,14 +968,14 @@ kfold_cross_validation(
 library(kernlab)
 set.seed(2012)
 imodel <- ksvm(wlfk ~ .,
-               data = cjb[train_set_idx,])
+               data = cjb[train_set_idx, ])
 predicted_train <- predict(imodel,
-                           newdata = cjb[train_set_idx, ],
+                           newdata = cjb[train_set_idx,],
                            type = "response")
 Metrics::ce(cjb$wlfk[train_set_idx], predicted_train)
 #> [1] 0.1497227
 predicted_test <- predict(imodel,
-                          newdata = cjb[-train_set_idx, ],
+                          newdata = cjb[-train_set_idx,],
                           type = "response")
 Metrics::ce(cjb$wlfk[-train_set_idx], predicted_test)
 #> [1] 0.1759657
@@ -980,7 +987,7 @@ svm_grid <- expand.grid(sigma = 2 ^ (-10:4),
 set.seed(2012)
 imodel <- train(
     wlfk ~ .,
-    data = cjb[train_set_idx,],
+    data = cjb[train_set_idx, ],
     method = "svmRadial",
     preProc = c("center", "scale"),
     tuneGrid = svm_grid

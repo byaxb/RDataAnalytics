@@ -1631,7 +1631,7 @@ cjb <- cjb %>% #和上述语句等价
 #以下再来看看行操作
 #找出语文成绩不及格的同学
 cjb %>%
-    filter(yw < 60)
+    dplyr::filter(yw < 60)
 
 #找出有不及格科目的同学
 cjb %>%
@@ -1640,7 +1640,7 @@ cjb %>%
 
 #按照性别进行分组统计
 cjb %>%
-    filter(zcj != 0) %>%
+    dplyr::filter(zcj != 0) %>%
     group_by(xb) %>%
     summarise(
         count = n(),
@@ -1660,7 +1660,7 @@ cjb %>%
 
 #按科目进行汇总统计
 cjb %>%
-    filter(zcj != 0) %>%
+    dplyr::filter(zcj != 0) %>%
     gather(key = ke_mu, value = cheng_ji, yw:sw) %>%
     group_by(ke_mu) %>%
     summarise(

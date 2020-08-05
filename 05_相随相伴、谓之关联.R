@@ -1,5 +1,8 @@
 
 
+
+
+
 # 05_相随相伴、谓之关联----------------------------------------------------
 
 #在观察完数据的长相之后，便开始深入其内在的关系结构了
@@ -18,7 +21,7 @@
 rm(list = ls())
 #蛮力搜索可能的规则数
 n_item <- c(2:5, 10, 20, 50, 100)
-n_rules <- 3^n_item - 2^(n_item + 1) + 1
+n_rules <- 3 ^ n_item - 2 ^ (n_item + 1) + 1
 View(data.frame(n_item, n_rules))
 
 library(tidyverse)
@@ -36,18 +39,20 @@ cjb <- read_csv(cjb_url,
 #cut()函数已经够用了
 #定义一个百分制转成五分制成绩的函数
 as_five_grade_scores <- function(x) {
-  cut(x,
-      breaks = c(0, seq(60, 100, by = 10)),
-      include.lowest = TRUE,
-      right = FALSE,
-      ordered_result = TRUE,
-      labels = c("不及格", "及格", "中", "良", "优"))
+    cut(
+        x,
+        breaks = c(0, seq(60, 100, by = 10)),
+        include.lowest = TRUE,
+        right = FALSE,
+        ordered_result = TRUE,
+        labels = c("不及格", "及格", "中", "良", "优")
+    )
 }
 
 cjb %<>%
-  mutate_at(vars(xb, wlfk), factor) %>% #类型转换
-  mutate_at(vars(yw:sw), as_five_grade_scores) %>%#数据分箱
-  select(-c(1:2))#姓名、班级两列不参与规则挖掘
+    mutate_at(vars(xb, wlfk), factor) %>% #类型转换
+    mutate_at(vars(yw:sw), as_five_grade_scores) %>% #数据分箱
+    select(-c(1:2))#姓名、班级两列不参与规则挖掘
 
 
 # Types of data -----------------------------------------------------------
@@ -69,16 +74,16 @@ inspect(head(cjb_trans))
 
 #转换为数据框
 cjb_trans %>%
-  as("data.frame") %>%
-  View()
+    as("data.frame") %>%
+    View()
 #转换为矩阵
 cjb_trans %>%
-  as("matrix") %>%
-  View()
+    as("matrix") %>%
+    View()
 #转换为列表
 cjb_trans %>%
-  as("list") %>%
-  head(n = 2)
+    as("list") %>%
+    head(n = 2)
 
 
 
@@ -100,11 +105,15 @@ library(arulesViz)
 #算法实现，只是一句话的事儿
 irules_args_default <- apriori(cjb_trans)
 irules_args_default <- apriori(cjb)
+? apriori
+
+irules_args_default <- apriori(cjb, parameter = list(ext = TRUE))
+quality(irules_args_default)
 
 
 #看一看挖出来的规则
 irules_args_default
-#> set of 2097 rules
+#> set of 3775 rules
 
 #查看具体的规则
 inspect(head(irules_args_default))
@@ -132,28 +141,29 @@ irules_args_default@info
 
 #定制其中的参数
 #设置支持度、置信度、最小长度等
-irules <- apriori(
-  cjb_trans,
-  parameter = list(
-    minlen = 2,
-    supp = 50 / length(cjb_trans), #最小支持度，减少偶然性
-    conf = 0.8 #最小置信度，推断能力
-  ))
+irules <- apriori(cjb_trans,
+                  parameter = list(
+                      minlen = 2,
+                      supp = 50 / length(cjb_trans),
+                      #最小支持度，减少偶然性
+                      conf = 0.8 #最小置信度，推断能力
+                  ))
 length(irules)
 inspectDT(irules)
-#> [1] 5584
+#> [1] 8651
 
 
 #也可以进一步设定前项和后项
 irules <- apriori(
-  cjb_trans,
-  parameter = list(
-    minlen = 2,
-    supp = 50 / length(cjb_trans),
-    conf = 0.8
-  ),
-  appearance = list(rhs = paste0("wlfk=", c("文科", "理科")),
-                    default = "lhs"))
+    cjb_trans,
+    parameter = list(
+        minlen = 2,
+        supp = 50 / length(cjb_trans),
+        conf = 0.8
+    ),
+    appearance = list(rhs = paste0("wlfk=", c("文科", "理科")),
+                      default = "lhs")
+)
 inspectDT(irules)
 #对规则进行排序
 irules_sorted <- sort(irules, by = "lift")
@@ -164,7 +174,7 @@ inspectDT(irules_sorted)
 # Pruned Rules ------------------------------------------------------------
 
 subset.matrix <-
-  is.subset(irules_sorted, irules_sorted, sparse = FALSE)
+    is.subset(irules_sorted, irules_sorted, sparse = FALSE)
 subset.matrix[lower.tri(subset.matrix, diag = TRUE)] <- NA
 
 View(subset.matrix)
@@ -173,7 +183,7 @@ as.integer(which(redundant))
 
 
 (irules_pruned <- irules_sorted[!redundant])
-#> set of 57 rules
+#> set of 107 rules
 inspect(irules_pruned)
 inspectDT(irules_pruned)
 #当然，很多时候，我们只想查看其中部分规则
@@ -188,30 +198,20 @@ quality(irules_pruned)
 
 
 str(quality(irules_pruned))
-#> 'data.frame':	121 obs. of  4 variables:
-#> $ support   : num  0.0735 0.0903 0.0994 0.0916 0.0903 ...
-#> $ confidence: num  0.934 0.933 0.928 0.922 0.921 ...
-#> $ lift      : num  1.9 1.9 1.89 1.88 1.87 ...
-#> $ count     : num  57 70 77 71 70 81 57 54 53 53 ...
+
 
 #更多评估指标
-(more_measures <- interestMeasure(
-  irules_pruned,
-  measure = c("support", "confidence", "lift","casualConfidence"),
-  transactions = cjb_trans))
-#      support confidence   lift casualConfidence
-# 1   0.073548    0.93443 1.9007          0.99990
-# 2   0.090323    0.93333 1.8985          0.99990
-# 3   0.099355    0.92771 1.8871          0.99989
-# 4   0.091613    0.92208 1.8756          0.99988
-# 5   0.090323    0.92105 1.8735          0.99988
-# 6   0.104516    0.92045 1.8723          0.99987
-# 7   0.073548    0.91935 1.8701          0.99988
+(
+    more_measures <- interestMeasure(
+        irules_pruned,
+        measure = c("support", "confidence", "lift", "casualConfidence"),
+        transactions = cjb_trans
+    )
+)
 
 quality(irules_pruned) <- more_measures %>%
-  mutate_at(
-    vars(1:3),
-    funs(round(., digits = 2)))
+    mutate_at(vars(1:3),
+              funs(round(., digits = 2)))
 
 
 
@@ -219,18 +219,18 @@ quality(irules_pruned) <- more_measures %>%
 
 #比如仅关心文科相关的规则
 irules_sub <- subset(irules_pruned,
-                      items %in% c("wlfk=文科"))
+                     items %in% c("wlfk=文科"))
 inspect(irules_sub)
 inspectDT(irules_sub)
 
 irules_sub <- subset(irules_pruned,
-                      items %pin% c("文科"))
+                     items %pin% c("文科"))
 inspectDT(irules_sub)
 #当然也可以同时满足多种搜索条件
 #比如性别和确信度
 irules_sub <- subset(irules_pruned,
-                      lhs %pin% c("sw") &
-                        lift > 1.8)
+                     lhs %pin% c("sw") &
+                         lift > 1.8)
 inspectDT(irules_sub)
 inspect(irules_sub)
 #> lhs                                      rhs         support confidence
@@ -248,7 +248,7 @@ inspect(irules_sub)
 #从规则中提取频繁项集
 itemsets <- unique(generatingItemsets(irules_pruned))
 itemsets
-#> set of 121 itemsets
+#> set of 107 itemsets
 itemsets_df <- as(itemsets, "data.frame")
 View(itemsets_df)
 inspect(itemsets)
@@ -258,16 +258,16 @@ inspect(itemsets)
 #生成频繁项集，而不是规则
 itemsets <- apriori(cjb_trans,
                     parameter = list(
-                      minlen = 2,
-                      supp = 50 / length(cjb_trans),
-                      target = "frequent itemsets"
+                        minlen = 2,
+                        supp = 50 / length(cjb_trans),
+                        target = "frequent itemsets"
                     ))
 inspect(itemsets)
 irules_induced <- ruleInduction(itemsets,
                                 cjb_trans,
                                 confidence = 0.8)
 irules_induced
-#> set of 5584 rules
+#> set of 8651 rules
 
 #显然，只要参数是一样的
 #得到规则条数也是一样的
@@ -279,20 +279,28 @@ itemFrequencyPlot(cjb_trans)
 item_freq <- itemFrequency(cjb_trans, type = "relative")
 library(tidyverse)
 item_freq %>%
-  as.data.frame %>%
-  rownames_to_column(var = "item") %>%
-  mutate(item = factor(item, levels = item)) %>%
-  ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x  = element_text(angle=60, vjust=1, hjust = 1))
+    as.data.frame %>%
+    rownames_to_column(var = "item") %>%
+    mutate(item = factor(item, levels = item)) %>%
+    ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
+    geom_bar(stat = "identity") +
+    theme(axis.text.x  = element_text(
+        angle = 60,
+        vjust = 1,
+        hjust = 1
+    ))
 #保留现有的因子水平，也有下述方法
 item_freq %>%
-  as.data.frame %>%
-  rownames_to_column(var = "item") %>%
-  mutate(item = forcats::fct_inorder(item)) %>%
-  ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x  = element_text(angle=60, vjust=1, hjust = 1))
+    as.data.frame %>%
+    rownames_to_column(var = "item") %>%
+    mutate(item = forcats::fct_inorder(item)) %>%
+    ggplot(aes(x = item, y = item_freq, fill = item_freq)) +
+    geom_bar(stat = "identity") +
+    theme(axis.text.x  = element_text(
+        angle = 60,
+        vjust = 1,
+        hjust = 1
+    ))
 
 
 # Rules Viz ---------------------------------------------------------------
@@ -306,8 +314,8 @@ plot(irules_pruned, method = "paracoord")
 #交互式的规则可视化
 library(tcltk2)
 plot(irules_pruned,
-            method="graph",
-            interactive=TRUE)
+     method = "graph",
+     interactive = TRUE)
 
 
 # Rules Export ------------------------------------------------------------
@@ -326,23 +334,23 @@ save(irules_pruned,
 #更好的办法，应该是将规则转换成数据框
 #然后另存为csv文件
 irules_pruned_in_df <-
-  as(irules_pruned, "data.frame")
+    as(irules_pruned, "data.frame")
 View(irules_pruned_in_df)
 #考虑到规则中也包含逗号,
 #在另存为csv文件时，一般需要设置参数quote=TRUE
-write.csv(irules_pruned_in_df,
-          file = "Rules.csv",
-          quote = TRUE,
-          row.names = FALSE)
+write.csv(
+    irules_pruned_in_df,
+    file = "Rules.csv",
+    quote = TRUE,
+    row.names = FALSE
+)
 #当然，在另存为csv之前，也可以对规则进行必要的处理
 irules_pruned_in_df %<>%
-  separate(
-    rules,
-    sep = "=>",
-    into = c("LHS", "RHS")) %>%
-  mutate_at(
-    vars("LHS", "RHS"),
-    funs(gsub("[\\{\\} ]", "", .)))
+    separate(rules,
+             sep = "=>",
+             into = c("LHS", "RHS")) %>%
+    mutate_at(vars("LHS", "RHS"),
+              funs(gsub("[\\{\\} ]", "", .)))
 View(irules_pruned_in_df)
 
 #转换成data.frame之后
@@ -350,10 +358,12 @@ View(irules_pruned_in_df)
 #比如可以通过正则表达式任意抽取自己想要的规则
 #请小伙伴们自行练习
 #当然，arules包中write()函数也可以将规则直接写到本地
-write.csv(irules_pruned_in_df,
-      file = "Rules2.csv",
-      quote = TRUE,
-      row.names = FALSE)
+write.csv(
+    irules_pruned_in_df,
+    file = "Rules2.csv",
+    quote = TRUE,
+    row.names = FALSE
+)
 
 #以上是R中关于关联规则的基本实现
 #感兴趣的同学，可以进一步阅读：
