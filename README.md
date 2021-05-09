@@ -1,6 +1,6 @@
 # RDataAnalytics
 
-This repository contains code and data for the postgraduate course **Data Analytics with R**, instructed by *Xinbo Ai*, at Beijing University of Posts and Telecommunications.   
+This repository contains code and data for the course **Data Analytics with R**, instructed by *Xinbo Ai*, at Beijing University of Posts and Telecommunications.   
 The corresponding MOOC is available at [xuetangx](https://next.xuetangx.com/course/buptP08541002314/4231623)
 
 
