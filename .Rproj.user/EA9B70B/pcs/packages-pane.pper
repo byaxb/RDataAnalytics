@@ -1,7 +1,0 @@
-{
-    "installOptions": {
-        "installDependencies": true,
-        "installFromRepository": true,
-        "libraryPath": "D:/SciTools/R/library"
-    }
-}
