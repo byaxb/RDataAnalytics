@@ -1,8 +1,5 @@
 
 
-
-
-
 # 05_相随相伴、谓之关联----------------------------------------------------
 
 #在观察完数据的长相之后，便开始深入其内在的关系结构了
@@ -307,7 +304,8 @@ item_freq %>%
 
 library(arulesViz)
 plot(irules_pruned[1:10],
-     method = "graph")#最常用的一种方式
+     method = "graph",
+     control = list(edgeCol = 'red', engine = 'igraph'))#最常用的一种方式
 plot(irules_pruned, method = "grouped")
 plot(irules_pruned, method = "paracoord")
 

@@ -1,8 +1,5 @@
 
 
-
-
-
 # 04_观数以形 -----------------------------------------------------------
 
 
@@ -573,6 +570,25 @@ treemap(
     lowerbound.cex.labels = 0.6
 )
 
+#更改其中的字体
+library(showtext)
+font_add("fzqt", regular = "D://tools/fonts/FZQTJW.TTF")
+showtext_begin()
+treemap(
+    as.data.frame(cjb_sum) ,
+    index = c("wlfk", "xb"),
+    vSize = "count",
+    vColor = "xb",
+    type = "categorical",
+    fontsize.labels = 20,
+    fontfamily.title = "fzqt",
+    fontfamily.labels = "fzqt",
+    fontfamily.legend = "fzqt",
+    lowerbound.cex.labels = 0.6
+)
+showtext_end()
+
+
 View(cjb_sum)
 nrow(cjb)
 library(treemap)
@@ -883,7 +899,7 @@ cor_coef <- cjb %>%
 #> sw 0.40 0.60 0.44 0.28 0.38 0.46 0.65 0.69 1.00
 
 # Tile for cor ------------------------------------------------------------
-
+#HOW TO INTERPRET A CORRELATION COEFFICIENT R By Deborah J. Rumsey
 library(ggplot2)
 library(tidyverse)
 cor_coef %>%
@@ -892,7 +908,7 @@ cor_coef %>%
     gather(key = km2, value = cor_num, -km1) %>%
     mutate(cor_level = cut(
         cor_num,
-        breaks = c(0, 0.3, 0.5, 0.8, 1),
+        breaks = c(0, 0.3, 0.5, 0.7, 1),
         right = FALSE
     )) %>%
     ggplot(aes(
@@ -905,7 +921,13 @@ cor_coef %>%
     scale_fill_brewer(palette = "YlGn", name = "相关系数区间")
 ggsave("cor_coef.png", dpi = 600)
 
-
+#区间划分方法并不唯一：
+#Hinkle DE, Wiersma W, Jurs SG (2003). Applied Statistics for the Behavioral Sciences 5th ed. Boston: Houghton Mifflin
+#0~0.3negligible correlation
+#0.3~0.5low correlation
+#0.5~0.7moderate correlation
+#0.7~0.9high correlation
+#0.9~1very high correlation
 # Catetorial vs Numeric ---------------------------------------------------
 
 #离散变量vs连续变量

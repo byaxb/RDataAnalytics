@@ -1,0 +1,10 @@
+{
+    "dialog-state": {
+        "caseSensitive": false,
+        "filePatterns": [],
+        "path": "",
+        "projectRelative": true,
+        "query": "angle",
+        "regex": false
+    }
+}

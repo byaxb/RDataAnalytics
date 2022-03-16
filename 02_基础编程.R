@@ -1,6 +1,6 @@
 
 
-# 基础编程 --------------------------------------------------------------
+# 02_基础编程 --------------------------------------------------------------
 
 #学习R语言数据分析，或是其它数据科学编程
 #往往学习曲线都比较陡
@@ -561,14 +561,34 @@ sapply(1:n_fib, function(x) {
 
 #关于apply，补充一下两点：
 #(1)带进度条的apply
-library(pbapply)
-pbsapply(1:n_fib, function(x) {
-    1 / sqrt(5) *
-        (((1 + sqrt(5)) / 2) ^ x -
-             ((1 - sqrt(5)) / 2) ^ x)
-})
-#(2)真正并行的apply
-#可以通过parallel::parSapply()等来实现
+#for循环的进度条
+pbfor::pb_for()
+for(i in 1:100) {
+    Sys.sleep(0.5)
+}
+#(2)并行计算
+#
+library(foreach)
+library(doSNOW)
+
+cl <- makeCluster(parallel::detectCores() - 1)
+registerDoSNOW(cl)
+
+I_REPEAT_TIMES <- 20
+J_REPEAT_TIMES <- 10
+results <-
+    foreach(
+        i = seq(0, 1, length.out = I_REPEAT_TIMES)
+    ) %:%
+    foreach(
+        j = 1:J_REPEAT_TIMES
+    ) %dopar% {
+        cur_ij <- paste0('i = ', i,
+                           'j = ', j)
+        # to do
+        cur_ij
+    }
+stopCluster(cl)
 
 
 
