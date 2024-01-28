@@ -2,13 +2,13 @@
 # Data Analytics with R
 
 This repository contains code and data for the course **Data Analytics with R**, instructed by *Xinbo Ai*, at Beijing University of Posts and Telecommunications.   
-The corresponding MOOC is available at [xuetangx](https://www.xuetangx.com/course/buptP08541002314/14769168)
+The corresponding MOOC is available at [xuetangx](https://www.xuetangx.com/course/buptP08541002314/19318369)
 
 
 ---
 
 本库托管了北京邮电大学《R语言数据分析》课程代码及数据。   
-本课程已在[学堂在线](https://www.xuetangx.com/course/buptP08541002314/14769168)上线
+本课程已在[学堂在线](https://www.xuetangx.com/course/buptP08541002314/19318369)上线
 
 
 ---
